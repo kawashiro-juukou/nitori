@@ -24,5 +24,5 @@ This project is still **Working in progress**, use it at your own risk.
 |---|---|---|
 | [nitori](pkgs/nitori/) | A Dart Implementation for Satori Protocol | [![pub package](https://img.shields.io/pub/v/nitori.svg)](https://pub.dev/packages/nitori) |
 | [nitori_client](pkgs/nitori_client/) | Dart Client Implementation for Satori Protocol. | [![pub package](https://img.shields.io/pub/v/nitori_client.svg)](https://pub.dev/packages/nitori_client) |
-| [nitori_core](pkgs/nitori_core/) | Core Module of Nitori. | [![pub package](https://img.shields.io/pub/v/nitori_core.svg)](https://pub.dev/packages/nitori_core) |
+| [nitori_message](pkgs/nitori_message/) | Message Builder for Nitori. | [![pub package](https://img.shields.io/pub/v/nitori_message.svg)](https://pub.dev/packages/nitori_message) |
 | [nitori_server](pkgs/nitori_server/) | Dart Server Implementation for Satori Protocol. | [![pub package](https://img.shields.io/pub/v/nitori_server.svg)](https://pub.dev/packages/nitori_server) |

@@ -1,4 +1,4 @@
-import 'package:nitori_core/nitori_core.dart';
+import 'package:nitori_message/nitori_message.dart';
 import 'package:test/test.dart';
 
 void main() {
