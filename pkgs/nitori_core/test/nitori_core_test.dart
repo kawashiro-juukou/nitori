@@ -2,15 +2,13 @@ import 'package:nitori_core/nitori_core.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('A group of tests', () {
-    final awesome = Awesome();
-
+  group('channel', () {
     setUp(() {
       // Additional setup goes here.
     });
 
-    test('First Test', () {
-      expect(awesome.isAwesome, isTrue);
+    test('test', () {
+      expect(true, isTrue);
     });
   });
 }
