@@ -26,10 +26,14 @@ Map<String, Object> omitNull(Map<String, Object?> map) {
 
 class BaseElement {
   String tag;
-  Map<String, Object>? attributes;
+  Map<String, Object?>? attributes;
   List<BaseElement>? children;
 
-  BaseElement(this.tag, {this.attributes, this.children});
+  BaseElement(this.tag, {attributes, this.children}) {
+    if (attributes != null) {
+      attributes = omitNull(attributes!);
+    }
+  }
 
   @override
   String toString() {

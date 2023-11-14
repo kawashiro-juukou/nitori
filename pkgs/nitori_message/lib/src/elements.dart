@@ -12,12 +12,12 @@ class AtElement extends BaseElement {
     this.role,
     this.type,
   }) : super('at',
-            attributes: omitNull({
+            attributes: {
               'id': id,
               'name': name,
               'role': role,
               'type': type,
-            }));
+        });
 }
 
 class SharpElement extends BaseElement {
@@ -28,10 +28,10 @@ class SharpElement extends BaseElement {
     required this.id,
     this.name,
   }) : super('sharp',
-            attributes: omitNull({
+            attributes: {
               'id': id,
               'name': name,
-            }));
+        });
 }
 
 class AElement extends BaseElement {
@@ -40,7 +40,7 @@ class AElement extends BaseElement {
   AElement({
     required this.href,
   }) : super('a',
-            attributes: omitNull({
+            attributes: {
               'href': href,
-            }));
+        });
 }
