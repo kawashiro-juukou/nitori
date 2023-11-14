@@ -44,7 +44,7 @@ class BaseElement extends Node {
 
   BaseElement(this.tag, {attributes, this.children}) {
     if (attributes != null) {
-      attributes = omitNull(attributes!);
+      this.attributes = omitNull(attributes!);
     }
   }
 
