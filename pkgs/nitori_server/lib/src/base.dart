@@ -1,11 +1,12 @@
 import 'dart:io';
 
 base class BaseController<T> {
-  late String prefix;
   // ignore: unused_field
   final T _interface;
 
   BaseController(this._interface);
+
+  get prefix => throw UnimplementedError();
 
   Future<void> handleRequest(HttpRequest request) async {
     try {
