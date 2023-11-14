@@ -25,8 +25,7 @@ class Channel {
 
   Channel(this.id, this.type, this.name, this.parentId);
 
-  /// Static method to create a Channel instance from JSON
-  static Channel fromJson(Map<String, dynamic> json) {
+  factory Channel.fromJson(Map<String, dynamic> json) {
     return Channel(
       json['id'],
       ChannelType.values[json['type']],
