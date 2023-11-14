@@ -15,7 +15,7 @@ void main() {
 
     test('Escape', () {
       expect(n.escape('<test/>'), equals('&lt;test/&gt;'));
-      expect(n.escape('\"test\"'), equals('&quot;test&quot;'));
+      expect(n.escape('"test"'), equals('&quot;test&quot;'));
       expect(n.escape('&test&'), equals('&amp;test&amp;'));
     });
 
