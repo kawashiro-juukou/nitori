@@ -1,11 +1,11 @@
 import './user.dart';
 
 enum Status {
-  OFFLINE(0),
-  ONLINE(1),
-  CONNECT(2),
-  DISCONNECT(3),
-  RECONNECT(4);
+  offline(0),
+  online(1),
+  connect(2),
+  disconnect(3),
+  reconnect(4);
 
   const Status(this.value);
   final int value;

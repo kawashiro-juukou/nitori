@@ -1,10 +1,10 @@
 import 'dart:async';
 
 enum ChannelType {
-  TEXT(0),
-  VOICE(1),
-  CATEGORY(2),
-  DIRECT(3);
+  text(0),
+  voice(1),
+  category(2),
+  direct(3);
 
   const ChannelType(this.value);
   final int value;
