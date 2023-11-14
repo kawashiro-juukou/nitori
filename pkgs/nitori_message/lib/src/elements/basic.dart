@@ -1,4 +1,4 @@
-import './base.dart';
+import '../base.dart';
 
 class AtElement extends BaseElement {
   String? id;
@@ -11,12 +11,11 @@ class AtElement extends BaseElement {
     this.name,
     this.role,
     this.type,
-  }) : super('at',
-            attributes: {
-              'id': id,
-              'name': name,
-              'role': role,
-              'type': type,
+  }) : super('at', attributes: {
+          'id': id,
+          'name': name,
+          'role': role,
+          'type': type,
         });
 }
 
@@ -27,10 +26,9 @@ class SharpElement extends BaseElement {
   SharpElement({
     required this.id,
     this.name,
-  }) : super('sharp',
-            attributes: {
-              'id': id,
-              'name': name,
+  }) : super('sharp', attributes: {
+          'id': id,
+          'name': name,
         });
 }
 
@@ -39,8 +37,7 @@ class AElement extends BaseElement {
 
   AElement({
     required this.href,
-  }) : super('a',
-            attributes: {
-              'href': href,
+  }) : super('a', attributes: {
+          'href': href,
         });
 }
