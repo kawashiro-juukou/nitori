@@ -24,10 +24,23 @@ Map<String, Object> omitNull(Map<String, Object?> map) {
   return result;
 }
 
-class BaseElement {
+class Node {}
+
+class Text extends Node {
+  String text;
+
+  Text(this.text);
+
+  @override
+  String toString() {
+    return escape(text);
+  }
+}
+
+class BaseElement extends Node {
   String tag;
   Map<String, Object?>? attributes;
-  List<BaseElement>? children;
+  List<Node>? children;
 
   BaseElement(this.tag, {attributes, this.children}) {
     if (attributes != null) {
@@ -62,16 +75,5 @@ class BaseElement {
       buffer.write('/>');
     }
     return buffer.toString();
-  }
-}
-
-class Text {
-  String text;
-
-  Text(this.text);
-
-  @override
-  String toString() {
-    return escape(text);
   }
 }
