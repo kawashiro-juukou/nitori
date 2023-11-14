@@ -5,10 +5,10 @@ import 'package:nitori_core/nitori_core.dart';
 
 import './base.dart';
 
-class ChannelController extends BaseController<ChannelInterface> {
+final class ChannelController extends BaseController<ChannelInterface> {
   @override
   var prefix = '/channel';
-  ChannelController(ChannelInterface _interface) : super(_interface);
+  ChannelController(ChannelInterface interface) : super(interface);
 
   @override
   Future<void> handlePost(HttpRequest request) async {
