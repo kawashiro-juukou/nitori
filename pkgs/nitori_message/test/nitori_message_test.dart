@@ -21,7 +21,7 @@ void main() {
 
     test('Unescape', () {
       expect(n.unescape('&lt;test/&gt;'), equals('<test/>'));
-      expect(n.unescape('&quot;test&quot;'), equals('\"test\"'));
+      expect(n.unescape('&quot;test&quot;'), equals('"test"'));
       expect(n.unescape('&amp;test&amp;'), equals('&test&'));
     });
   });
