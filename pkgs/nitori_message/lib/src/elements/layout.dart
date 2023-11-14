@@ -15,5 +15,5 @@ class MessageElement extends BaseElement {
 
   MessageElement({this.id, this.forward, children})
       : super('message',
-            attributes: {id: id, forward: forward}, children: children);
+            attributes: {'id': id, 'forward': forward}, children: children);
 }

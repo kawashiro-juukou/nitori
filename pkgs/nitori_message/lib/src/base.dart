@@ -14,13 +14,16 @@ String unescape(String text) {
       .replaceAll('&gt;', '>');
 }
 
-Map<String, Object> omitNull(Map<String, Object?> map) {
+Map<String, Object>? omitNull(Map<String?, Object?> map) {
   var result = <String, Object>{};
   map.forEach((key, value) {
-    if (value != null) {
+    if (key != null && value != null) {
       result[key] = value;
     }
   });
+  if (result.isEmpty) {
+    return null;
+  }
   return result;
 }
 
