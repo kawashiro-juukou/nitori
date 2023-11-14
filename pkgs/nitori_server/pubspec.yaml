@@ -8,7 +8,11 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  # path: ^1.8.0
+  nitori_core: ^1.0.0
+
+dependency_overrides:
+  nitori_core:
+    path: ../nitori_core
 
 dev_dependencies:
   lints: ^2.0.0
