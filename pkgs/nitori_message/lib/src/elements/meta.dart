@@ -12,5 +12,10 @@ class AuthorElement extends BaseElement {
 
   AuthorElement({this.userId, this.nickname, this.avatar, children})
       : super('author',
-            attributes: {userId, nickname, avatar}, children: children);
+            attributes: {
+              'user-id': userId,
+              'nickname': nickname,
+              'avatar': avatar
+            },
+            children: children);
 }

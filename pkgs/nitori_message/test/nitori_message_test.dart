@@ -65,5 +65,38 @@ void main() {
       expect(n.MessageElement(children: [n.Text('test')]).toString(),
           equals('<message>test</message>'));
     });
+
+    test('Meta', () {
+      expect(n.QuoteElement().toString(), equals('<quote/>'));
+      expect(n.QuoteElement(children: [n.Text('test')]).toString(),
+          equals('<quote>test</quote>'));
+      expect(n.AuthorElement().toString(), equals('<author/>'));
+      expect(n.AuthorElement(userId: '1').toString(),
+          equals('<author user-id="1"/>'));
+      expect(n.AuthorElement(userId: '1', nickname: 'test').toString(),
+          equals('<author user-id="1" nickname="test"/>'));
+      expect(
+          n.AuthorElement(userId: '1', nickname: 'test', avatar: 'test')
+              .toString(),
+          equals('<author user-id="1" nickname="test" avatar="test"/>'));
+    });
+
+    test('Resource', () {
+      expect(n.ImageElement(src: 'https://example.com').toString(),
+          equals('<img src="https://example.com"/>'));
+      expect(
+          n.ImageElement(
+                  src: 'https://example.com', cache: true, timeout: '1000')
+              .toString(),
+          equals('<img src="https://example.com" cache timeout="1000"/>'));
+      expect(
+          n.ImgElement(src: 'https://example.com', width: 300, height: 200)
+              .toString(),
+          equals('<img src="https://example.com" width="300" height="200"/>'));
+      expect(n.AudioElement(src: 'https://example.com').toString(),
+          equals('<audio src="https://example.com"/>'));
+      expect(n.VideoElement(src: 'https://example.com').toString(),
+          equals('<video src="https://example.com"/>'));
+    });
   });
 }

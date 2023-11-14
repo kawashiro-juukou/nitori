@@ -6,14 +6,17 @@ class ResourceElement extends BaseElement {
   String? timeout;
 
   ResourceElement({
+    required String tag,
     required this.src,
     this.cache,
     this.timeout,
-  }) : super('resource', attributes: {
-          'src': src,
-          'cache': cache,
-          'timeout': timeout,
-        });
+    Map<String, Object?>? attributes,
+  }) : super(tag,
+            attributes: {
+              'src': src,
+              'cache': cache,
+              'timeout': timeout,
+            }..addAll(attributes ?? {}));
 }
 
 class ImgElement extends ResourceElement {
@@ -27,12 +30,54 @@ class ImgElement extends ResourceElement {
     bool? cache,
     String? timeout,
   }) : super(
+          tag: 'img',
+          src: src,
+          cache: cache,
+          timeout: timeout,
+          attributes: {
+            'width': width,
+            'height': height,
+          },
+        );
+}
+
+typedef ImageElement = ImgElement;
+
+class AudioElement extends ResourceElement {
+  AudioElement({
+    required String src,
+    bool? cache,
+    String? timeout,
+  }) : super(
+          tag: 'audio',
           src: src,
           cache: cache,
           timeout: timeout,
         );
 }
 
-typedef AudioElement = ResourceElement;
-typedef VideoElement = ResourceElement;
-typedef FileElement = ResourceElement;
+class VideoElement extends ResourceElement {
+  VideoElement({
+    required String src,
+    bool? cache,
+    String? timeout,
+  }) : super(
+          tag: 'video',
+          src: src,
+          cache: cache,
+          timeout: timeout,
+        );
+}
+
+class FileElement extends ResourceElement {
+  FileElement({
+    required String src,
+    bool? cache,
+    String? timeout,
+  }) : super(
+          tag: 'file',
+          src: src,
+          cache: cache,
+          timeout: timeout,
+        );
+}
