@@ -2,7 +2,7 @@ import 'package:nitori_message/nitori_message.dart' as n;
 import 'package:test/test.dart';
 
 void main() {
-  group('Base Element and Functions', () {
+  group('Base', () {
     test('BaseElement', () {
       expect(n.BaseElement('test').toString(), equals('<test/>'));
       expect(n.BaseElement('test', attributes: {'id': '001'}).toString(),
@@ -97,6 +97,18 @@ void main() {
           equals('<audio src="https://example.com"/>'));
       expect(n.VideoElement(src: 'https://example.com').toString(),
           equals('<video src="https://example.com"/>'));
+    });
+
+    test('Modifier', () {
+      expect(
+          n.StrongElement('test').toString(), equals('<strong>test</strong>'));
+      expect(n.EmElement('test').toString(), equals('<em>test</em>'));
+      expect(n.InsElement('test').toString(), equals('<ins>test</ins>'));
+      expect(n.DelElement('test').toString(), equals('<del>test</del>'));
+      expect(n.SplElement('test').toString(), equals('<spl>test</spl>'));
+      expect(n.CodeElement('test').toString(), equals('<code>test</code>'));
+      expect(n.SupElement('test').toString(), equals('<sup>test</sup>'));
+      expect(n.SubElement('test').toString(), equals('<sub>test</sub>'));
     });
   });
 }
