@@ -1,11 +1,11 @@
-import 'package:nitori_message/nitori_message.dart';
+import 'package:nitori_message/nitori_message.dart' as n;
 
 void main() {
-  print(AtElement(id: '001', name: 'Kawashiro Nitori'));
-  print(AtElement(type: 'all'));
-  print(AtElement(role: 'admin'));
+  print(n.At(id: '001', name: 'Kawashiro Nitori'));
+  print(n.At(type: 'all'));
+  print(n.At(role: 'admin'));
 
-  print(SharpElement(id: '001', name: 'Kawashiro Channel'));
+  print(n.Sharp(id: '001', name: 'Kawashiro Channel'));
 
-  print(AElement(href: 'https://example.com/link'));
+  print(n.A(href: 'https://example.com/link'));
 }

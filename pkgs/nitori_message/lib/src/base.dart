@@ -40,12 +40,12 @@ class Text extends Node {
   }
 }
 
-class BaseElement extends Node {
+class Base extends Node {
   String tag;
   Map<String, Object?>? attributes;
   List<Node>? children;
 
-  BaseElement(this.tag, {attributes, this.children}) {
+  Base(this.tag, {attributes, this.children}) {
     if (attributes != null) {
       this.attributes = omitNull(attributes!);
     }

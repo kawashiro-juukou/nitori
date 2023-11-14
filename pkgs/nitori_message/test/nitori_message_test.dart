@@ -4,12 +4,11 @@ import 'package:test/test.dart';
 void main() {
   group('Base', () {
     test('BaseElement', () {
-      expect(n.BaseElement('test').toString(), equals('<test/>'));
-      expect(n.BaseElement('test', attributes: {'id': '001'}).toString(),
+      expect(n.Base('test').toString(), equals('<test/>'));
+      expect(n.Base('test', attributes: {'id': '001'}).toString(),
           equals('<test id="001"/>'));
       expect(
-          n.BaseElement('test', attributes: {'id': '001', 'name': 'test'})
-              .toString(),
+          n.Base('test', attributes: {'id': '001', 'name': 'test'}).toString(),
           equals('<test id="001" name="test"/>'));
     });
 
@@ -28,87 +27,79 @@ void main() {
   group('Elements', () {
     test('Basic', () {
       // At Element
-      expect(n.AtElement(id: '1').toString(), equals('<at id="1"/>'));
-      expect(n.AtElement(id: '1', name: 'test').toString(),
+      expect(n.At(id: '1').toString(), equals('<at id="1"/>'));
+      expect(n.At(id: '1', name: 'test').toString(),
           equals('<at id="1" name="test"/>'));
-      expect(n.AtElement(role: 'test').toString(), equals('<at role="test"/>'));
-      expect(n.AtElement(type: 'test').toString(), equals('<at type="test"/>'));
+      expect(n.At(role: 'test').toString(), equals('<at role="test"/>'));
+      expect(n.At(type: 'test').toString(), equals('<at type="test"/>'));
       // Sharp Element
-      expect(n.SharpElement(id: '1').toString(), equals('<sharp id="1"/>'));
-      expect(n.SharpElement(id: '1', name: 'test').toString(),
+      expect(n.Sharp(id: '1').toString(), equals('<sharp id="1"/>'));
+      expect(n.Sharp(id: '1', name: 'test').toString(),
           equals('<sharp id="1" name="test"/>'));
       // A Element
-      expect(n.AElement(href: 'https://example.com').toString(),
+      expect(n.A(href: 'https://example.com').toString(),
           equals('<a href="https://example.com"/>'));
     });
 
     test('Layout', () {
       // Br Element
-      expect(n.BrElement().toString(), equals('<br/>'));
+      expect(n.Br().toString(), equals('<br/>'));
       // P Element
-      expect(n.PElement().toString(), equals('<p/>'));
-      expect(n.PElement(children: [n.Text('test')]).toString(),
-          equals('<p>test</p>'));
-      expect(n.PElement(children: [n.Text('test'), n.Text('test2')]).toString(),
+      expect(n.P().toString(), equals('<p/>'));
+      expect(n.P(children: [n.Text('test')]).toString(), equals('<p>test</p>'));
+      expect(n.P(children: [n.Text('test'), n.Text('test2')]).toString(),
           equals('<p>testtest2</p>'));
-      expect(n.PElement(children: [n.Text('test'), n.BrElement()]).toString(),
+      expect(n.P(children: [n.Text('test'), n.Br()]).toString(),
           equals('<p>test<br/></p>'));
       // Message Element
-      expect(n.MessageElement().toString(), equals('<message/>'));
-      expect(n.MessageElement(id: '1').toString(), equals('<message id="1"/>'));
-      expect(n.MessageElement(forward: true).toString(),
-          equals('<message forward/>'));
-      expect(n.MessageElement(id: '1', forward: true).toString(),
+      expect(n.Message().toString(), equals('<message/>'));
+      expect(n.Message(id: '1').toString(), equals('<message id="1"/>'));
+      expect(n.Message(forward: true).toString(), equals('<message forward/>'));
+      expect(n.Message(id: '1', forward: true).toString(),
           equals('<message id="1" forward/>'));
-      expect(n.MessageElement(id: '1', forward: false).toString(),
+      expect(n.Message(id: '1', forward: false).toString(),
           equals('<message id="1" forward="false"/>'));
-      expect(n.MessageElement(children: [n.Text('test')]).toString(),
+      expect(n.Message(children: [n.Text('test')]).toString(),
           equals('<message>test</message>'));
     });
 
     test('Meta', () {
-      expect(n.QuoteElement().toString(), equals('<quote/>'));
-      expect(n.QuoteElement(children: [n.Text('test')]).toString(),
+      expect(n.Quote().toString(), equals('<quote/>'));
+      expect(n.Quote(children: [n.Text('test')]).toString(),
           equals('<quote>test</quote>'));
-      expect(n.AuthorElement().toString(), equals('<author/>'));
-      expect(n.AuthorElement(userId: '1').toString(),
-          equals('<author user-id="1"/>'));
-      expect(n.AuthorElement(userId: '1', nickname: 'test').toString(),
+      expect(n.Author().toString(), equals('<author/>'));
+      expect(n.Author(userId: '1').toString(), equals('<author user-id="1"/>'));
+      expect(n.Author(userId: '1', nickname: 'test').toString(),
           equals('<author user-id="1" nickname="test"/>'));
-      expect(
-          n.AuthorElement(userId: '1', nickname: 'test', avatar: 'test')
-              .toString(),
+      expect(n.Author(userId: '1', nickname: 'test', avatar: 'test').toString(),
           equals('<author user-id="1" nickname="test" avatar="test"/>'));
     });
 
     test('Resource', () {
-      expect(n.ImageElement(src: 'https://example.com').toString(),
+      expect(n.Image(src: 'https://example.com').toString(),
           equals('<img src="https://example.com"/>'));
       expect(
-          n.ImageElement(
-                  src: 'https://example.com', cache: true, timeout: '1000')
+          n.Image(src: 'https://example.com', cache: true, timeout: '1000')
               .toString(),
           equals('<img src="https://example.com" cache timeout="1000"/>'));
       expect(
-          n.ImgElement(src: 'https://example.com', width: 300, height: 200)
-              .toString(),
+          n.Img(src: 'https://example.com', width: 300, height: 200).toString(),
           equals('<img src="https://example.com" width="300" height="200"/>'));
-      expect(n.AudioElement(src: 'https://example.com').toString(),
+      expect(n.Audio(src: 'https://example.com').toString(),
           equals('<audio src="https://example.com"/>'));
-      expect(n.VideoElement(src: 'https://example.com').toString(),
+      expect(n.Video(src: 'https://example.com').toString(),
           equals('<video src="https://example.com"/>'));
     });
 
     test('Modifier', () {
-      expect(
-          n.StrongElement('test').toString(), equals('<strong>test</strong>'));
-      expect(n.EmElement('test').toString(), equals('<em>test</em>'));
-      expect(n.InsElement('test').toString(), equals('<ins>test</ins>'));
-      expect(n.DelElement('test').toString(), equals('<del>test</del>'));
-      expect(n.SplElement('test').toString(), equals('<spl>test</spl>'));
-      expect(n.CodeElement('test').toString(), equals('<code>test</code>'));
-      expect(n.SupElement('test').toString(), equals('<sup>test</sup>'));
-      expect(n.SubElement('test').toString(), equals('<sub>test</sub>'));
+      expect(n.Strong('test').toString(), equals('<strong>test</strong>'));
+      expect(n.Em('test').toString(), equals('<em>test</em>'));
+      expect(n.Ins('test').toString(), equals('<ins>test</ins>'));
+      expect(n.Del('test').toString(), equals('<del>test</del>'));
+      expect(n.Spl('test').toString(), equals('<spl>test</spl>'));
+      expect(n.Code('test').toString(), equals('<code>test</code>'));
+      expect(n.Sup('test').toString(), equals('<sup>test</sup>'));
+      expect(n.Sub('test').toString(), equals('<sub>test</sub>'));
     });
   });
 }

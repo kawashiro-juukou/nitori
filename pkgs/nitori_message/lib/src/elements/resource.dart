@@ -1,6 +1,6 @@
 import '../base.dart';
 
-class ResourceElement extends BaseElement {
+class ResourceElement extends Base {
   String src;
   bool? cache;
   String? timeout;
@@ -19,11 +19,11 @@ class ResourceElement extends BaseElement {
             }..addAll(attributes ?? {}));
 }
 
-class ImgElement extends ResourceElement {
+class Img extends ResourceElement {
   int? width;
   int? height;
 
-  ImgElement({
+  Img({
     required String src,
     this.width,
     this.height,
@@ -41,10 +41,10 @@ class ImgElement extends ResourceElement {
         );
 }
 
-typedef ImageElement = ImgElement;
+typedef Image = Img;
 
-class AudioElement extends ResourceElement {
-  AudioElement({
+class Audio extends ResourceElement {
+  Audio({
     required String src,
     bool? cache,
     String? timeout,
@@ -56,8 +56,8 @@ class AudioElement extends ResourceElement {
         );
 }
 
-class VideoElement extends ResourceElement {
-  VideoElement({
+class Video extends ResourceElement {
+  Video({
     required String src,
     bool? cache,
     String? timeout,
@@ -69,8 +69,8 @@ class VideoElement extends ResourceElement {
         );
 }
 
-class FileElement extends ResourceElement {
-  FileElement({
+class File extends ResourceElement {
+  File({
     required String src,
     bool? cache,
     String? timeout,

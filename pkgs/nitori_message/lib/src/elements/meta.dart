@@ -1,16 +1,16 @@
 import '../base.dart';
 
-class QuoteElement extends BaseElement {
-  QuoteElement({attributes, children})
+class Quote extends Base {
+  Quote({attributes, children})
       : super('quote', attributes: attributes, children: children);
 }
 
-class AuthorElement extends BaseElement {
+class Author extends Base {
   String? userId;
   String? nickname;
   String? avatar;
 
-  AuthorElement({this.userId, this.nickname, this.avatar, children})
+  Author({this.userId, this.nickname, this.avatar, children})
       : super('author',
             attributes: {
               'user-id': userId,

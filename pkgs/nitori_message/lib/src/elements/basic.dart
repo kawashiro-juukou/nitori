@@ -1,12 +1,12 @@
 import '../base.dart';
 
-class AtElement extends BaseElement {
+class At extends Base {
   String? id;
   String? name;
   String? role;
   String? type;
 
-  AtElement({
+  At({
     this.id,
     this.name,
     this.role,
@@ -19,11 +19,11 @@ class AtElement extends BaseElement {
         });
 }
 
-class SharpElement extends BaseElement {
+class Sharp extends Base {
   String id;
   String? name;
 
-  SharpElement({
+  Sharp({
     required this.id,
     this.name,
   }) : super('sharp', attributes: {
@@ -32,10 +32,10 @@ class SharpElement extends BaseElement {
         });
 }
 
-class AElement extends BaseElement {
+class A extends Base {
   String href;
 
-  AElement({
+  A({
     required this.href,
   }) : super('a', attributes: {
           'href': href,
