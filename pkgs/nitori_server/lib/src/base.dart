@@ -1,8 +1,9 @@
 import 'dart:io';
 
-class BaseController<T> {
+base class BaseController<T> {
   late String prefix;
-  T _interface;
+  // ignore: unused_field
+  final T _interface;
 
   BaseController(this._interface);
 
