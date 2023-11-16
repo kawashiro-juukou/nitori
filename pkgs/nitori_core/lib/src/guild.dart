@@ -1,5 +1,10 @@
 import './base.dart';
 
+import 'package:json_annotation/json_annotation.dart';
+
+part 'guild.g.dart';
+
+@JsonSerializable(fieldRename: FieldRename.snake)
 class Guild {
   String id;
   String? name;
@@ -7,21 +12,9 @@ class Guild {
 
   Guild(this.id, {this.name, this.avatar});
 
-  factory Guild.fromJson(Map<String, dynamic> json) {
-    return Guild(
-      json['id'],
-      name: json['name'],
-      avatar: json['avatar'],
-    );
-  }
+  factory Guild.fromJson(Map<String, dynamic> json) => _$GuildFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'avatar': avatar,
-    };
-  }
+  Map<String, dynamic> toJson() => _$GuildToJson(this);
 }
 
 abstract interface class GuildInterface {

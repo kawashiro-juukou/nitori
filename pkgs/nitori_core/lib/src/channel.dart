@@ -1,5 +1,9 @@
 import 'dart:async';
 
+import 'package:json_annotation/json_annotation.dart';
+
+part 'channel.g.dart';
+
 enum ChannelType {
   text(0),
   voice(1),
@@ -10,6 +14,7 @@ enum ChannelType {
   final int value;
 }
 
+@JsonSerializable(fieldRename: FieldRename.snake)
 class Channel {
   /// Channel ID
   String id;
@@ -25,24 +30,11 @@ class Channel {
 
   Channel(this.id, this.type, this.name, this.parentId);
 
-  factory Channel.fromJson(Map<String, dynamic> json) {
-    return Channel(
-      json['id'],
-      ChannelType.values[json['type']],
-      json['name'],
-      json['parentId'],
-    );
-  }
+  factory Channel.fromJson(Map<String, dynamic> json) =>
+      _$ChannelFromJson(json);
 
   /// Instance method to convert the Channel instance to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'type': type,
-      'name': name,
-      'parentId': parentId,
-    };
-  }
+  Map<String, dynamic> toJson() => _$ChannelToJson(this);
 }
 
 abstract interface class ChannelInterface {
