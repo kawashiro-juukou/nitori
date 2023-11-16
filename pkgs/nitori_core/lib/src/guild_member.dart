@@ -1,5 +1,10 @@
 import './user.dart';
 
+import 'package:json_annotation/json_annotation.dart';
+
+part 'guild_member.g.dart';
+
+@JsonSerializable(fieldRename: FieldRename.snake)
 class GuildMember {
   User user;
   String? nick;
@@ -8,22 +13,8 @@ class GuildMember {
 
   GuildMember(this.user, {this.nick, this.avatar, this.joinedAt});
 
-  factory GuildMember.fromJson(Map<String, dynamic> json) {
-    return GuildMember(
-      User.fromJson(json['user']),
-      nick: json['nick'],
-      avatar: json['avatar'],
-      joinedAt:
-          json['joined_at'] != null ? DateTime.parse(json['joined_at']) : null,
-    );
-  }
+  factory GuildMember.fromJson(Map<String, dynamic> json) =>
+      _$GuildMemberFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'user': user.toJson(),
-      'nick': nick,
-      'avatar': avatar,
-      'joined_at': joinedAt?.toIso8601String(),
-    };
-  }
+  Map<String, dynamic> toJson() => _$GuildMemberToJson(this);
 }
