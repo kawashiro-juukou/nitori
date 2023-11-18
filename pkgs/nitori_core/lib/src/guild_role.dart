@@ -1,24 +1,20 @@
 import './base.dart';
 
+import 'package:json_annotation/json_annotation.dart';
+
+part 'guild_role.g.dart';
+
+@JsonSerializable(fieldRename: FieldRename.snake)
 class GuildRole {
   String id;
   String name;
 
   GuildRole(this.id, this.name);
 
-  factory GuildRole.fromJson(Map<String, dynamic> json) {
-    return GuildRole(
-      json['id'],
-      json['name'],
-    );
-  }
+  factory GuildRole.fromJson(Map<String, dynamic> json) =>
+      _$GuildRoleFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-    };
-  }
+  Map<String, dynamic> toJson() => _$GuildRoleToJson(this);
 }
 
 abstract class GuildRoleInterface {

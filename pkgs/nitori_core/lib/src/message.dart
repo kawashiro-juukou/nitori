@@ -1,9 +1,14 @@
+import 'package:json_annotation/json_annotation.dart';
+
 import './base.dart';
 import './channel.dart';
 import './guild.dart';
 import './guild_member.dart';
 import './user.dart';
 
+part 'message.g.dart';
+
+@JsonSerializable(fieldRename: FieldRename.snake)
 class Message {
   String id;
   String content;
@@ -22,37 +27,10 @@ class Message {
       this.createdAt,
       this.updatedAt});
 
-  factory Message.fromJson(Map<String, dynamic> json) {
-    return Message(
-      json['id'],
-      json['content'],
-      channel:
-          json['channel'] != null ? Channel.fromJson(json['channel']) : null,
-      guild: json['guild'] != null ? Guild.fromJson(json['guild']) : null,
-      member:
-          json['member'] != null ? GuildMember.fromJson(json['member']) : null,
-      user: json['user'] != null ? User.fromJson(json['user']) : null,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : null,
-    );
-  }
+  factory Message.fromJson(Map<String, dynamic> json) =>
+      _$MessageFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'content': content,
-      'channel': channel?.toJson(),
-      'guild': guild?.toJson(),
-      'member': member?.toJson(),
-      'user': user?.toJson(),
-      'created_at': createdAt?.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
-    };
-  }
+  Map<String, dynamic> toJson() => _$MessageToJson(this);
 }
 
 abstract class MessageInterface {

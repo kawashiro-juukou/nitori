@@ -1,5 +1,9 @@
 import './user.dart';
 
+import 'package:json_annotation/json_annotation.dart';
+
+part 'login.g.dart';
+
 enum Status {
   offline(0),
   online(1),
@@ -11,6 +15,7 @@ enum Status {
   final int value;
 }
 
+@JsonSerializable(fieldRename: FieldRename.snake)
 class Login {
   Status status;
   User? user;
@@ -19,23 +24,9 @@ class Login {
 
   Login(this.status, {this.user, this.selfId, this.platform});
 
-  factory Login.fromJson(Map<String, dynamic> json) {
-    return Login(
-      Status.values[json['status']],
-      user: json['user'] != null ? User.fromJson(json['user']) : null,
-      selfId: json['self_id'],
-      platform: json['platform'],
-    );
-  }
+  factory Login.fromJson(Map<String, dynamic> json) => _$LoginFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'status': status.value,
-      'user': user?.toJson(),
-      'self_id': selfId,
-      'platform': platform,
-    };
-  }
+  Map<String, dynamic> toJson() => _$LoginToJson(this);
 }
 
 abstract class LoginInterface {
