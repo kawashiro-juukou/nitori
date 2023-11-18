@@ -1,9 +1,5 @@
 import './base.dart';
-import './elements/basic.dart';
-import './elements/layout.dart';
-import './elements/meta.dart';
-import './elements/modifier.dart';
-import './elements/resource.dart';
+import './elements.dart';
 
 /// create a [Node] by tag name
 Node? createTag(String tag, dynamic attributes, dynamic children) {
