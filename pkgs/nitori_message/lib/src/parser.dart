@@ -130,7 +130,7 @@ class Parser {
 
   Parser(String input) : tokenizer = Tokenizer(input);
 
-  Node parse() {
+  Node? parse() {
     var token = tokenizer.next();
     if (token == null) {
       throw Exception('Unexpected end of input');
@@ -150,7 +150,9 @@ class Parser {
         // Parse attributes and children
         while (tokenizer.hasNext() && !tokenizer.peek()!.startsWith('</')) {
           var child = parse();
-          children.add(child);
+          if (child != null) {
+            children.add(child);
+          }
         }
         // Skip the closing tag
         tokenizer.next();
@@ -176,7 +178,7 @@ class Parser {
         match = attributeRegex.firstMatch(attributesStr);
       }
 
-      return Base(tagName, attributes: attributes, children: children);
+      return _createTag(tagName, attributes, children);
     } else {
       // Parse a text node
       return Text(token);
@@ -189,7 +191,9 @@ List<Node> parse(String input) {
   var nodes = <Node>[];
   while (parser.tokenizer.hasNext()) {
     var node = parser.parse();
-    nodes.add(node);
+    if (node != null) {
+      nodes.add(node);
+    }
   }
   return nodes;
 }
