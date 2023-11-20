@@ -2,7 +2,7 @@ import './base.dart';
 import './elements.dart';
 
 /// create a [Node] by tag name
-Node? createTag(String tag, dynamic attributes, dynamic children) {
+Node? _createTag(String tag, dynamic attributes, dynamic children) {
   switch (tag) {
     case 'at':
       return At(
@@ -154,6 +154,26 @@ class Parser {
         }
         // Skip the closing tag
         tokenizer.next();
+      }
+
+      var tagNameIndex = tagName.indexOf(' ');
+      var attributesStr = tagNameIndex == -1
+          ? ''
+          : tagName.substring(tagNameIndex + 1, tagName.length);
+      tagName =
+          tagNameIndex == -1 ? tagName : tagName.substring(0, tagNameIndex);
+
+      // Parse attributes
+      var attributeRegex = RegExp(r'([\w-]+)(?:="([^"]*)")?');
+      var match = attributeRegex.firstMatch(attributesStr);
+      while (match != null) {
+        var key = match.group(1);
+        var value = match.group(2);
+        if (key != null && value != null) {
+          attributes[key] = value;
+        }
+        attributesStr = attributesStr.substring(match.end);
+        match = attributeRegex.firstMatch(attributesStr);
       }
 
       return Base(tagName, attributes: attributes, children: children);

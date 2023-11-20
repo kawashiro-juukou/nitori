@@ -37,6 +37,17 @@ void main() {
           equals(toString([
             n.Base('test', children: [n.Text('111')])
           ])));
+      expect(
+          toString(n.parse(
+              '<test><test>111</test><test/><test>222</test>333</test>')),
+          equals(toString([
+            n.Base('test', children: [
+              n.Base('test', children: [n.Text('111')]),
+              n.Base('test'),
+              n.Base('test', children: [n.Text('222')]),
+              n.Text('333')
+            ])
+          ])));
     });
   });
 }
