@@ -98,6 +98,12 @@ Node? parseTag(String str, int index) {
       if (char == ' ') {
         state = 1;
       } else if (char == '>') {
+        if (tag.endsWith('/')) {
+          // Check if the tag is self-closing
+          tag = tag.substring(
+              0, tag.length - 1); // Remove the '/' from the end of the tag
+          return Base(tag, attributes: attributes, children: children);
+        }
         return Base(tag, attributes: attributes, children: children);
       } else {
         tag += char;
@@ -106,6 +112,12 @@ Node? parseTag(String str, int index) {
       if (char == ' ') {
         continue;
       } else if (char == '>') {
+        if (tag.endsWith('/')) {
+          // Check if the tag is self-closing
+          tag = tag.substring(
+              0, tag.length - 1); // Remove the '/' from the end of the tag
+          return Base(tag, attributes: attributes, children: children);
+        }
         return Base(tag, attributes: attributes, children: children);
       } else {
         state = 2;

@@ -105,14 +105,20 @@ void main() {
 
   group('Parser', () {
     test('Basic', () {
-      expect(n.parse('<test/>'), equals([n.Base('test')]));
-      expect(n.parse('<test id="001"/>'),
+      expect(n.parse('<test/>').map((e) => e.toString()).toList(),
+          equals([n.Base('test').toString()]));
+      expect(
+          n.parse('<test id="001"/>').map((e) => e.toString()).toList(),
           equals([
-            n.Base('test', attributes: {'id': '001'})
+            n.Base('test', attributes: {'id': '001'}).toString()
           ]));
-      expect(n.parse('<test id="001" name="test"/>'),
+      expect(
+          n
+              .parse('<test id="001" name="test"/>')
+              .map((e) => e.toString())
+              .toList(),
           equals([
-            n.Base('test', attributes: {'id': '001', 'name': 'test'})
+            n.Base('test', attributes: {'id': '001', 'name': 'test'}).toString()
           ]));
     });
   });

@@ -68,7 +68,7 @@ class Base extends Node {
         }
       });
     }
-    if (children != null) {
+    if (children != null && children!.isNotEmpty) {
       buffer.write('>');
       for (var child in children!) {
         buffer.write(child.toString());
