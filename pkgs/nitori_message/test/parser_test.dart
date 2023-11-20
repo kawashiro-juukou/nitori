@@ -116,9 +116,13 @@ void main() {
 
     test('Modifier', () {
       expect(n.parse('<strong>test</strong>'), equals([n.Strong('test')]));
+      expect(n.parse('<b>test</b>'), equals([n.Strong('test')]));
       expect(n.parse('<em>test</em>'), equals([n.Em('test')]));
+      expect(n.parse('<i>test</i>'), equals([n.Em('test')]));
       expect(n.parse('<ins>test</ins>'), equals([n.Ins('test')]));
+      expect(n.parse('<u>test</u>'), equals([n.Ins('test')]));
       expect(n.parse('<del>test</del>'), equals([n.Del('test')]));
+      expect(n.parse('<s>test</s>'), equals([n.Del('test')]));
       expect(n.parse('<spl>test</spl>'), equals([n.Spl('test')]));
       expect(n.parse('<code>test</code>'), equals([n.Code('test')]));
       expect(n.parse('<sup>test</sup>'), equals([n.Sup('test')]));
