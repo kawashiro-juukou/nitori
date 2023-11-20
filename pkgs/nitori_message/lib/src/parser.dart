@@ -72,7 +72,7 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
           avatar: attributes['avatar']);
 
     default:
-      return null;
+      return Base(tag, attributes: attributes, children: children);
   }
 }
 
