@@ -76,127 +76,100 @@ Node? createTag(String tag, dynamic attributes, dynamic children) {
   }
 }
 
-/// parse a html like string to a HTML Tag
-Node? parseTag(String str, int index) {
-  var length = str.length;
-  var char = str[index];
-  if (char != '<') {
-    return Text(char);
-  }
-  var buffer = StringBuffer();
-  var tag = '';
-  var attributes = <String, Object?>{};
-  var children = <Node>[];
-  var state = 0;
-  var key = '';
-  var value = '';
-  var quote = '';
-  var i = index + 1;
-  while (i < length) {
-    var char = str[i];
-    if (state == 0) {
-      if (char == ' ') {
-        state = 1;
-      } else if (char == '>') {
-        if (tag.endsWith('/')) {
-          // Check if the tag is self-closing
-          tag = tag.substring(
-              0, tag.length - 1); // Remove the '/' from the end of the tag
-          return Base(tag, attributes: attributes, children: children);
-        }
-        return Base(tag, attributes: attributes, children: children);
-      } else {
-        tag += char;
-      }
-    } else if (state == 1) {
-      if (char == ' ') {
-        continue;
-      } else if (char == '>') {
-        if (tag.endsWith('/')) {
-          // Check if the tag is self-closing
-          tag = tag.substring(
-              0, tag.length - 1); // Remove the '/' from the end of the tag
-          return Base(tag, attributes: attributes, children: children);
-        }
-        return Base(tag, attributes: attributes, children: children);
-      } else {
-        state = 2;
-        buffer.write(char);
-      }
-    } else if (state == 2) {
-      if (char == '=') {
-        key = buffer.toString();
-        buffer.clear();
-        state = 3;
-      } else if (char == ' ') {
-        key = buffer.toString();
-        buffer.clear();
-        state = 4;
-      } else {
-        buffer.write(char);
-      }
-    } else if (state == 3) {
-      if (char == '"' || char == "'") {
-        quote = char;
-      } else {
-        buffer.write(char);
-        quote = '';
-      }
-      state = 5;
-    } else if (state == 4) {
-      if (char == '=') {
-        state = 3;
-      } else if (char == ' ') {
-        continue;
-      } else {
-        buffer.write(char);
-        state = 5;
-      }
-    } else if (state == 5) {
-      if (char == quote) {
-        value = buffer.toString();
-        buffer.clear();
-        attributes[key] = value;
-        state = 0;
-      } else {
-        buffer.write(char);
-      }
-    }
-    i++;
+class Tokenizer {
+  final String input;
+  late int position;
+
+  Tokenizer(this.input) {
+    position = 0;
   }
 
-  return null;
+  // Returns the next token without advancing the position
+  String? peek() {
+    var oldPosition = position;
+    var token = next();
+    position = oldPosition;
+    return token;
+  }
+
+  // Returns the next token and advances the position
+  String? next() {
+    if (position >= input.length) {
+      return null;
+    }
+
+    var buffer = StringBuffer();
+    while (position < input.length) {
+      var char = input[position];
+      if (char == '<') {
+        if (buffer.isNotEmpty) {
+          break;
+        }
+      } else if (char == '>') {
+        if (buffer.isNotEmpty) {
+          buffer.write(char);
+          position++;
+          break;
+        }
+      }
+      buffer.write(char);
+      position++;
+    }
+
+    return buffer.toString();
+  }
+
+  // Checks if there are more tokens
+  bool hasNext() {
+    return position < input.length;
+  }
 }
 
-/// parse a html like string to a list of HTML Tag
-List<Node> parse(String str) {
-  List<Node> result = [];
-  var buffer = StringBuffer();
-  var index = 0;
-  var length = str.length;
-  while (index < length) {
-    var char = str[index];
-    if (char == '<') {
-      if (buffer.isNotEmpty) {
-        result.add(Text(buffer.toString()));
-        buffer.clear();
-      }
-      var tag = parseTag(str, index);
-      if (tag != null) {
-        result.add(tag);
-        index += tag.toString().length;
-      } else {
-        buffer.write(char);
-      }
-    } else {
-      buffer.write(char);
+class Parser {
+  final Tokenizer tokenizer;
+
+  Parser(String input) : tokenizer = Tokenizer(input);
+
+  Node parse() {
+    var token = tokenizer.next();
+    if (token == null) {
+      throw Exception('Unexpected end of input');
     }
-    index++;
-  }
 
-  if (buffer.isNotEmpty) {
-    result.add(Text(buffer.toString()));
-  }
+    if (token.startsWith('<')) {
+      // Parse a tag
+      var isClosingTag = token.startsWith('</');
+      var isSelfClosingTag = token.endsWith('/>');
+      var tagName = isClosingTag
+          ? token.substring(2, token.length - 1)
+          : token.substring(1, token.length - (isSelfClosingTag ? 2 : 1));
+      var attributes = <String, String>{};
+      var children = <Node>[];
 
-  return result;
+      if (!isClosingTag && !isSelfClosingTag) {
+        // Parse attributes and children
+        while (tokenizer.hasNext() && !tokenizer.peek()!.startsWith('</')) {
+          var child = parse();
+          children.add(child);
+        }
+        // Skip the closing tag
+        tokenizer.next();
+      }
+
+      return Base(tagName, attributes: attributes, children: children);
+    } else {
+      // Parse a text node
+      return Text(token);
+    }
+  }
+}
+
+List<Node> parse(String input) {
+  var parser = Parser(input);
+  var nodes = <Node>[];
+  while (parser.tokenizer.hasNext()) {
+    var node = parser.parse();
+    nodes.add(node);
+  }
+  return nodes;
 }
