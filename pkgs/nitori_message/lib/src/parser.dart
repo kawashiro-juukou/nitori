@@ -145,7 +145,7 @@ class Parser {
       var tagName = isClosingTag
           ? token.substring(2, token.length - 1)
           : token.substring(1, token.length - (isSelfClosingTag ? 2 : 1));
-      var attributes = <String, String>{};
+      var attributes = <String, Object>{};
       var children = <Node>[];
 
       if (!isClosingTag && !isSelfClosingTag) {
@@ -175,6 +175,8 @@ class Parser {
         var value = match.group(2);
         if (key != null && value != null) {
           attributes[key] = value;
+        } else if (key != null) {
+          attributes[key] = true;
         }
         attributesStr = attributesStr.substring(match.end);
         match = attributeRegex.firstMatch(attributesStr);
