@@ -36,24 +36,48 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
           timeout: attributes['timeout']);
     case 'b':
     case 'strong':
-      return Strong(children);
+      return Strong((children as List<Node>)
+          .whereType<Text>()
+          .map((e) => e.text)
+          .join(''));
     case 'i':
     case 'em':
-      return Em(children);
+      return Em((children as List<Node>)
+          .whereType<Text>()
+          .map((e) => e.text)
+          .join(''));
     case 'u':
     case 'ins':
-      return Ins(children);
+      return Ins((children as List<Node>)
+          .whereType<Text>()
+          .map((e) => e.text)
+          .join(''));
     case 's':
     case 'del':
-      return Del(children);
+      return Del((children as List<Node>)
+          .whereType<Text>()
+          .map((e) => e.text)
+          .join(''));
     case 'spl':
-      return Spl(children);
+      return Spl((children as List<Node>)
+          .whereType<Text>()
+          .map((e) => e.text)
+          .join(''));
     case 'code':
-      return Code(children);
+      return Code((children as List<Node>)
+          .whereType<Text>()
+          .map((e) => e.text)
+          .join(''));
     case 'sup':
-      return Sup(children);
+      return Sup((children as List<Node>)
+          .whereType<Text>()
+          .map((e) => e.text)
+          .join(''));
     case 'sub':
-      return Sub(children);
+      return Sub((children as List<Node>)
+          .whereType<Text>()
+          .map((e) => e.text)
+          .join(''));
     case 'br':
       return Br();
     case 'p':
@@ -61,7 +85,7 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
     case 'message':
       return Message(
           id: attributes['id'],
-          forward: attributes['forward'],
+          forward: attributes['forward'] == true,
           children: children);
     case 'quote':
       return Quote(attributes: attributes, children: children);

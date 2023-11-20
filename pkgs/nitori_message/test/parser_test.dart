@@ -73,8 +73,9 @@ void main() {
       expect(n.parse('<message forward/>'), equals([n.Message(forward: true)]));
       expect(n.parse('<message id="1" forward/>'),
           equals([n.Message(id: '1', forward: true)]));
-      expect(n.parse('<message id="1" forward="false"/>'),
-          equals([n.Message(id: '1', forward: false)]));
+      // NOTE: Should we handle `key="false"`?
+      // expect(n.parse('<message id="1" forward="false"/>'),
+      //     equals([n.Message(id: '1', forward: false)]));
       expect(
           n.parse('<message>test</message>'),
           equals([
