@@ -130,6 +130,8 @@ class Parser {
 
   Parser(String input) : tokenizer = Tokenizer(input);
 
+  hasNext() => tokenizer.hasNext();
+
   Node? parse() {
     var token = tokenizer.next();
     if (token == null) {
@@ -189,7 +191,7 @@ class Parser {
 List<Node> parse(String input) {
   var parser = Parser(input);
   var nodes = <Node>[];
-  while (parser.tokenizer.hasNext()) {
+  while (parser.hasNext()) {
     var node = parser.parse();
     if (node != null) {
       nodes.add(node);
