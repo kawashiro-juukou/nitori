@@ -38,6 +38,14 @@ class Text extends Node {
   String toString() {
     return escape(text);
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is Text && other.text == text;
+  }
+
+  @override
+  int get hashCode => text.hashCode;
 }
 
 class Base extends Node {
@@ -48,6 +56,9 @@ class Base extends Node {
   Base(this.tag, {attributes, this.children}) {
     if (attributes != null) {
       this.attributes = omitNull(attributes!);
+    }
+    if (children != null && children!.isEmpty) {
+      children = null;
     }
   }
 
@@ -79,4 +90,44 @@ class Base extends Node {
     }
     return buffer.toString();
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! Base) {
+      return false;
+    } else if (tag != other.tag) {
+      return false;
+    } else if (attributes == null && other.attributes != null) {
+      return false;
+    } else if (attributes != null && other.attributes == null) {
+      return false;
+    } else if (attributes != null && other.attributes != null) {
+      if (attributes!.length != other.attributes!.length) {
+        return false;
+      }
+      for (var key in attributes!.keys) {
+        if (attributes![key] != other.attributes![key]) {
+          return false;
+        }
+      }
+    } else if (children == null && other.children != null) {
+      return false;
+    } else if (children != null && other.children == null) {
+      return false;
+    } else if (children != null && other.children != null) {
+      if (children!.length != other.children!.length) {
+        return false;
+      }
+      for (var i = 0; i < children!.length; i++) {
+        if (children![i] != other.children![i]) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  @override
+  int get hashCode => tag.hashCode ^ attributes.hashCode ^ children.hashCode;
 }
