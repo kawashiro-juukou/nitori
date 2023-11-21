@@ -73,10 +73,10 @@ void main() {
     });
 
     test('Modifier', () {
-      expect(n.Bold('test').toString(), equals('<strong>test</strong>'));
-      expect(n.Idiomatic('test').toString(), equals('<em>test</em>'));
-      expect(n.Underline('test').toString(), equals('<ins>test</ins>'));
-      expect(n.Strikethrough('test').toString(), equals('<del>test</del>'));
+      expect(n.Bold('test').toString(), equals('<b>test</b>'));
+      expect(n.Idiomatic('test').toString(), equals('<i>test</i>'));
+      expect(n.Underline('test').toString(), equals('<u>test</u>'));
+      expect(n.Strikethrough('test').toString(), equals('<s>test</s>'));
       expect(n.Spoiler('test').toString(), equals('<spl>test</spl>'));
       expect(n.Code('test').toString(), equals('<code>test</code>'));
       expect(n.Superscript('test').toString(), equals('<sup>test</sup>'));
