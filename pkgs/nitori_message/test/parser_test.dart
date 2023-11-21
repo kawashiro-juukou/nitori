@@ -47,26 +47,26 @@ void main() {
       expect(n.parse('<sharp id="1" name="test"/>'),
           equals([n.Sharp(id: '1', name: 'test')]));
       expect(n.parse('<a href="https://example.com"/>'),
-          equals([n.A(href: 'https://example.com')]));
+          equals([n.Anchor(href: 'https://example.com')]));
     });
 
     test('Layout', () {
-      expect(n.parse('<br/>'), equals([n.Br()]));
-      expect(n.parse('<p/>'), equals([n.P()]));
+      expect(n.parse('<br/>'), equals([n.LineBreak()]));
+      expect(n.parse('<p/>'), equals([n.Paragraph()]));
       expect(
           n.parse('<p>test</p>'),
           equals([
-            n.P(children: [n.Text('test')])
+            n.Paragraph(children: [n.Text('test')])
           ]));
       expect(
           n.parse('<p>testtest2</p>'),
           equals([
-            n.P(children: [n.Text('testtest2')])
+            n.Paragraph(children: [n.Text('testtest2')])
           ]));
       expect(
           n.parse('<p>test<br/></p>'),
           equals([
-            n.P(children: [n.Text('test'), n.Br()])
+            n.Paragraph(children: [n.Text('test'), n.LineBreak()])
           ]));
       expect(n.parse('<message/>'), equals([n.Message()]));
       expect(n.parse('<message id="1"/>'), equals([n.Message(id: '1')]));
@@ -108,7 +108,8 @@ void main() {
           ]));
       expect(
           n.parse('<img src="https://example.com" width="300" height="200"/>'),
-          equals([n.Img(src: 'https://example.com', width: 300, height: 200)]));
+          equals(
+              [n.Image(src: 'https://example.com', width: 300, height: 200)]));
       expect(n.parse('<audio src="https://example.com"/>'),
           equals([n.Audio(src: 'https://example.com')]));
       expect(n.parse('<video src="https://example.com"/>'),
@@ -116,18 +117,18 @@ void main() {
     });
 
     test('Modifier', () {
-      expect(n.parse('<strong>test</strong>'), equals([n.Strong('test')]));
-      expect(n.parse('<b>test</b>'), equals([n.Strong('test')]));
-      expect(n.parse('<em>test</em>'), equals([n.Em('test')]));
-      expect(n.parse('<i>test</i>'), equals([n.Em('test')]));
-      expect(n.parse('<ins>test</ins>'), equals([n.Ins('test')]));
-      expect(n.parse('<u>test</u>'), equals([n.Ins('test')]));
-      expect(n.parse('<del>test</del>'), equals([n.Del('test')]));
-      expect(n.parse('<s>test</s>'), equals([n.Del('test')]));
-      expect(n.parse('<spl>test</spl>'), equals([n.Spl('test')]));
+      expect(n.parse('<strong>test</strong>'), equals([n.Bold('test')]));
+      expect(n.parse('<b>test</b>'), equals([n.Bold('test')]));
+      expect(n.parse('<em>test</em>'), equals([n.Idiomatic('test')]));
+      expect(n.parse('<i>test</i>'), equals([n.Idiomatic('test')]));
+      expect(n.parse('<ins>test</ins>'), equals([n.Underline('test')]));
+      expect(n.parse('<u>test</u>'), equals([n.Underline('test')]));
+      expect(n.parse('<del>test</del>'), equals([n.Strikethrough('test')]));
+      expect(n.parse('<s>test</s>'), equals([n.Strikethrough('test')]));
+      expect(n.parse('<spl>test</spl>'), equals([n.Spoiler('test')]));
       expect(n.parse('<code>test</code>'), equals([n.Code('test')]));
-      expect(n.parse('<sup>test</sup>'), equals([n.Sup('test')]));
-      expect(n.parse('<sub>test</sub>'), equals([n.Sub('test')]));
+      expect(n.parse('<sup>test</sup>'), equals([n.Superscript('test')]));
+      expect(n.parse('<sub>test</sub>'), equals([n.Subscript('test')]));
     });
   });
 }

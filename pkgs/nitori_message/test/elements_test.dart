@@ -15,19 +15,21 @@ void main() {
       expect(n.Sharp(id: '1', name: 'test').toString(),
           equals('<sharp id="1" name="test"/>'));
       // A Element
-      expect(n.A(href: 'https://example.com').toString(),
+      expect(n.Anchor(href: 'https://example.com').toString(),
           equals('<a href="https://example.com"/>'));
     });
 
     test('Layout', () {
       // Br Element
-      expect(n.Br().toString(), equals('<br/>'));
+      expect(n.LineBreak().toString(), equals('<br/>'));
       // P Element
-      expect(n.P().toString(), equals('<p/>'));
-      expect(n.P(children: [n.Text('test')]).toString(), equals('<p>test</p>'));
-      expect(n.P(children: [n.Text('test'), n.Text('test2')]).toString(),
+      expect(n.Paragraph().toString(), equals('<p/>'));
+      expect(n.Paragraph(children: [n.Text('test')]).toString(),
+          equals('<p>test</p>'));
+      expect(
+          n.Paragraph(children: [n.Text('test'), n.Text('test2')]).toString(),
           equals('<p>testtest2</p>'));
-      expect(n.P(children: [n.Text('test'), n.Br()]).toString(),
+      expect(n.Paragraph(children: [n.Text('test'), n.LineBreak()]).toString(),
           equals('<p>test<br/></p>'));
       // Message Element
       expect(n.Message().toString(), equals('<message/>'));
@@ -61,7 +63,8 @@ void main() {
               .toString(),
           equals('<img src="https://example.com" cache timeout="1000"/>'));
       expect(
-          n.Img(src: 'https://example.com', width: 300, height: 200).toString(),
+          n.Image(src: 'https://example.com', width: 300, height: 200)
+              .toString(),
           equals('<img src="https://example.com" width="300" height="200"/>'));
       expect(n.Audio(src: 'https://example.com').toString(),
           equals('<audio src="https://example.com"/>'));
@@ -70,14 +73,14 @@ void main() {
     });
 
     test('Modifier', () {
-      expect(n.Strong('test').toString(), equals('<strong>test</strong>'));
-      expect(n.Em('test').toString(), equals('<em>test</em>'));
-      expect(n.Ins('test').toString(), equals('<ins>test</ins>'));
-      expect(n.Del('test').toString(), equals('<del>test</del>'));
-      expect(n.Spl('test').toString(), equals('<spl>test</spl>'));
+      expect(n.Bold('test').toString(), equals('<strong>test</strong>'));
+      expect(n.Idiomatic('test').toString(), equals('<em>test</em>'));
+      expect(n.Underline('test').toString(), equals('<ins>test</ins>'));
+      expect(n.Strikethrough('test').toString(), equals('<del>test</del>'));
+      expect(n.Spoiler('test').toString(), equals('<spl>test</spl>'));
       expect(n.Code('test').toString(), equals('<code>test</code>'));
-      expect(n.Sup('test').toString(), equals('<sup>test</sup>'));
-      expect(n.Sub('test').toString(), equals('<sub>test</sub>'));
+      expect(n.Superscript('test').toString(), equals('<sup>test</sup>'));
+      expect(n.Subscript('test').toString(), equals('<sub>test</sub>'));
     });
   });
 }

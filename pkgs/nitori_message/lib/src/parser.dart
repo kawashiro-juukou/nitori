@@ -13,9 +13,9 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
     case 'sharp':
       return Sharp(id: attributes['id'], name: attributes['name']);
     case 'a':
-      return A(href: attributes['href']);
+      return Anchor(href: attributes['href']);
     case 'img':
-      return Img(
+      return Image(
           src: attributes['src'],
           cache: attributes['cache'],
           timeout: attributes['timeout'],
@@ -38,30 +38,30 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
           timeout: attributes['timeout']);
     case 'b':
     case 'strong':
-      return Strong((children as List<Node>)
+      return Bold((children as List<Node>)
           .whereType<Text>()
           .map((e) => e.text)
           .join(''));
     case 'i':
     case 'em':
-      return Em((children as List<Node>)
+      return Idiomatic((children as List<Node>)
           .whereType<Text>()
           .map((e) => e.text)
           .join(''));
     case 'u':
     case 'ins':
-      return Ins((children as List<Node>)
+      return Underline((children as List<Node>)
           .whereType<Text>()
           .map((e) => e.text)
           .join(''));
     case 's':
     case 'del':
-      return Del((children as List<Node>)
+      return Strikethrough((children as List<Node>)
           .whereType<Text>()
           .map((e) => e.text)
           .join(''));
     case 'spl':
-      return Spl((children as List<Node>)
+      return Spoiler((children as List<Node>)
           .whereType<Text>()
           .map((e) => e.text)
           .join(''));
@@ -71,19 +71,19 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
           .map((e) => e.text)
           .join(''));
     case 'sup':
-      return Sup((children as List<Node>)
+      return Superscript((children as List<Node>)
           .whereType<Text>()
           .map((e) => e.text)
           .join(''));
     case 'sub':
-      return Sub((children as List<Node>)
+      return Subscript((children as List<Node>)
           .whereType<Text>()
           .map((e) => e.text)
           .join(''));
     case 'br':
-      return Br();
+      return LineBreak();
     case 'p':
-      return P(attributes: attributes, children: children);
+      return Paragraph(attributes: attributes, children: children);
     case 'message':
       return Message(
           id: attributes['id'],

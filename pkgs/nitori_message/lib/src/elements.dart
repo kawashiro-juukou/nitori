@@ -34,10 +34,10 @@ class Sharp extends Base {
         });
 }
 
-class A extends Base {
+class Anchor extends Base {
   String href;
 
-  A({
+  Anchor({
     required this.href,
   }) : super('a', attributes: {
           'href': href,
@@ -48,12 +48,12 @@ class A extends Base {
 
 // #region Layout
 
-class Br extends Base {
-  Br() : super('br');
+class LineBreak extends Base {
+  LineBreak() : super('br');
 }
 
-class P extends Base {
-  P({attributes, children})
+class Paragraph extends Base {
+  Paragraph({attributes, children})
       : super('p', attributes: attributes, children: children);
 }
 
@@ -94,48 +94,48 @@ class Author extends Base {
 
 // #region Modifier
 
-class Strong extends Base {
-  Strong(String text) : super('strong', children: [Text(text)]);
+class Bold extends Base {
+  Bold(String text) : super('b', children: [Text(text)]);
 }
 
-class Em extends Base {
-  Em(String text) : super('em', children: [Text(text)]);
+class Idiomatic extends Base {
+  Idiomatic(String text) : super('i', children: [Text(text)]);
 }
 
-class Ins extends Base {
-  Ins(String text) : super('ins', children: [Text(text)]);
+class Underline extends Base {
+  Underline(String text) : super('u', children: [Text(text)]);
 }
 
-class Del extends Base {
-  Del(String text) : super('del', children: [Text(text)]);
+class Strikethrough extends Base {
+  Strikethrough(String text) : super('s', children: [Text(text)]);
 }
 
-class Spl extends Base {
-  Spl(String text) : super('spl', children: [Text(text)]);
+class Spoiler extends Base {
+  Spoiler(String text) : super('spl', children: [Text(text)]);
 }
 
 class Code extends Base {
   Code(String text) : super('code', children: [Text(text)]);
 }
 
-class Sup extends Base {
-  Sup(String text) : super('sup', children: [Text(text)]);
+class Superscript extends Base {
+  Superscript(String text) : super('sup', children: [Text(text)]);
 }
 
-class Sub extends Base {
-  Sub(String text) : super('sub', children: [Text(text)]);
+class Subscript extends Base {
+  Subscript(String text) : super('sub', children: [Text(text)]);
 }
 
 // #endregion
 
 // #region Resource
 
-class ResourceElement extends Base {
+class _ResourceElement extends Base {
   String src;
   bool? cache;
   String? timeout;
 
-  ResourceElement({
+  _ResourceElement({
     required String tag,
     required this.src,
     this.cache,
@@ -149,11 +149,11 @@ class ResourceElement extends Base {
             }..addAll(attributes ?? {}));
 }
 
-class Img extends ResourceElement {
+class Image extends _ResourceElement {
   int? width;
   int? height;
 
-  Img({
+  Image({
     required String src,
     this.width,
     this.height,
@@ -171,9 +171,7 @@ class Img extends ResourceElement {
         );
 }
 
-typedef Image = Img;
-
-class Audio extends ResourceElement {
+class Audio extends _ResourceElement {
   Audio({
     required String src,
     bool? cache,
@@ -186,7 +184,7 @@ class Audio extends ResourceElement {
         );
 }
 
-class Video extends ResourceElement {
+class Video extends _ResourceElement {
   Video({
     required String src,
     bool? cache,
@@ -199,7 +197,7 @@ class Video extends ResourceElement {
         );
 }
 
-class File extends ResourceElement {
+class File extends _ResourceElement {
   File({
     required String src,
     bool? cache,
