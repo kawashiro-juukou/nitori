@@ -18,7 +18,9 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
       return Img(
           src: attributes['src'],
           cache: attributes['cache'],
-          timeout: attributes['timeout']);
+          timeout: attributes['timeout'],
+          width: int.tryParse(attributes['width'] ?? ''),
+          height: int.tryParse(attributes['height'] ?? ''));
     case 'audio':
       return Audio(
           src: attributes['src'],
@@ -85,7 +87,7 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
     case 'message':
       return Message(
           id: attributes['id'],
-          forward: attributes['forward'] == true,
+          forward: attributes['forward'] == true ? true : null,
           children: children);
     case 'quote':
       return Quote(attributes: attributes, children: children);
