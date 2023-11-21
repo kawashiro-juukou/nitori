@@ -87,7 +87,11 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
     case 'message':
       return Message(
           id: attributes['id'],
-          forward: attributes['forward'] == true ? true : null,
+          forward: attributes['forward'] == null
+              ? null
+              : attributes['forward'] is bool
+                  ? attributes['forward']
+                  : bool.tryParse(attributes['forward'] ?? ''),
           children: children);
     case 'quote':
       return Quote(attributes: attributes, children: children);
