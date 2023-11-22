@@ -5,8 +5,8 @@ void main() {
     n.At(id: '001', name: 'Kawashiro Nitori'),
     n.Text('Hello, world!'),
     n.Image(src: 'https://example.com/image.png'),
-    n.Br(),
-    n.Strong('Welcome to Nitori: '),
+    n.LineBreak(),
+    n.Bold('Welcome to Nitori: '),
     n.Sharp(id: '001', name: 'Kawashiro Channel'),
   ]);
   print(message);
