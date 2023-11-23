@@ -214,6 +214,10 @@ class Parser {
 
       return _createTag(tagName, attributes, children);
     } else {
+      if (token.trim().isEmpty) {
+        // Skip empty text
+        return null;
+      }
       // Parse a text node
       return Text(token);
     }

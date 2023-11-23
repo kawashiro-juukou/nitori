@@ -41,7 +41,10 @@ class Text extends Node {
 
   @override
   bool operator ==(Object other) {
-    return other is Text && other.text == text;
+    return other is Text &&
+        // There might be white spaces before and after the text,
+        // but we don't care about them in comparison.
+        other.text.trim() == text.trim();
   }
 
   @override

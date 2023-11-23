@@ -131,4 +131,62 @@ void main() {
       expect(n.parse('<sub>test</sub>'), equals([n.Subscript('test')]));
     });
   });
+
+  group('Examples', () {
+    test('Single Message', () {
+      expect(
+          n.parse("""<message>
+  <at id="1" name="test"/>
+  <at id="2" name="test2"/>
+  <br/>
+  <p>test</p>
+  <img src="https://example.com"/>
+  <audio src="https://example.com"/>
+  <p>
+    <b>bold</b><sup>sup</sup><sub>sub</sub>
+    <spl>spoiler</spl>
+    <code>code</code>
+    <u>underline</u>
+    <s>strikethrough</s>
+  </p>
+</message>"""),
+          equals([
+            n.Message(
+              children: [
+                n.At(id: '1', name: 'test'),
+                n.At(id: '2', name: 'test2'),
+                n.LineBreak(),
+                n.Paragraph(children: [n.Text('test')]),
+                n.Image(src: 'https://example.com'),
+                n.Audio(src: 'https://example.com'),
+                n.Paragraph(children: [
+                  n.Bold('bold'),
+                  n.Superscript('sup'),
+                  n.Subscript('sub'),
+                  n.Spoiler('spoiler'),
+                  n.Code('code'),
+                  n.Underline('underline'),
+                  n.Strikethrough('strikethrough')
+                ])
+              ],
+            )
+          ]));
+
+      expect(
+          n.parse("""<message>
+<code>
+  yarn add nitori
+  yarn run test
+  npm publish
+</code>
+</message>"""),
+          equals([
+            n.Message(
+              children: [
+                n.Code('yarn add nitori\n  yarn run test\n  npm publish')
+              ],
+            )
+          ]));
+    });
+  });
 }
