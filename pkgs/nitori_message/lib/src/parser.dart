@@ -162,7 +162,7 @@ class Parser {
 
   hasNext() => tokenizer.hasNext();
 
-  Node? parse() {
+  Node? parse({String? parentTagName}) {
     var token = tokenizer.next();
     if (token == null) {
       throw Exception('Unexpected end of input');
@@ -177,18 +177,6 @@ class Parser {
           : token.substring(1, token.length - (isSelfClosingTag ? 2 : 1));
       var attributes = <String, Object>{};
       var children = <Node>[];
-
-      if (!isClosingTag && !isSelfClosingTag) {
-        // Parse attributes and children
-        while (tokenizer.hasNext() && !tokenizer.peek()!.startsWith('</')) {
-          var child = parse();
-          if (child != null) {
-            children.add(child);
-          }
-        }
-        // Skip the closing tag
-        tokenizer.next();
-      }
 
       var tagNameIndex = tagName.indexOf(' ');
       var attributesStr = tagNameIndex == -1
@@ -212,12 +200,37 @@ class Parser {
         match = attributeRegex.firstMatch(attributesStr);
       }
 
+      if (!isClosingTag && !isSelfClosingTag) {
+        // Parse attributes and children
+        while (tokenizer.hasNext() && !tokenizer.peek()!.startsWith('</')) {
+          var child = parse(parentTagName: tagName);
+          if (child != null) {
+            children.add(child);
+          }
+        }
+        // Skip the closing tag
+        tokenizer.next();
+      }
+
       return _createTag(tagName, attributes, children);
     } else {
+      var t = parentTagName != null && _shouldNotTrim(parentTagName)
+          // trim the leading and trailing newlines
+          ? token
+              .replaceFirst(RegExp(r'^\n'), '')
+              .replaceFirst(RegExp(r'\n$'), '')
+          : token.trim();
+      if (t.isEmpty) {
+        return null;
+      }
       // Parse a text node
-      return Text(token);
+      return Text(t);
     }
   }
+}
+
+bool _shouldNotTrim(String tagName) {
+  return ['code'].contains(tagName);
 }
 
 List<Node> parse(String input) {
