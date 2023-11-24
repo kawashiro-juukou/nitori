@@ -1,6 +1,6 @@
 name: nitori_message
 description: Message Elements Builder and Parser for Nitori, A Dart/Flutter Implementation of Satori Protocol
-version: 0.0.1+1
+version: 0.0.1+2
 repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori_message
 issue_tracker: https://github.com/kawashiro-juukou/nitori/issues
 
