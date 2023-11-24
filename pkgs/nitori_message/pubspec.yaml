@@ -1,11 +1,26 @@
 name: nitori_message
 description: Message Builder for Nitori.
-version: 0.0.1
+version: 0.0.1+1
 repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori_message
 issue_tracker: https://github.com/kawashiro-juukou/nitori/issues
 
 environment:
   sdk: ^3.1.4
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
+
+topics:
+  - nitori
+  - satori
+  - chat
+  - messages
+  - bot
 
 dependencies: {}
 
