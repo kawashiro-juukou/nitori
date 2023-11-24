@@ -106,15 +106,19 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
   }
 }
 
+/// A tokenizer that splits the input into tokens
 class Tokenizer {
+  /// The input string
   final String input;
+
+  /// The current position
   late int position;
 
   Tokenizer(this.input) {
     position = 0;
   }
 
-  // Returns the next token without advancing the position
+  /// Returns the next token without advancing the position
   String? peek() {
     var oldPosition = position;
     var token = next();
@@ -122,7 +126,7 @@ class Tokenizer {
     return token;
   }
 
-  // Returns the next token and advances the position
+  /// Returns the next token and advances the position
   String? next() {
     if (position >= input.length) {
       return null;
@@ -149,19 +153,23 @@ class Tokenizer {
     return buffer.toString();
   }
 
-  // Checks if there are more tokens
+  /// Checks if there are more tokens
   bool hasNext() {
     return position < input.length;
   }
 }
 
+/// A parser that parses tokens into a tree of nodes
 class Parser {
+  /// The tokenizer
   final Tokenizer tokenizer;
 
   Parser(String input) : tokenizer = Tokenizer(input);
 
+  /// Checks if there are more tokens
   hasNext() => tokenizer.hasNext();
 
+  /// Parses the next token
   Node? parse() {
     var token = tokenizer.next();
     if (token == null) {
@@ -224,6 +232,7 @@ class Parser {
   }
 }
 
+/// Parses the input into a tree of nodes
 List<Node> parse(String input) {
   var parser = Parser(input);
   var nodes = <Node>[];

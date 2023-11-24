@@ -1,3 +1,8 @@
+/// Escapes special characters in the given [text] to their corresponding HTML entities.
+///
+/// This function replaces the characters &, ", <, and > with their corresponding HTML entities.
+///
+/// [text]: The text to escape.
 String escape(String text) {
   return text
       .replaceAll('&', '&amp;')
@@ -6,6 +11,11 @@ String escape(String text) {
       .replaceAll('>', '&gt;');
 }
 
+/// Reverts the escaping of special characters in the given [text].
+///
+/// This function replaces the HTML entities for &, ", <, and > with their corresponding characters.
+///
+/// [text]: The text to unescape.
 String unescape(String text) {
   return text
       .replaceAll('&quot;', '"')
@@ -14,6 +24,11 @@ String unescape(String text) {
       .replaceAll('&gt;', '>');
 }
 
+/// Returns a new map with all null entries removed from the given [map].
+///
+/// If the resulting map is empty, this function returns null.
+///
+/// [map]: The map to remove null entries from.
 Map<String, Object>? omitNull(Map<String?, Object?> map) {
   var result = <String, Object>{};
   map.forEach((key, value) {
@@ -27,9 +42,14 @@ Map<String, Object>? omitNull(Map<String?, Object?> map) {
   return result;
 }
 
+/// A base class for nodes in Satori message elements.
 class Node {}
 
+/// A node that represents text in Satori message elements.
+///
+/// This class overrides the equality operator to ignore leading and trailing whitespace.
 class Text extends Node {
+  /// The text of this node.
   String text;
 
   Text(this.text);
@@ -51,9 +71,17 @@ class Text extends Node {
   int get hashCode => text.hashCode;
 }
 
+/// A base class for nodes that can have attributes and children in a tree structure.
+///
+/// This class overrides the equality operator to compare the tag, attributes, and children of the nodes.
 class Base extends Node {
+  /// The tag of this node.
   String tag;
+
+  /// The attributes of this node.
   Map<String, Object?>? attributes;
+
+  /// The children of this node.
   List<Node>? children;
 
   Base(this.tag, {attributes, this.children}) {
