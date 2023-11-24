@@ -20,6 +20,8 @@ This project is still **Working in progress**, use it at your own risk.
 
 ## Packages
 
+> Note: some packages are not published yet.
+
 | Package | Description | Version |
 |---|---|---|
 | [nitori](pkgs/nitori/) | A Dart Implementation for Satori Protocol | [![pub package](https://img.shields.io/pub/v/nitori.svg)](https://pub.dev/packages/nitori) |
