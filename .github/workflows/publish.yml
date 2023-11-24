@@ -13,11 +13,11 @@ jobs:
       fail-fast: false
       matrix:
         pkgs:
-          - pkgs/nitori
-          - pkgs/nitori_core
+          # - pkgs/nitori
+          # - pkgs/nitori_core
           - pkgs/nitori_message
-          - pkgs/nitori_client
-          - pkgs/nitori_server
+          # - pkgs/nitori_client
+          # - pkgs/nitori_server
 
     steps:
       - uses: actions/checkout@v2
