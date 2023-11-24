@@ -71,15 +71,16 @@ class Text extends Node {
   int get hashCode => text.hashCode;
 }
 
-
 /// A base class for nodes that can have attributes and children in a tree structure.
 ///
 /// This class overrides the equality operator to compare the tag, attributes, and children of the nodes.
 class Base extends Node {
   /// The tag of this node.
   String tag;
+
   /// The attributes of this node.
   Map<String, Object?>? attributes;
+
   /// The children of this node.
   List<Node>? children;
 

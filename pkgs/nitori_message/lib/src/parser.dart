@@ -110,6 +110,7 @@ Node? _createTag(String tag, dynamic attributes, dynamic children) {
 class Tokenizer {
   /// The input string
   final String input;
+
   /// The current position
   late int position;
 
