@@ -1,0 +1,47 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        pkgs:
+          - pkgs/nitori
+          - pkgs/nitori_core
+          - pkgs/nitori_message
+          - pkgs/nitori_client
+          - pkgs/nitori_server
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart
+        with:
+          sdk: stable
+
+      - name: Put LICENSE
+        run: |
+          if [ ! -f "${GITHUB_WORKSPACE}/${{ matrix.pkgs }}/LICENSE" ]; then
+            cp LICENSE ${GITHUB_WORKSPACE}/${{ matrix.pkgs }}/LICENSE
+          fi
+
+      - name: Get dependencies
+        run: |
+          dart pub global activate mono_repo
+          dart pub global run mono_repo pub get
+
+      - name: Publish
+        uses: k-paxian/dart-package-publisher@v1.6
+        with:
+          accessToken: ${{ secrets.OAUTH_ACCESS_TOKEN }}
+          refreshToken: ${{ secrets.OAUTH_REFRESH_TOKEN }}
+          flutter: false
+          relativePath: ${{ matrix.pkgs }}
