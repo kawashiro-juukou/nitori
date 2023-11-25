@@ -1,0 +1,23 @@
+# This configures the .github/workflows/pull_request_labeler.yml workflow.
+
+infra:
+  - .github/**
+  - tool/**
+
+test:
+  - pkgs/*/test/**
+
+package:nitori:
+  - pkgs/nitori/**
+
+package:nitori_core:
+  - pkgs/nitori_core/**
+
+package:nitori_client:
+  - pkgs/nitori_client/**
+
+package:nitori_server:
+  - pkgs/nitori_server/**
+
+package:nitor_messagei:
+  - pkgs/nitori_message/**
