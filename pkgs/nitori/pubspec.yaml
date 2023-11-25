@@ -3,6 +3,9 @@ description: A Dart Implementation for Satori Protocol
 version: 0.0.1
 # repository: https://github.com/my_org/my_repo
 
+# Note: remove this line when we want to publish this package.
+publish_to: none
+
 environment:
   sdk: ^3.1.4
 

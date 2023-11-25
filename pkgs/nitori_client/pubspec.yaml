@@ -3,6 +3,9 @@ description: Dart Client Implementation for Satori Protocol.
 version: 1.0.0
 # repository: https://github.com/my_org/my_repo
 
+# Note: remove this line when we want to publish this package.
+publish_to: none
+
 environment:
   sdk: ^3.1.4
 
