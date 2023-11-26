@@ -1,7 +1,8 @@
 name: nitori_core
-description: Core Module for Nitori.
-version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+description: Core Module for Nitori, A Dart/Flutter Implementation of Satori Protocol.
+version: 0.0.1
+repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori_core
+issue_tracker: https://github.com/kawashiro-juukou/nitori/issues
 
 # Note: remove this line when we want to publish this package.
 publish_to: none
