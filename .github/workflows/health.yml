@@ -11,6 +11,10 @@ on:
       - labeled
       - unlabeled
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   health:
     uses: dart-lang/ecosystem/.github/workflows/health.yaml@main
