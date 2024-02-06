@@ -11,7 +11,7 @@ class GuildMember {
   String? avatar;
   DateTime? joinedAt;
 
-  GuildMember(this.user, {this.nick, this.avatar, this.joinedAt});
+  GuildMember({required this.user, this.nick, this.avatar, this.joinedAt});
 
   factory GuildMember.fromJson(Map<String, dynamic> json) =>
       _$GuildMemberFromJson(json);

@@ -22,7 +22,7 @@ class Login {
   String? selfId;
   String? platform;
 
-  Login(this.status, {this.user, this.selfId, this.platform});
+  Login({ required this.status, this.user, this.selfId, this.platform});
 
   factory Login.fromJson(Map<String, dynamic> json) => _$LoginFromJson(json);
 

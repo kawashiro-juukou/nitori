@@ -9,7 +9,7 @@ class GuildRole {
   String id;
   String name;
 
-  GuildRole(this.id, this.name);
+  GuildRole({required this.id, required this.name});
 
   factory GuildRole.fromJson(Map<String, dynamic> json) =>
       _$GuildRoleFromJson(json);

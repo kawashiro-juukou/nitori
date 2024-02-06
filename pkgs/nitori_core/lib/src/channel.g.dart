@@ -7,10 +7,10 @@ part of 'channel.dart';
 // **************************************************************************
 
 Channel _$ChannelFromJson(Map<String, dynamic> json) => Channel(
-      json['id'] as String,
-      $enumDecode(_$ChannelTypeEnumMap, json['type']),
-      json['name'] as String,
-      json['parent_id'] as String?,
+      id: json['id'] as String,
+      type: $enumDecode(_$ChannelTypeEnumMap, json['type']),
+      name: json['name'] as String,
+      parentId: json['parent_id'] as String?,
     );
 
 Map<String, dynamic> _$ChannelToJson(Channel instance) => <String, dynamic>{

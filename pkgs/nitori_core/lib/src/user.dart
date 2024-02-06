@@ -10,7 +10,7 @@ class User {
   String? avatar;
   bool? isBot;
 
-  User(this.id, {this.name, this.nick, this.avatar, this.isBot});
+  User({required this.id, this.name, this.nick, this.avatar, this.isBot});
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 

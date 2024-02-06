@@ -7,8 +7,8 @@ part of 'guild_role.dart';
 // **************************************************************************
 
 GuildRole _$GuildRoleFromJson(Map<String, dynamic> json) => GuildRole(
-      json['id'] as String,
-      json['name'] as String,
+      id: json['id'] as String,
+      name: json['name'] as String,
     );
 
 Map<String, dynamic> _$GuildRoleToJson(GuildRole instance) => <String, dynamic>{

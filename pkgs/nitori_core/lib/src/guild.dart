@@ -10,7 +10,7 @@ class Guild {
   String? name;
   String? avatar;
 
-  Guild(this.id, {this.name, this.avatar});
+  Guild({ required this.id, this.name, this.avatar});
 
   factory Guild.fromJson(Map<String, dynamic> json) => _$GuildFromJson(json);
 

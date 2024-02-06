@@ -7,7 +7,7 @@ part of 'guild.dart';
 // **************************************************************************
 
 Guild _$GuildFromJson(Map<String, dynamic> json) => Guild(
-      json['id'] as String,
+      id: json['id'] as String,
       name: json['name'] as String?,
       avatar: json['avatar'] as String?,
     );

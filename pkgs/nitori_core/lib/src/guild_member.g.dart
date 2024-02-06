@@ -7,7 +7,7 @@ part of 'guild_member.dart';
 // **************************************************************************
 
 GuildMember _$GuildMemberFromJson(Map<String, dynamic> json) => GuildMember(
-      User.fromJson(json['user'] as Map<String, dynamic>),
+      user: User.fromJson(json['user'] as Map<String, dynamic>),
       nick: json['nick'] as String?,
       avatar: json['avatar'] as String?,
       joinedAt: json['joined_at'] == null
