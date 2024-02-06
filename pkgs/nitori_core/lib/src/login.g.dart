@@ -7,7 +7,7 @@ part of 'login.dart';
 // **************************************************************************
 
 Login _$LoginFromJson(Map<String, dynamic> json) => Login(
-      $enumDecode(_$StatusEnumMap, json['status']),
+      status: $enumDecode(_$StatusEnumMap, json['status']),
       user: json['user'] == null
           ? null
           : User.fromJson(json['user'] as Map<String, dynamic>),

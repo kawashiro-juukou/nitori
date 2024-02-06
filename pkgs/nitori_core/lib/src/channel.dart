@@ -28,7 +28,11 @@ class Channel {
   /// Channel Parent ID
   String? parentId;
 
-  Channel(this.id, this.type, this.name, this.parentId);
+  Channel(
+      {required this.id,
+      required this.type,
+      required this.name,
+      this.parentId});
 
   factory Channel.fromJson(Map<String, dynamic> json) =>
       _$ChannelFromJson(json);

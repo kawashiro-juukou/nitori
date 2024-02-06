@@ -7,8 +7,8 @@ part of 'message.dart';
 // **************************************************************************
 
 Message _$MessageFromJson(Map<String, dynamic> json) => Message(
-      json['id'] as String,
-      json['content'] as String,
+      id: json['id'] as String,
+      content: json['content'] as String,
       channel: json['channel'] == null
           ? null
           : Channel.fromJson(json['channel'] as Map<String, dynamic>),
