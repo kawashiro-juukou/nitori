@@ -1,4 +1,4 @@
-# Created with package:mono_repo v6.6.0
+# Created with package:mono_repo v6.6.1
 name: Dart CI
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;sdk:stable"
@@ -30,14 +30,14 @@ jobs:
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
       - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@d6a63dab3335f427404425de0fbfed4686d93c4f
+        uses: dart-lang/setup-dart@b64355ae6ca0b5d484f0106a033dd1388965d06d
         with:
           sdk: stable
       - id: checkout
         name: Checkout repository
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - name: mono_repo self validate
-        run: dart pub global activate mono_repo 6.6.0
+        run: dart pub global activate mono_repo 6.6.1
       - name: mono_repo self validate
         run: dart pub global run mono_repo generate --validate
   job_002:
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4;packages:pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server;commands:analyze"
@@ -55,12 +55,12 @@ jobs:
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
       - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@d6a63dab3335f427404425de0fbfed4686d93c4f
+        uses: dart-lang/setup-dart@b64355ae6ca0b5d484f0106a033dd1388965d06d
         with:
           sdk: "3.1.4"
       - id: checkout
         name: Checkout repository
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - id: pkgs_nitori_pub_upgrade
         name: pkgs/nitori; dart pub upgrade
         run: dart pub upgrade
@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;sdk:dev;packages:pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server;commands:analyze"
@@ -121,12 +121,12 @@ jobs:
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
       - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@d6a63dab3335f427404425de0fbfed4686d93c4f
+        uses: dart-lang/setup-dart@b64355ae6ca0b5d484f0106a033dd1388965d06d
         with:
           sdk: dev
       - id: checkout
         name: Checkout repository
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - id: pkgs_nitori_pub_upgrade
         name: pkgs/nitori; dart pub upgrade
         run: dart pub upgrade
@@ -177,7 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;sdk:dev;packages:pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server;commands:format"
@@ -187,12 +187,12 @@ jobs:
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
       - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@d6a63dab3335f427404425de0fbfed4686d93c4f
+        uses: dart-lang/setup-dart@b64355ae6ca0b5d484f0106a033dd1388965d06d
         with:
           sdk: dev
       - id: checkout
         name: Checkout repository
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - id: pkgs_nitori_pub_upgrade
         name: pkgs/nitori; dart pub upgrade
         run: dart pub upgrade
@@ -243,7 +243,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4;packages:pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server;commands:test"
@@ -253,12 +253,12 @@ jobs:
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
       - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@d6a63dab3335f427404425de0fbfed4686d93c4f
+        uses: dart-lang/setup-dart@b64355ae6ca0b5d484f0106a033dd1388965d06d
         with:
           sdk: "3.1.4"
       - id: checkout
         name: Checkout repository
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - id: pkgs_nitori_pub_upgrade
         name: pkgs/nitori; dart pub upgrade
         run: dart pub upgrade
@@ -314,7 +314,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;sdk:dev;packages:pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server;commands:test"
@@ -324,12 +324,12 @@ jobs:
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
       - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@d6a63dab3335f427404425de0fbfed4686d93c4f
+        uses: dart-lang/setup-dart@b64355ae6ca0b5d484f0106a033dd1388965d06d
         with:
           sdk: dev
       - id: checkout
         name: Checkout repository
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - id: pkgs_nitori_pub_upgrade
         name: pkgs/nitori; dart pub upgrade
         run: dart pub upgrade
@@ -385,12 +385,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@d6a63dab3335f427404425de0fbfed4686d93c4f
+        uses: dart-lang/setup-dart@b64355ae6ca0b5d484f0106a033dd1388965d06d
         with:
           sdk: "3.1.4"
       - id: checkout
         name: Checkout repository
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - id: pkgs_nitori_pub_upgrade
         name: pkgs/nitori; dart pub upgrade
         run: dart pub upgrade
@@ -446,12 +446,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@d6a63dab3335f427404425de0fbfed4686d93c4f
+        uses: dart-lang/setup-dart@b64355ae6ca0b5d484f0106a033dd1388965d06d
         with:
           sdk: dev
       - id: checkout
         name: Checkout repository
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - id: pkgs_nitori_pub_upgrade
         name: pkgs/nitori; dart pub upgrade
         run: dart pub upgrade
