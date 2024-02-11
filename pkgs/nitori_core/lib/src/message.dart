@@ -19,7 +19,9 @@ class Message {
   DateTime? createdAt;
   DateTime? updatedAt;
 
-  Message({required this.id, required this.content,
+  Message(
+      {required this.id,
+      required this.content,
       this.channel,
       this.guild,
       this.member,
