@@ -6,7 +6,7 @@ interface class Pagination<T> {
 }
 
 enum EventType {
-  Internal(0);
+  internal(0);
 
   final int value;
   const EventType(this.value);
