@@ -17,39 +17,34 @@ jobs:
   publish_core:
     permissions:
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@main
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1.8.1
     with:
       working-directory: pkgs/nitori_core
-      use-flutter: false
 
   publish_message:
     permissions:
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@main
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1.8.1
     with:
       working-directory: pkgs/nitori_message
-      use-flutter: false
 
   publish_client:
     permissions:
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@main
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1.8.1
     with:
       working-directory: pkgs/nitori_client
-      use-flutter: false
 
   publish_server:
     permissions:
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@main
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1.8.1
     with:
       working-directory: pkgs/nitori_server
-      use-flutter: false
 
   publish_nitori:
     permissions:
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@main
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1.8.1
     with:
       working-directory: pkgs/nitori
-      use-flutter: false

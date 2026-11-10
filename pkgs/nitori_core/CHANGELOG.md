@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2026-11-11
+
+### Added
+- Event, Meta, Command, Argv, Resource codec and eventAliases (nitori_core)
+- Satori HTTP API client and WebSocket gateway (nitori_client)
+
+### Fixed
+- Use `@v1.8.1` reusable publish workflow; publish all packages
+
 ## [0.1.1] - 2026-11-10
 
 ### Fixed
