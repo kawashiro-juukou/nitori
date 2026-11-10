@@ -107,8 +107,11 @@ class Author extends Base {
   Author({this.userId, this.nickname, this.avatar, children})
       : super('author',
             attributes: {
-              'user-id': userId,
-              'nickname': nickname,
+              // The official spec uses `id` / `name` / `avatar`; the older
+              // `user-id` / `nickname` spellings are still accepted by the
+              // parser for backward compatibility with existing content.
+              'id': userId,
+              'name': nickname,
               'avatar': avatar
             },
             children: children);
@@ -118,60 +121,86 @@ class Author extends Base {
 
 // #region Modifier
 
+/// Base class for inline modifier elements such as `<b>` and `<u>`.
+///
+/// Unlike the official Element tree, children stay nested so parsing
+/// `<b>x<u>y</u></b>` keeps the `<u>` inside the `<b>`.
+abstract class Modifier extends Base {
+  Modifier._(String tag, {String? text, List<Node>? children})
+      : super(tag, children: [
+          if (text != null) Text(text),
+          ...?children,
+        ]);
+
+  /// The plain text content of this modifier, including nested text.
+  String get text =>
+      children?.whereType<Text>().map((e) => e.text).join('') ?? '';
+}
+
 /// Represents a `<b>` element.
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E7%B2%97%E4%BD%93
-class Bold extends Base {
-  Bold(String text) : super('b', children: [Text(text)]);
+class Bold extends Modifier {
+  Bold(String text) : super._('b', text: text);
+  Bold.children(List<Node> children) : super._('b', children: children);
 }
 
-/// Represents a `<i>` element.
+/// Represents an `<i>` element.
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E6%96%9C%E4%BD%93
-class Idiomatic extends Base {
-  Idiomatic(String text) : super('i', children: [Text(text)]);
+class Idiomatic extends Modifier {
+  Idiomatic(String text) : super._('i', text: text);
+  Idiomatic.children(List<Node> children) : super._('i', children: children);
 }
 
 /// Represents a `<u>` element.
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E4%B8%8B%E5%88%92%E7%BA%BF
-class Underline extends Base {
-  Underline(String text) : super('u', children: [Text(text)]);
+class Underline extends Modifier {
+  Underline(String text) : super._('u', text: text);
+  Underline.children(List<Node> children) : super._('u', children: children);
 }
 
-/// Represents a `<s>` element.
+/// Represents an `<s>` element.
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E5%88%A0%E9%99%A4%E7%BA%BF
-class Strikethrough extends Base {
-  Strikethrough(String text) : super('s', children: [Text(text)]);
+class Strikethrough extends Modifier {
+  Strikethrough(String text) : super._('s', text: text);
+  Strikethrough.children(List<Node> children)
+      : super._('s', children: children);
 }
 
 /// Represents a `<spl>` element.
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E5%89%A7%E9%80%8F
-class Spoiler extends Base {
-  Spoiler(String text) : super('spl', children: [Text(text)]);
+class Spoiler extends Modifier {
+  Spoiler(String text) : super._('spl', text: text);
+  Spoiler.children(List<Node> children) : super._('spl', children: children);
 }
 
 /// Represents a `<code>` element.
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E4%BB%A3%E7%A0%81
-class Code extends Base {
-  Code(String text) : super('code', children: [Text(text)]);
+class Code extends Modifier {
+  Code(String text) : super._('code', text: text);
+  Code.children(List<Node> children) : super._('code', children: children);
 }
 
 /// Represents a `<sup>` element.
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E4%B8%8A%E6%A0%87
-class Superscript extends Base {
-  Superscript(String text) : super('sup', children: [Text(text)]);
+class Superscript extends Modifier {
+  Superscript(String text) : super._('sup', text: text);
+  Superscript.children(List<Node> children)
+      : super._('sup', children: children);
 }
 
 /// Represents a `<sub>` element.
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E4%B8%8B%E6%A0%87
-class Subscript extends Base {
-  Subscript(String text) : super('sub', children: [Text(text)]);
+class Subscript extends Modifier {
+  Subscript(String text) : super._('sub', text: text);
+  Subscript.children(List<Node> children) : super._('sub', children: children);
 }
 
 // #endregion
@@ -183,18 +212,21 @@ class _ResourceElement extends Base {
   String src;
   bool? cache;
   String? timeout;
+  String? title;
 
   _ResourceElement({
     required String tag,
     required this.src,
     this.cache,
     this.timeout,
+    this.title,
     Map<String, Object?>? attributes,
   }) : super(tag,
             attributes: {
               'src': src,
               'cache': cache,
               'timeout': timeout,
+              'title': title,
             }..addAll(attributes ?? {}));
 }
 
@@ -211,11 +243,13 @@ class Image extends _ResourceElement {
     this.height,
     bool? cache,
     String? timeout,
+    String? title,
   }) : super(
           tag: 'img',
           src: src,
           cache: cache,
           timeout: timeout,
+          title: title,
           attributes: {
             'width': width,
             'height': height,
@@ -227,15 +261,26 @@ class Image extends _ResourceElement {
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E8%AF%AD%E9%9F%B3
 class Audio extends _ResourceElement {
+  String? duration;
+  String? poster;
+
   Audio({
     required String src,
     bool? cache,
     String? timeout,
+    String? title,
+    this.duration,
+    this.poster,
   }) : super(
           tag: 'audio',
           src: src,
           cache: cache,
           timeout: timeout,
+          title: title,
+          attributes: {
+            'duration': duration,
+            'poster': poster,
+          },
         );
 }
 
@@ -243,15 +288,32 @@ class Audio extends _ResourceElement {
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E8%A7%86%E9%A2%91
 class Video extends _ResourceElement {
+  int? width;
+  int? height;
+  String? duration;
+  String? poster;
+
   Video({
     required String src,
+    this.width,
+    this.height,
     bool? cache,
     String? timeout,
+    String? title,
+    this.duration,
+    this.poster,
   }) : super(
           tag: 'video',
           src: src,
           cache: cache,
           timeout: timeout,
+          title: title,
+          attributes: {
+            'width': width,
+            'height': height,
+            'duration': duration,
+            'poster': poster,
+          },
         );
 }
 
@@ -259,15 +321,23 @@ class Video extends _ResourceElement {
 ///
 /// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E6%96%87%E4%BB%B6
 class File extends _ResourceElement {
+  String? poster;
+
   File({
     required String src,
     bool? cache,
     String? timeout,
+    String? title,
+    this.poster,
   }) : super(
           tag: 'file',
           src: src,
           cache: cache,
           timeout: timeout,
+          title: title,
+          attributes: {
+            'poster': poster,
+          },
         );
 }
 

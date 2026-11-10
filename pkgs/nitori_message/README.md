@@ -44,7 +44,7 @@ You could see the [Elements Cheat Sheet](#elements-cheat-sheet) for more details
 ```dart
 import 'package:nitori_message/nitori_message.dart' as n;
 
-var message = n.Message.parse(
+var messages = n.parse(
   '<message>'
   '<at id="001" name="Kawashiro Nitori" />'
   'Hello, world!'
@@ -53,7 +53,9 @@ var message = n.Message.parse(
   '<b>Welcome to Nitori: </b>'
   '<sharp id="001" name="Kawashiro Channel" />'
   '</message>',
-); // n.Message
+); // List<n.Node>
+
+var message = messages.first as n.Message;
 ```
 
 The code above will produce a structure like this:

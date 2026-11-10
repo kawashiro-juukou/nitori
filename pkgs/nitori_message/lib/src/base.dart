@@ -13,15 +13,35 @@ String escape(String text) {
 
 /// Reverts the escaping of special characters in the given [text].
 ///
-/// This function replaces the HTML entities for &, ", <, and > with their corresponding characters.
+/// This function replaces the HTML entities for &, ", <, and > with their
+/// corresponding characters. Numeric entities (`&#39;`, `&#x27;`, ...) are
+/// resolved as well, mirroring @satorijs/element.
+///
+/// The order matters: `&` must be decoded last so escaped entities such as
+/// `<` survive as literal text; the numeric encodings of `&`
+/// (`&#38;` / `&#x26;`) are kept intact until that final pass for the same
+/// reason.
 ///
 /// [text]: The text to unescape.
 String unescape(String text) {
   return text
-      .replaceAll('&quot;', '"')
-      .replaceAll('&amp;', '&')
       .replaceAll('&lt;', '<')
-      .replaceAll('&gt;', '>');
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAllMapped(RegExp(r'&#(\d+);'), (match) {
+    // `&#38;` encodes `&` itself; keep it for the final pass below.
+    final code = match.group(1)!;
+    return code == '38'
+        ? match.group(0)!
+        : String.fromCharCode(int.parse(code));
+  }).replaceAllMapped(RegExp(r'&#x([0-9a-f]+);', caseSensitive: false),
+          (match) {
+    // `&#x26;` encodes `&` itself; same treatment as above.
+    final code = match.group(1)!;
+    return code.toLowerCase() == '26'
+        ? match.group(0)!
+        : String.fromCharCode(int.parse(code, radix: 16));
+  }).replaceAllMapped(RegExp(r'&(amp|#38|#x26);'), (match) => '&');
 }
 
 /// Returns a new map with all null entries removed from the given [map].
@@ -68,7 +88,7 @@ class Text extends Node {
   }
 
   @override
-  int get hashCode => text.hashCode;
+  int get hashCode => text.trim().hashCode;
 }
 
 /// A base class for nodes that can have attributes and children in a tree structure.
@@ -103,7 +123,9 @@ class Base extends Node {
           if (value) {
             buffer.write(' $key');
           } else {
-            buffer.write(' $key="false"');
+            // A false boolean serializes as `no-<key>`, mirroring the
+            // official `toAttrString`.
+            buffer.write(' no-$key');
           }
         } else {
           buffer.write(' $key="${escape(value.toString())}"');

@@ -38,7 +38,7 @@ void main() {
       expect(n.Message(id: '1', forward: true).toString(),
           equals('<message id="1" forward/>'));
       expect(n.Message(id: '1', forward: false).toString(),
-          equals('<message id="1" forward="false"/>'));
+          equals('<message id="1" no-forward/>'));
       expect(n.Message(children: [n.Text('test')]).toString(),
           equals('<message>test</message>'));
     });
@@ -48,11 +48,11 @@ void main() {
       expect(n.Quote(children: [n.Text('test')]).toString(),
           equals('<quote>test</quote>'));
       expect(n.Author().toString(), equals('<author/>'));
-      expect(n.Author(userId: '1').toString(), equals('<author user-id="1"/>'));
+      expect(n.Author(userId: '1').toString(), equals('<author id="1"/>'));
       expect(n.Author(userId: '1', nickname: 'test').toString(),
-          equals('<author user-id="1" nickname="test"/>'));
+          equals('<author id="1" name="test"/>'));
       expect(n.Author(userId: '1', nickname: 'test', avatar: 'test').toString(),
-          equals('<author user-id="1" nickname="test" avatar="test"/>'));
+          equals('<author id="1" name="test" avatar="test"/>'));
     });
 
     test('Resource', () {
@@ -70,6 +70,37 @@ void main() {
           equals('<audio src="https://example.com"/>'));
       expect(n.Video(src: 'https://example.com').toString(),
           equals('<video src="https://example.com"/>'));
+      expect(n.File(src: 'https://example.com').toString(),
+          equals('<file src="https://example.com"/>'));
+      // Common resource attributes.
+      expect(n.Image(src: 's', title: 'name').toString(),
+          equals('<img src="s" title="name"/>'));
+      expect(n.Audio(src: 's', title: 't').toString(),
+          equals('<audio src="s" title="t"/>'));
+      expect(n.Video(src: 's', title: 't').toString(),
+          equals('<video src="s" title="t"/>'));
+      expect(n.File(src: 's', title: 't').toString(),
+          equals('<file src="s" title="t"/>'));
+      expect(n.Image(src: 's', cache: false).toString(),
+          equals('<img src="s" no-cache/>'));
+      // Media-only attributes.
+      expect(
+          n.Audio(src: 's', duration: '10', poster: 'https://example.com')
+              .toString(),
+          equals(
+              '<audio src="s" duration="10" poster="https://example.com"/>'));
+      expect(
+          n.Video(
+                  src: 's',
+                  width: 300,
+                  height: 200,
+                  duration: '10',
+                  poster: 'https://example.com')
+              .toString(),
+          equals(
+              '<video src="s" width="300" height="200" duration="10" poster="https://example.com"/>'));
+      expect(n.File(src: 's', poster: 'https://example.com').toString(),
+          equals('<file src="s" poster="https://example.com"/>'));
     });
 
     test('Modifier', () {
@@ -81,6 +112,24 @@ void main() {
       expect(n.Code('test').toString(), equals('<code>test</code>'));
       expect(n.Superscript('test').toString(), equals('<sup>test</sup>'));
       expect(n.Subscript('test').toString(), equals('<sub>test</sub>'));
+    });
+
+    test('Modifier keeps nested children', () {
+      expect(
+          n.Bold.children([
+            n.Text('x'),
+            n.Underline.children([n.Text('y')])
+          ]).toString(),
+          equals('<b>x<u>y</u></b>'));
+      expect(
+          n.Bold.children([
+            n.Text('x'),
+            n.Underline.children([n.Text('y')])
+          ]),
+          equals(n.parse('<b>x<u>y</u></b>').first));
+      // Round trip after nesting is preserved.
+      final nested = n.parse('<b>x<u>y</u></b>');
+      expect(nested.first.toString(), equals('<b>x<u>y</u></b>'));
     });
   });
 }
