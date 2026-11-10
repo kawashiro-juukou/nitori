@@ -55,10 +55,13 @@ rec {
       body = ''
         set -euo pipefail
         export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
+        export PUB_CACHE=${PUB_CACHE:-/tmp/nitori-pub-cache}
 
         mkdir -p "$PUB_CACHE"
         work=$(mktemp -d)
         cp -r ${src}/. "$work"
+        # The store copy is read-only, but dart pub writes pubspec.lock.
+        chmod -R +w "$work"
         cd "$work"
 
         for pkg in ${lib.concatStringsSep " " packages}; do
@@ -78,6 +81,7 @@ rec {
         name = "nitori-check-sandboxed";
         runtimeInputs = [ pkgs.dart ];
         text = ''
+          # Keep the pub cache out of the user's home during a sandboxed build.
           export HOME=/tmp
           export PUB_CACHE=/tmp/nitori-pub-cache
           ${body}
