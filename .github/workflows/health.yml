@@ -13,8 +13,10 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   health:
-    uses: dart-lang/ecosystem/.github/workflows/health.yaml@main
+    permissions:
+      pull-requests: write
+    # 钉死到 commit SHA；mono_repo 式 dependabot 不管理它，升级时手动 bump。
+    uses: dart-lang/ecosystem/.github/workflows/health.yaml@54e16739d9c15ef0b77e050242c16226ad9235f9

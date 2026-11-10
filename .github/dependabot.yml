@@ -1,0 +1,43 @@
+# Created with package:mono_repo v6.9.0
+{
+  "version": 2,
+  "reviewers": [],
+  "labels": [],
+  "updates": [
+    {
+      "package-ecosystem": "pub",
+      "directory": "pkgs/nitori",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": "pkgs/nitori_client",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": "pkgs/nitori_core",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": "pkgs/nitori_message",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": "pkgs/nitori_server",
+      "schedule": {
+        "interval": "weekly"
+      }
+    }
+  ]
+}

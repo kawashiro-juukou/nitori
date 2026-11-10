@@ -1,24 +1,41 @@
 name: Publish
 
 on:
-  pull_request:
-    branches:
-      - master
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - labeled
-      - unlabeled
   push:
     tags:
       - "[A-z]+-v[0-9]+.[0-9]+.[0-9]+*"
 
 permissions:
   contents: read
-  pull-requests: write
-  id-token: write
 
 jobs:
+  # 改用 dart-lang/setup-dart 的 publish.yml：dart-lang/ecosystem 的
+  # publish.yaml 已标记 DEPRECATED（依赖方迁移完成后将被移除），且 pub.dev
+  # 的 OIDC 可信发布由该 workflow 负责。
+  package:
+    permissions: {}
+    runs-on: ubuntu-latest
+    outputs:
+      directory: ${{ steps.directory.outputs.directory }}
+    steps:
+      # 从 tag 反推包目录，monorepo 单包发布需逐个 tag（如 nitori_message-v1.2.3）。
+      - id: directory
+        name: Find the package directory from the tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          package="${TAG%%-v*}"
+          if [[ ! "$package" =~ ^[a-z_]+$ ]]; then
+            echo "No package directory in tag $TAG."
+            exit 1
+          fi
+          echo "directory=pkgs/$package" >> "$GITHUB_OUTPUT"
+
   publish:
-    uses: dart-lang/ecosystem/.github/workflows/publish.yaml@main
+    needs: package
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
+    with:
+      working-directory: ${{ needs.package.outputs.directory }}
+      use-flutter: false
