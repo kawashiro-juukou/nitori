@@ -80,21 +80,6 @@ enum Opcode {
   final int value;
 }
 
-/// Event type discriminator, kept for backwards compatibility.
-enum EventType {
-  internal(0);
-
-  final int value;
-  const EventType(this.value);
-}
-
-class Event<T> {
-  EventType type;
-  T data;
-
-  Event(this.type, this.data);
-}
-
 /// Converts a `snake_case` wire key to the `camelCase` Dart field name.
 String cashConvertSnakeToCamel(String key) {
   final parts = key.split('_');
