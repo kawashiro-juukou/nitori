@@ -196,9 +196,8 @@ class NitoriClient {
 
 /// A single login: carries the identity headers and exposes the full HTTP API.
 class NitoriBot {
-  NitoriBot(this.client, {Login? login, String? platform, String? userId})
-      : login = login,
-        platform = platform ?? login?.platform ?? '',
+  NitoriBot(this.client, {this.login, String? platform, String? userId})
+      : platform = platform ?? login?.platform ?? '',
         userId = userId ?? login?.user?.id ?? '';
 
   final NitoriClient client;
