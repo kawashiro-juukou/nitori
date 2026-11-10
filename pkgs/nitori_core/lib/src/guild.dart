@@ -4,7 +4,8 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'guild.g.dart';
 
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable(
+    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
 class Guild {
   String id;
   String? name;
@@ -19,6 +20,12 @@ class Guild {
 
 abstract interface class GuildInterface {
   Future<Guild> getGuild(String id);
-  Future<Pagination<Guild>> getGuildList(String? next);
-  Future handleGuildApprove(String messageId, bool approve, String comment);
+
+  Future<Pagination<Guild>> getGuildList({String? next});
+
+  Future<void> handleGuildRequest(String messageId, bool approve,
+      {String? comment});
+
+  Future<void> handleGuildMemberRequest(String messageId, bool approve,
+      {String? comment});
 }

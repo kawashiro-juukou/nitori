@@ -1,20 +1,51 @@
-import './user.dart';
-
 import 'package:json_annotation/json_annotation.dart';
+
+import './base.dart';
+import './guild_role.dart';
+import './user.dart';
 
 part 'guild_member.g.dart';
 
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable(
+    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
 class GuildMember {
   User user;
+  String? name;
   String? nick;
   String? avatar;
-  DateTime? joinedAt;
+  String? title;
 
-  GuildMember({required this.user, this.nick, this.avatar, this.joinedAt});
+  /// Millisecond UNIX timestamp, as defined by the protocol.
+  int? joinedAt;
+
+  List<GuildRole>? roles;
+
+  GuildMember(
+      {required this.user,
+      this.name,
+      this.nick,
+      this.avatar,
+      this.title,
+      this.joinedAt,
+      this.roles});
 
   factory GuildMember.fromJson(Map<String, dynamic> json) =>
       _$GuildMemberFromJson(json);
 
   Map<String, dynamic> toJson() => _$GuildMemberToJson(this);
+}
+
+abstract interface class GuildMemberInterface {
+  Future<GuildMember> getGuildMember(String guildId, String userId);
+
+  Future<Pagination<GuildMember>> getGuildMemberList(String guildId,
+      {String? next});
+
+  /// `duration` and `reason` are only sent when muting; a `null` duration
+  /// unmutes the member.
+  Future<void> muteGuildMember(String guildId, String userId,
+      {int? duration, String? reason});
+
+  Future<void> kickGuildMember(String guildId, String userId,
+      {bool? permanent});
 }

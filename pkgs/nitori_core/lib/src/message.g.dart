@@ -7,8 +7,8 @@ part of 'message.dart';
 // **************************************************************************
 
 Message _$MessageFromJson(Map<String, dynamic> json) => Message(
-      id: json['id'] as String,
-      content: json['content'] as String,
+      id: json['id'] as String?,
+      content: json['content'] as String?,
       channel: json['channel'] == null
           ? null
           : Channel.fromJson(json['channel'] as Map<String, dynamic>),
@@ -21,21 +21,34 @@ Message _$MessageFromJson(Map<String, dynamic> json) => Message(
       user: json['user'] == null
           ? null
           : User.fromJson(json['user'] as Map<String, dynamic>),
-      createdAt: json['created_at'] == null
+      timestamp: json['timestamp'] as int?,
+      quote: json['quote'] == null
           ? null
-          : DateTime.parse(json['created_at'] as String),
-      updatedAt: json['updated_at'] == null
-          ? null
-          : DateTime.parse(json['updated_at'] as String),
+          : Message.fromJson(json['quote'] as Map<String, dynamic>),
+      elements: json['elements'] as List<dynamic>?,
+      createdAt: json['created_at'] as int?,
+      updatedAt: json['updated_at'] as int?,
     );
 
-Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
-      'id': instance.id,
-      'content': instance.content,
-      'channel': instance.channel,
-      'guild': instance.guild,
-      'member': instance.member,
-      'user': instance.user,
-      'created_at': instance.createdAt?.toIso8601String(),
-      'updated_at': instance.updatedAt?.toIso8601String(),
-    };
+Map<String, dynamic> _$MessageToJson(Message instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('id', instance.id);
+  writeNotNull('content', instance.content);
+  writeNotNull('channel', instance.channel?.toJson());
+  writeNotNull('guild', instance.guild?.toJson());
+  writeNotNull('member', instance.member?.toJson());
+  writeNotNull('user', instance.user?.toJson());
+  writeNotNull('timestamp', instance.timestamp);
+  writeNotNull('quote', instance.quote?.toJson());
+  writeNotNull('elements', instance.elements);
+  writeNotNull('created_at', instance.createdAt);
+  writeNotNull('updated_at', instance.updatedAt);
+  return val;
+}
