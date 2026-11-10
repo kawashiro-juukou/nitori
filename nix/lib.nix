@@ -19,20 +19,24 @@ rec {
 
   # The pub cache and generated build artefacts are excluded so they are not
   # copied into the build sandbox; .dart_tool alone is ~60MB here.
-  src = lib.cleanSourceWith {
-    src = ../.;
-    filter =
-      name: type:
-      let
-        baseName = lib.baseNameOf name;
-      in
-      !(
-        lib.cleanSourceFilter name type
-        || baseName == ".dart_tool"
-        || baseName == ".pub-cache"
-        || baseName == "pubspec.lock"
-      );
-  };
+  # Based on the flake's own source path, not `../.`, because only the
+  # git-tracked tree is copied into the store for a flake.
+  src =
+    if self == null then
+      abort "nix/lib.nix: helpers need `self` to filter the repository source"
+    else
+      lib.cleanSourceWith {
+        src = self.outPath;
+        filter =
+          name: type:
+          let
+            baseName = lib.baseNameOf name;
+          in
+          lib.cleanSourceFilter name type
+          && baseName != ".dart_tool"
+          && baseName != ".pub-cache"
+          && baseName != "pubspec.lock";
+      };
 
   # The mark a successful analyze+test run leaves behind.
   successMarker = "nitori: analyze + test passed\n";

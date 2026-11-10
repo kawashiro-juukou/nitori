@@ -20,7 +20,12 @@ in
           }
           ''
             echo "nitori: analyze + test passed" > $out
-            ${helpers.mkCheckScript { inherit pkgs; sandboxed = true; }}/bin/nitori-check-sandboxed
+            ${
+              helpers.mkCheckScript {
+                inherit pkgs;
+                sandboxed = true;
+              }
+            }/bin/nitori-check-sandboxed
           '';
     };
 }

@@ -1,4 +1,9 @@
-{ lib, self, inputs, ... }:
+{
+  lib,
+  self,
+  inputs,
+  ...
+}:
 let
   # The nix/ directory is outside the flake's `specialArgs`, so its helpers are
   # called by hand rather than through the module system.
