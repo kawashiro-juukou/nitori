@@ -11,6 +11,7 @@ in
       apps.default = {
         type = "app";
         program = helpers.mkCheckScript { inherit pkgs; };
+        meta.description = "Run dart analyze and dart test for every package";
       };
     };
 }

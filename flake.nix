@@ -27,6 +27,7 @@
       perSystem = _: {
         treefmt = {
           projectRootFile = "flake.nix";
+          flakeCheck = false;
           programs = {
             dart-format.enable = true;
             nixfmt.enable = true;
