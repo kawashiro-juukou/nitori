@@ -1,8 +1,5 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
+/// Dart client for the Satori protocol.
 library;
 
-export 'src/nitori_client_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/client.dart';
+export 'src/gateway.dart';
