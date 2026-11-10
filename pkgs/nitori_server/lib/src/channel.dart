@@ -13,11 +13,13 @@ final class ChannelController extends BaseController<ChannelInterface> {
 
   @override
   Future<void> handlePost(HttpRequest request) async {
-    final body = await request
-        .cast<List<int>>()
-        .transform(utf8.decoder)
-        .transform(json.decoder)
-        .single as Map<String, dynamic>;
+    final body =
+        await request
+                .cast<List<int>>()
+                .transform(utf8.decoder)
+                .transform(json.decoder)
+                .single
+            as Map<String, dynamic>;
 
     final channel = Channel.fromJson(body);
 

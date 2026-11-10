@@ -183,9 +183,9 @@ void main() {
           equals([
             n.Message(
               children: [
-                n.Code('yarn add nitori\n  yarn run test\n  npm publish')
+                n.Code('yarn add nitori\n  yarn run test\n  npm publish'),
               ],
-            )
+            ),
           ]));
     });
   });
