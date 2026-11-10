@@ -7,6 +7,11 @@ on:
         description: The directory within the repository where the package is located
         required: true
         type: string
+      use-flutter:
+        description: Whether to install the Flutter SDK in addition to the Dart SDK
+        required: false
+        default: false
+        type: boolean
     secrets:
       GH_TOKEN:
         required: false
@@ -27,6 +32,10 @@ jobs:
         uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1
         with:
           sdk: stable
+
+      - name: Set up Flutter
+        if: ${{ inputs.use-flutter }}
+        uses: flutter-actions/setup-flutter@6e2468fd827c4a7337cd4b835a6049b78bc0bd1f
 
       - name: Install dependencies
         run: dart pub get
