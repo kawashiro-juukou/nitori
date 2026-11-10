@@ -2,8 +2,7 @@ name: Publish
 
 # Tags are plain versions (v0.1.0); every package in pkgs/ carries that same
 # version, so this workflow publishes each package that is not marked
-# `publish_to: none`. Add a job below as soon as another package becomes
-# publishable.
+# `publish_to: none`.
 on:
   push:
     tags:
@@ -14,12 +13,43 @@ permissions:
 
 jobs:
   # dart-lang/setup-dart's reusable publish.yml handles the OIDC trusted
-  # publishing flow for pub.dev. Only nitori_message is publishable today;
-  # the other four packages are still marked `publish_to: none`.
+  # publishing flow for pub.dev. Each job publishes one package.
+  publish_core:
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
+    with:
+      working-directory: pkgs/nitori_core
+      use-flutter: false
+
   publish_message:
     permissions:
       id-token: write
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
     with:
       working-directory: pkgs/nitori_message
+      use-flutter: false
+
+  publish_client:
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
+    with:
+      working-directory: pkgs/nitori_client
+      use-flutter: false
+
+  publish_server:
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
+    with:
+      working-directory: pkgs/nitori_server
+      use-flutter: false
+
+  publish_nitori:
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
+    with:
+      working-directory: pkgs/nitori
       use-flutter: false
