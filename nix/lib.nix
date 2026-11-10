@@ -55,7 +55,7 @@ rec {
       body = ''
         set -euo pipefail
         export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
-        export PUB_CACHE=${PUB_CACHE:-/tmp/nitori-pub-cache}
+        export PUB_CACHE=''${PUB_CACHE:-/tmp/nitori-pub-cache}
 
         mkdir -p "$PUB_CACHE"
         work=$(mktemp -d)
