@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3] - 2026-11-11
+
+### Fixed
+- Export event, command, resource and escaping libraries publicly
+- Remove unused placeholder `Event<T>` / `EventType` from base.dart
+
 ## [0.1.2] - 2026-11-11
 
 ### Added
