@@ -4,7 +4,7 @@ Nitori Core provides a set of core classes and utilities for Nitori projects, im
 
 ## Project Structure
 
-Following the [Satori Protocol](https://satori.js.org/zh-CN/resources/channel.html) definition, Nitori Core has the same structure as Satori Protocol.
+Following the [Satori Protocol](https://satori.chat/zh-CN/resources/channel.html) definition, Nitori Core has the same structure as Satori Protocol.
 
 ```
 lib/

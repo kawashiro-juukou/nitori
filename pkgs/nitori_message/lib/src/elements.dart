@@ -66,9 +66,9 @@ class LineBreak extends Base {
 
 /// Represents a `<p>` element.
 ///
-/// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E6%AE%B5%E8%90%BD
+/// See also: https://satori.chat/zh-CN/protocol/elements.html#%E6%AE%B5%E8%90%BD
 class Paragraph extends Base {
-  Paragraph({attributes, children})
+  Paragraph({Map<String, Object?>? attributes, List<Node>? children})
       : super('p', attributes: attributes, children: children);
 }
 
@@ -78,33 +78,33 @@ class Paragraph extends Base {
 
 /// Represents a `<message>` element.
 ///
-/// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E6%B6%88%E6%81%AF
+/// See also: https://satori.chat/zh-CN/protocol/elements.html#%E6%B6%88%E6%81%AF
 class Message extends Base {
   String? id;
   bool? forward;
 
-  Message({this.id, this.forward, children})
+  Message({this.id, this.forward, List<Node>? children})
       : super('message',
             attributes: {'id': id, 'forward': forward}, children: children);
 }
 
 /// Represents a `<quote>` element.
 ///
-/// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E5%BC%95%E7%94%A8
+/// See also: https://satori.chat/zh-CN/protocol/elements.html#%E5%BC%95%E7%94%A8
 class Quote extends Base {
-  Quote({attributes, children})
+  Quote({Map<String, Object?>? attributes, List<Node>? children})
       : super('quote', attributes: attributes, children: children);
 }
 
 /// Represents an `<author>` element.
 ///
-/// See also: https://satori.js.org/zh-CN/protocol/elements.html#%E4%BD%9C%E8%80%85
+/// See also: https://satori.chat/zh-CN/protocol/elements.html#%E4%BD%9C%E8%80%85
 class Author extends Base {
   String? userId;
   String? nickname;
   String? avatar;
 
-  Author({this.userId, this.nickname, this.avatar, children})
+  Author({this.userId, this.nickname, this.avatar, List<Node>? children})
       : super('author',
             attributes: {
               // The official spec uses `id` / `name` / `avatar`; the older

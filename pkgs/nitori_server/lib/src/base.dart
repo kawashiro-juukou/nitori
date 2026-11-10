@@ -6,7 +6,7 @@ base class BaseController<T> {
 
   BaseController(this._interface);
 
-  get prefix => throw UnimplementedError();
+  String get prefix => throw UnimplementedError();
 
   Future<void> handleRequest(HttpRequest request) async {
     try {

@@ -1,7 +1,7 @@
 # Nitori Core
 
 Core module for [Nitori](https://pub.dev/packages/nitori), a Dart
-implementation of the [Satori Protocol](https://satori.network/).
+implementation of the [Satori Protocol](https://satori.chat/).
 
 Provides the protocol data models (User, Guild, Channel, Message, Login, ...),
 the `Methods` registry entries, and wire-format helpers such as

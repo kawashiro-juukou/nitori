@@ -1,6 +1,6 @@
 # Nitori
 
-A Dart implementation for the [Satori Protocol](https://satori.network/).
+A Dart implementation for the [Satori Protocol](https://satori.chat/).
 
 This is the umbrella package for the Nitori monorepo. It re-exports the
 sub-packages:
