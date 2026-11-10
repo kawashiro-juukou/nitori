@@ -1,6 +1,6 @@
 name: nitori
 description: A Dart Implementation for Satori Protocol
-version: 0.0.1
+version: 0.1.0
 # repository: https://github.com/my_org/my_repo
 
 # Note: remove this line when we want to publish this package.

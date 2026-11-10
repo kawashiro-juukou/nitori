@@ -1,6 +1,6 @@
 name: nitori_server
 description: Dart Server Implementation for Satori Protocol.
-version: 1.0.0
+version: 0.1.0
 # repository: https://github.com/my_org/my_repo
 
 # Note: remove this line when we want to publish this package.
@@ -11,7 +11,7 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  nitori_core: ^1.0.0
+  nitori_core: ^0.1.0
 
 dependency_overrides:
   nitori_core:
