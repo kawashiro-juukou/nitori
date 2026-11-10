@@ -205,6 +205,31 @@ class Subscript extends Modifier {
 
 // #endregion
 
+// #region Experimental
+
+/// Represents a `<button>` element.
+///
+/// See also: https://satori.chat/zh-CN/protocol/elements.html#%E6%8C%89%E9%92%AE-%E5%AE%9E%E9%AA%8C%E6%80%A7
+class Button extends Base {
+  String? id;
+
+  Button(
+    String text, {
+    this.id,
+    Map<String, Object?>? attributes,
+  }) : super('button',
+            attributes: {...?attributes, 'id': id}, children: [Text(text)]);
+
+  Button.children(
+    List<Node> children, {
+    this.id,
+    Map<String, Object?>? attributes,
+  }) : super('button',
+            attributes: {...?attributes, 'id': id}, children: children);
+}
+
+// #endregion
+
 // #region Resource
 
 /// Abstract class for resource elements.

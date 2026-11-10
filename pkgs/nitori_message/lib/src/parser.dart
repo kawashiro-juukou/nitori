@@ -111,6 +111,8 @@ Node? _createTag(
           nickname:
               _string(attributes, 'name') ?? _string(attributes, 'nickname'),
           avatar: _string(attributes, 'avatar'));
+    case 'button':
+      return Button.children(children, id: _string(attributes, 'id'));
     default:
       return Base(tag, attributes: attributes, children: children);
   }
@@ -214,6 +216,13 @@ class Parser {
       var attributes = <String, Object>{};
       var children = <Node>[];
 
+      var tagNameIndex = tagName.indexOf(' ');
+      var attributesStr = tagNameIndex == -1
+          ? ''
+          : tagName.substring(tagNameIndex + 1, tagName.length);
+      tagName =
+          tagNameIndex == -1 ? tagName : tagName.substring(0, tagNameIndex);
+
       if (!isClosingTag && !isSelfClosingTag) {
         // Parse attributes and children
         while (tokenizer.hasNext() && !tokenizer.peek()!.startsWith('</')) {
@@ -236,13 +245,6 @@ class Parser {
       // A newline right next to a tag is layout noise; other whitespace is
       // kept, matching the official parser.
       _trimNext = true;
-
-      var tagNameIndex = tagName.indexOf(' ');
-      var attributesStr = tagNameIndex == -1
-          ? ''
-          : tagName.substring(tagNameIndex + 1, tagName.length);
-      tagName =
-          tagNameIndex == -1 ? tagName : tagName.substring(0, tagNameIndex);
 
       // Parse attributes; values may be double-quoted, single-quoted or bare.
       // The single-quote alternatives are assembled from a code point to keep

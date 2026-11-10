@@ -114,4 +114,4 @@ print(message);
 | `Message` | [`<message>`](https://satori.chat/zh-CN/protocol/elements.html#%E6%B6%88%E6%81%AF) | |
 | `Quote` | [`<quote>`](https://satori.chat/zh-CN/protocol/elements.html#%E5%BC%95%E7%94%A8) | |
 | `Author` | [`<author>`](https://satori.chat/zh-CN/protocol/elements.html#%E4%BD%9C%E8%80%85) | |
-| `Button` | [`<button>`](https://satori.chat/zh-CN/protocol/elements.html#%E6%8C%89%E9%92%AE-%E5%AE%9E%E9%AA%8C%E6%80%A7) | **Not implemented yet** |
+| `Button` | [`<button>`](https://satori.chat/zh-CN/protocol/elements.html#%E6%8C%89%E9%92%AE-%E5%AE%9E%E9%AA%8C%E6%80%A7) | Represent an interactive button. |

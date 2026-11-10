@@ -114,6 +114,17 @@ void main() {
       expect(n.Subscript('test').toString(), equals('<sub>test</sub>'));
     });
 
+    test('Experimental', () {
+      expect(n.Button('Hi').toString(), equals('<button>Hi</button>'));
+      expect(n.Button('Hi', id: 'x').toString(),
+          equals('<button id="x">Hi</button>'));
+      expect(n.Button.children([n.Text('Hi')], id: 'x').toString(),
+          equals('<button id="x">Hi</button>'));
+      expect(
+          n.Button('Hi', id: 'x', attributes: {'class': 'primary'}).toString(),
+          equals('<button class="primary" id="x">Hi</button>'));
+    });
+
     test('Modifier keeps nested children', () {
       expect(
           n.Bold.children([

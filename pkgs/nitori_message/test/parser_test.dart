@@ -189,6 +189,18 @@ void main() {
       expect(n.parse('<sub>test</sub>'), equals([n.Subscript('test')]));
     });
 
+    test('Experimental', () {
+      expect(
+          n.parse('<button id="x">Hi</button>'),
+          equals([
+            n.Button.children([n.Text('Hi')], id: 'x')
+          ]));
+      expect(n.parse('<button id="x">Hi</button>').first.toString(),
+          equals('<button id="x">Hi</button>'));
+      expect(n.parse('<button id="x"/>'),
+          equals([n.Button.children([], id: 'x')]));
+    });
+
     test('Modifier preserves nesting and round trips', () {
       expect(
           n.parse('<b>x<u>y</u></b>'),
