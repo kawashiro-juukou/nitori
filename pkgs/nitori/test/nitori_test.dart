@@ -2,15 +2,16 @@ import 'package:nitori/nitori.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('A group of tests', () {
-    final awesome = Awesome();
+  group('Umbrella exports', () {
+    test('re-exports core models', () {
+      var channel = Channel(id: '001', type: ChannelType.text);
 
-    setUp(() {
-      // Additional setup goes here.
+      expect(channel.toJson(), containsPair('id', '001'));
+      expect(channel.toJson(), containsPair('type', 0));
     });
 
-    test('First Test', () {
-      expect(awesome.isAwesome, isTrue);
+    test('re-exports message parser', () {
+      expect(parse('<b>Hello</b>'), equals([Bold('Hello')]));
     });
   });
 }
