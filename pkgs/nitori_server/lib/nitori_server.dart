@@ -1,4 +1,6 @@
+/// Dart server implementation of the Satori protocol.
 library;
 
-export 'src/base.dart';
-export 'src/channel.dart';
+export 'src/adapter.dart';
+export 'src/in_memory_adapter.dart';
+export 'src/server.dart';
