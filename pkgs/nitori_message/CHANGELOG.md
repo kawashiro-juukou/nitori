@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2026-11-11
+
+### Added
+- Runnable `example/nitori_message_example.dart`
+
 ## [0.1.3] - 2026-11-11
 
 ### Changed
