@@ -25,7 +25,9 @@ Message _$MessageFromJson(Map<String, dynamic> json) => Message(
       quote: json['quote'] == null
           ? null
           : Message.fromJson(json['quote'] as Map<String, dynamic>),
-      elements: json['elements'] as List<dynamic>?,
+      elements: (json['elements'] as List<dynamic>?)
+          ?.map((e) => e as Map<String, dynamic>)
+          .toList(),
       createdAt: json['created_at'] as int?,
       updatedAt: json['updated_at'] as int?,
     );

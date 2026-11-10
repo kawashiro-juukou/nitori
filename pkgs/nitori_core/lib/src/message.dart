@@ -24,11 +24,11 @@ class Message {
   /// Quoted message, recursively nested.
   Message? quote;
 
-  /// Structured elements of the message.
+  /// Structured elements of the message, in their wire form.
   ///
-  /// The element models live in `nitori_message`; depending on it here would
-  /// invert the package graph, so the field stays untyped on the wire.
-  List<dynamic>? elements;
+  /// The typed element models live in `nitori_message`; depending on it here
+  /// would invert the package graph, so the field is a structural element map.
+  List<Map<String, Object?>>? elements;
 
   /// Millisecond UNIX timestamps, as defined by the protocol.
   int? createdAt;

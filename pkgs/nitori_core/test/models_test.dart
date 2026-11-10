@@ -181,6 +181,34 @@ void main() {
       expect((encoded['quote'] as Map)['quote']['content'], 'deepest');
       expect(encoded, json);
     });
+
+    test('round-trips structured elements as element maps', () {
+      final elements = <Map<String, Object?>>[
+        {
+          'tag': 'text',
+          'attrs': <String, Object?>{},
+          'children': <Object?>[],
+        },
+        {
+          'tag': 'img',
+          'attrs': <String, Object?>{'src': 'https://example.com/a.png'},
+          'children': <Object?>[],
+        },
+      ];
+
+      final message = Message(id: 'message-1', elements: elements);
+      final encoded = message.toJson();
+
+      expect(encoded['elements'], isA<List<Map<String, Object?>>>());
+
+      final decoded = Message.fromJson(encoded);
+
+      expect(decoded.elements, isA<List<Map<String, Object?>>>());
+      expect(decoded.elements, elements);
+      expect(decoded.elements!.first['tag'], 'text');
+      expect(decoded.elements!.last['attrs'],
+          {'src': 'https://example.com/a.png'});
+    });
   });
 
   group('Friend', () {
