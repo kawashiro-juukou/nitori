@@ -10,35 +10,46 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
+  # dart-lang/setup-dart's reusable publish.yml handles the OIDC trusted
+  # publishing flow for pub.dev. Each job publishes one package.
   publish_core:
-    uses: ./.github/workflows/_publish-package.yml
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
     with:
       working-directory: pkgs/nitori_core
-    secrets: inherit
+      use-flutter: false
 
   publish_message:
-    uses: ./.github/workflows/_publish-package.yml
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
     with:
       working-directory: pkgs/nitori_message
-    secrets: inherit
+      use-flutter: false
 
   publish_client:
-    uses: ./.github/workflows/_publish-package.yml
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
     with:
       working-directory: pkgs/nitori_client
-    secrets: inherit
+      use-flutter: false
 
   publish_server:
-    uses: ./.github/workflows/_publish-package.yml
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
     with:
       working-directory: pkgs/nitori_server
-    secrets: inherit
+      use-flutter: false
 
   publish_nitori:
-    uses: ./.github/workflows/_publish-package.yml
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
     with:
       working-directory: pkgs/nitori
-    secrets: inherit
+      use-flutter: false
