@@ -4,15 +4,14 @@ version: 0.1.0
 repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori_core
 issue_tracker: https://github.com/kawashiro-juukou/nitori/issues
 
-# Note: remove this line when we want to publish this package.
-publish_to: none
+
 
 environment:
   sdk: ^3.1.4
 
 # Add regular dependencies here.
 dependencies:
-  json_annotation: '4.8.1'
+  json_annotation: ^4.8.1
 
 dev_dependencies:
   lints: ^2.0.0

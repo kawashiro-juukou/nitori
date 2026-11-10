@@ -1,3 +1,7 @@
+## 0.1.0
+
+- Aligned with the unified monorepo version.
+
 ## 0.0.2
 
 - Break: fix `ChannelType` wire values (TEXT=0, DIRECT=1, CATEGORY=2, VOICE=3)

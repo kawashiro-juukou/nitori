@@ -1,10 +1,9 @@
 name: nitori_client
 description: Dart Client Implementation for Satori Protocol.
 version: 0.1.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori_client
 
-# Note: remove this line when we want to publish this package.
-publish_to: none
+
 
 environment:
   sdk: ^3.1.4

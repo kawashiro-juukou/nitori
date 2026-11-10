@@ -1,3 +1,7 @@
+## 0.1.0
+
+- Aligned with the unified monorepo version.
+
 ## 0.0.1+2
 
 - Added comments and documents for every exposed class and function. ([#14](https://github.com/kawashiro-juukou/nitori/pull/14))

@@ -1,3 +1,3 @@
-## 1.0.0
+## 0.1.0
 
-- Initial version.
+- Initial scaffold aligned with the unified monorepo version (previous 1.0.0 was premature).
