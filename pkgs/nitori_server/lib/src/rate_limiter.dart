@@ -70,7 +70,8 @@ class _TokenBucket {
   void _refill() {
     final now = DateTime.now().millisecondsSinceEpoch;
     final elapsedSeconds = (now - _lastRefillMs) / 1000.0;
-    _tokens = (_tokens + elapsedSeconds * refillRatePerSecond).clamp(0.0, capacity.toDouble());
+    _tokens = (_tokens + elapsedSeconds * refillRatePerSecond)
+        .clamp(0.0, capacity.toDouble());
     _lastRefillMs = now;
   }
 }
@@ -88,10 +89,12 @@ class RateLimiter {
   );
 
   _TokenBucket _getBucket(String key) {
-    return _buckets.putIfAbsent(key, () => _TokenBucket(
-      config.maxRequests,
-      config.maxRequests / (config.window.inMilliseconds / 1000.0),
-    ));
+    return _buckets.putIfAbsent(
+        key,
+        () => _TokenBucket(
+              config.maxRequests,
+              config.maxRequests / (config.window.inMilliseconds / 1000.0),
+            ));
   }
 
   /// Extracts the rate limit key from an HTTP request.
@@ -99,21 +102,23 @@ class RateLimiter {
     switch (config.scope) {
       case RateLimitScope.ip:
         return request.connectionInfo?.remoteAddress.address;
-      case RateLimitScope.identity: {
-        final platform = request.headers.value('satori-platform');
-        final userId = request.headers.value('satori-user-id');
-        if (platform != null && userId != null) {
-          return '$platform:$userId';
+      case RateLimitScope.identity:
+        {
+          final platform = request.headers.value('satori-platform');
+          final userId = request.headers.value('satori-user-id');
+          if (platform != null && userId != null) {
+            return '$platform:$userId';
+          }
+          return request.connectionInfo?.remoteAddress.address;
         }
-        return request.connectionInfo?.remoteAddress.address;
-      }
-      case RateLimitScope.token: {
-        final auth = request.headers.value('authorization');
-        if (auth != null && auth.startsWith('Bearer ')) {
-          return auth.substring('Bearer '.length);
+      case RateLimitScope.token:
+        {
+          final auth = request.headers.value('authorization');
+          if (auth != null && auth.startsWith('Bearer ')) {
+            return auth.substring('Bearer '.length);
+          }
+          return request.connectionInfo?.remoteAddress.address;
         }
-        return request.connectionInfo?.remoteAddress.address;
-      }
       case RateLimitScope.global:
         return 'global';
     }
@@ -125,19 +130,21 @@ class RateLimiter {
       case RateLimitScope.ip:
         // IP not available at identify time, fallback to token/identity
         return _wsIdentifyKeyFallback(identify);
-      case RateLimitScope.identity: {
-        final platform = identify['platform'] as String?;
-        final userId = identify['user_id'] as String?;
-        if (platform != null && userId != null) {
-          return '$platform:$userId';
+      case RateLimitScope.identity:
+        {
+          final platform = identify['platform'] as String?;
+          final userId = identify['user_id'] as String?;
+          if (platform != null && userId != null) {
+            return '$platform:$userId';
+          }
+          return _wsIdentifyKeyFallback(identify);
         }
-        return _wsIdentifyKeyFallback(identify);
-      }
-      case RateLimitScope.token: {
-        final token = identify['token'] as String?;
-        if (token != null) return token;
-        return _wsIdentifyKeyFallback(identify);
-      }
+      case RateLimitScope.token:
+        {
+          final token = identify['token'] as String?;
+          if (token != null) return token;
+          return _wsIdentifyKeyFallback(identify);
+        }
       case RateLimitScope.global:
         return 'global';
     }
@@ -160,7 +167,8 @@ class RateLimiter {
     if (!config.enabled) return null;
     final key = _httpKey(request);
     if (key == null) return null;
-    final bucket = config.scope == RateLimitScope.global ? _globalBucket : _getBucket(key);
+    final bucket =
+        config.scope == RateLimitScope.global ? _globalBucket : _getBucket(key);
     if (!bucket.tryConsume(1)) {
       return bucket.retryAfterMs(1);
     }
@@ -173,7 +181,8 @@ class RateLimiter {
     if (!config.enabled) return null;
     final key = _wsIdentifyKey(identify);
     if (key == null) return null;
-    final bucket = config.scope == RateLimitScope.global ? _globalBucket : _getBucket(key);
+    final bucket =
+        config.scope == RateLimitScope.global ? _globalBucket : _getBucket(key);
     if (!bucket.tryConsume(1)) {
       return bucket.retryAfterMs(1);
     }
@@ -184,7 +193,8 @@ class RateLimiter {
   /// Returns null if allowed, or retry-after milliseconds if rate limited.
   int? checkWsEvent(String key) {
     if (!config.enabled) return null;
-    final bucket = config.scope == RateLimitScope.global ? _globalBucket : _getBucket(key);
+    final bucket =
+        config.scope == RateLimitScope.global ? _globalBucket : _getBucket(key);
     if (!bucket.tryConsume(1)) {
       return bucket.retryAfterMs(1);
     }
