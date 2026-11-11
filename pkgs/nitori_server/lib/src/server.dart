@@ -11,6 +11,7 @@ import 'package:mime/mime.dart';
 import 'package:nitori_core/nitori_core.dart';
 
 import 'adapter.dart';
+import 'rate_limiter.dart';
 
 /// Constant-time string equality check to avoid timing side-channels.
 bool _constantTimeEquals(String a, String b) {
@@ -34,9 +35,10 @@ class _BufferedEvent {
 
 /// One connected gateway client.
 class _GatewayClient {
-  _GatewayClient(this.socket);
+  _GatewayClient(this.socket, this.remoteAddress);
 
   final WebSocket socket;
+  final String? remoteAddress;
   bool authorized = false;
 }
 
@@ -64,6 +66,9 @@ class SatoriServer {
     this.resumeTimeout = const Duration(minutes: 5),
     this.maxRequestBodySize = 32 * 1024 * 1024,
     this.maxBufferSize = 1000,
+    this.httpRateLimit,
+    this.wsConnectRateLimit,
+    this.wsEventRateLimit,
   });
 
   /// Platform integration providing bots and events.
@@ -82,8 +87,24 @@ class SatoriServer {
   /// Largest number of events kept in the replay buffer.
   final int maxBufferSize;
 
+  /// Rate limit configuration for HTTP API requests (`/v1/*`).
+  final RateLimiterConfig? httpRateLimit;
+
+  /// Rate limit configuration for WebSocket connections (IDENTIFY).
+  final RateLimiterConfig? wsConnectRateLimit;
+
+  /// Rate limit configuration for WebSocket event frames (upstream).
+  final RateLimiterConfig? wsEventRateLimit;
+
   final Set<_GatewayClient> _clients = <_GatewayClient>{};
   final ListQueue<_BufferedEvent> _buffer = ListQueue<_BufferedEvent>();
+
+  late final RateLimiter? _httpRateLimiter =
+      httpRateLimit != null ? RateLimiter(httpRateLimit!) : null;
+  late final RateLimiter? _wsConnectRateLimiter =
+      wsConnectRateLimit != null ? RateLimiter(wsConnectRateLimit!) : null;
+  late final RateLimiter? _wsEventRateLimiter =
+      wsEventRateLimit != null ? RateLimiter(wsEventRateLimit!) : null;
 
   int _sequence = 0;
   HttpServer? _server;
@@ -136,13 +157,26 @@ class SatoriServer {
 
   Future<void> _handleRequest(HttpRequest request) async {
     try {
+      // HTTP rate limiting check (applies to all /v1/* endpoints)
+      int? httpRetryAfter;
+      try {
+        httpRetryAfter = _httpRateLimiter?.checkHttp(request);
+      } catch (e, st) {
+        _report(e, st);
+      }
+      if (httpRetryAfter != null) {
+        await _sendRateLimitError(request, httpRetryAfter);
+        return;
+      }
+
       if (request.uri.path == '/v1/events') {
         if (!WebSocketTransformer.isUpgradeRequest(request)) {
           await _sendError(request, HttpStatus.upgradeRequired,
               'WebSocket upgrade required');
           return;
         }
-        _attach(await WebSocketTransformer.upgrade(request));
+        _attach(await WebSocketTransformer.upgrade(request),
+            remoteAddress: request.connectionInfo?.remoteAddress.address);
         return;
       }
 
@@ -165,6 +199,20 @@ class SatoriServer {
     } catch (_) {
       await _sendError(
           request, HttpStatus.internalServerError, 'Internal Server Error');
+    }
+  }
+
+  Future<void> _sendRateLimitError(
+      HttpRequest request, int retryAfterMs) async {
+    try {
+      final seconds = (retryAfterMs / 1000).ceil();
+      request.response
+        ..statusCode = HttpStatus.tooManyRequests
+        ..headers.set('Retry-After', seconds.toString())
+        ..write('Too Many Requests');
+      await request.response.close();
+    } catch (_) {
+      return;
     }
   }
 
@@ -577,8 +625,8 @@ class SatoriServer {
     return headerValue.parameters['name'] ?? 'file$index';
   }
 
-  void _attach(WebSocket socket) {
-    final client = _GatewayClient(socket);
+  void _attach(WebSocket socket, {String? remoteAddress}) {
+    final client = _GatewayClient(socket, remoteAddress);
     _clients.add(client);
     // Pings reap sockets whose peer vanished without closing.
     socket.pingInterval = const Duration(seconds: 30);
@@ -603,6 +651,21 @@ class SatoriServer {
       return;
     }
 
+    // WS event rate limiting check (for any upstream frame from authorized client)
+    if (client.authorized && _wsEventRateLimiter != null) {
+      int? wsEventRetryAfter;
+      try {
+        final ip = client.remoteAddress ?? 'unknown';
+        wsEventRetryAfter = _wsEventRateLimiter.checkWsEvent(ip);
+      } catch (e, st) {
+        _report(e, st);
+      }
+      if (wsEventRetryAfter != null) {
+        unawaited(client.socket.close(4029, 'rate limited'));
+        return;
+      }
+    }
+
     final body = payload['body'];
     final identify =
         body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
@@ -610,6 +673,18 @@ class SatoriServer {
     switch (payload['op']) {
       // Opcode.identify
       case 3:
+        // WS connection rate limiting check
+        int? wsConnectRetryAfter;
+        try {
+          wsConnectRetryAfter = _wsConnectRateLimiter?.checkWsConnect(identify);
+        } catch (e, st) {
+          _report(e, st);
+        }
+        if (wsConnectRetryAfter != null) {
+          unawaited(client.socket.close(4029, 'rate limited'));
+          return;
+        }
+
         if (token != null) {
           final provided = identify['token'];
           if (provided is! String || !_constantTimeEquals(provided, token!)) {
