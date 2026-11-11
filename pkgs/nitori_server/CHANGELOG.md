@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.10] - 2026-11-11
+
+### Added
+- Configurable rate limiting (token bucket) for HTTP API and WebSocket gateway
+  - Scopes: IP, identity (platform + user ID), token, global
+  - HTTP rate limit returns 429 with Retry-After header
+  - WebSocket connect/event rate limiting
+  - Default disabled for backward compatibility
+
+### Changed
+- Unified version bump across the monorepo
+
 ## [0.1.9] - 2026-11-11
 
 ### Added
