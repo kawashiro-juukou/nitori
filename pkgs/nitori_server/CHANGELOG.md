@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.9] - 2026-11-11
+
+### Added
+- Documentation comments for all public APIs
+
+### Fixed
+- Deep copy Event in `_publish` to prevent adapter mutation from affecting replay buffer
+- Reject duplicate multipart part names in `upload.create`
+
+### Changed
+- Unified version bump across the monorepo
+
 ## [0.1.8] - 2026-11-11
 
 ### Changed

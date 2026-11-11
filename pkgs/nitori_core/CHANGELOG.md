@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.9] - 2026-11-11
+
+### Added
+- `Event.deepCopy()` and `Message.deepCopy()` for deep isolation of nested objects
+
+### Changed
+- Unified version bump across the monorepo
+
 ## [0.1.8] - 2026-11-11
 
 ### Changed
