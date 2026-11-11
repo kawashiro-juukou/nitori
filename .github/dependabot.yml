@@ -6,6 +6,286 @@
   "updates": [
     {
       "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_core",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_message",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_server",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_client",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_core",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_message",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_server",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a6240d279e3809874/pkgs/nitori",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_client",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_core",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_message",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_server",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_client",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_core",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_message",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_server",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_client",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_core",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_message",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_server",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_client",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_core",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_message",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_client",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_core",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_message",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
+      "directory": ".direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_server",
+      "schedule": {
+        "interval": "weekly"
+      }
+    },
+    {
+      "package-ecosystem": "pub",
       "directory": "pkgs/nitori",
       "schedule": {
         "interval": "weekly"
