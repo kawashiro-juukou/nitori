@@ -182,4 +182,174 @@ void main() {
 
     await second.close();
   });
+
+  test('an unserializable event does not drop the clients', () async {
+    final connection = await identify();
+
+    // referrer is dynamic, so an adapter can smuggle in anything at all.
+    adapter.emit(Event(
+      type: 'message-created',
+      login: bot.login,
+      referrer: _Unencodable(),
+    ));
+    adapter.emit(Event(type: 'channel-added', login: bot.login));
+
+    await waitFor(() => connection.frames.any((frame) =>
+        (frame['body'] as Map<String, dynamic>)['type'] == 'channel-added'));
+    final events = connection.frames
+        .where((frame) => frame['op'] == 0)
+        .map((frame) => frame['body'] as Map<String, dynamic>);
+    expect(events.single['type'], 'channel-added');
+
+    // The connection survived: PING still answers PONG.
+    connection.send(1);
+    await waitFor(() => connection.frames.any((frame) => frame['op'] == 2));
+
+    await connection.close();
+  });
+
+  test('IDENTIFY with sn 0 does not replay', () async {
+    final first = await identify();
+    await first.socket.close();
+    await first.socket.done;
+
+    adapter.emit(Event(type: 'channel-added', login: bot.login));
+
+    final second = await identify(sn: 0);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    expect(
+      second.frames.where((frame) => frame['op'] == 0),
+      isEmpty,
+    );
+
+    await second.close();
+  });
+
+  test('login events are broadcast but never replayed', () async {
+    final connection = await identify();
+    adapter.emit(Event(type: 'login-added', login: bot.login));
+    await waitFor(
+        () => connection.frames.where((frame) => frame['op'] == 0).isNotEmpty);
+
+    await connection.close();
+    await connection.socket.done;
+
+    adapter.emit(Event(type: 'channel-added', login: bot.login));
+
+    final second = await identify(sn: 1);
+    final replayed = second.frames
+        .where((frame) => frame['op'] == 0)
+        .map((frame) => frame['body'] as Map<String, dynamic>)
+        .toList();
+
+    expect(replayed.map((event) => event['type']), <String>['channel-added']);
+
+    await second.close();
+  });
+
+  test('publishing one event twice assigns incrementing sn', () async {
+    final connection = await identify();
+    final event = Event(type: 'channel-added', login: bot.login);
+
+    adapter.emit(event);
+    adapter.emit(event);
+
+    await waitFor(
+        () => connection.frames.where((frame) => frame['op'] == 0).isNotEmpty);
+    final sns = connection.frames
+        .where((frame) => frame['op'] == 0)
+        .map((frame) => (frame['body'] as Map<String, dynamic>)['sn'])
+        .toList();
+
+    expect(sns, <int>[1, 2]);
+    // The caller's own object was never mutated.
+    expect(event.sn, isNull);
+
+    await connection.close();
+  });
+
+  test('a stale adapter timestamp still replays within resumeTimeout',
+      () async {
+    final connection = await identify();
+    adapter.emit(Event(
+      type: 'channel-added',
+      login: bot.login,
+      timestamp: 0,
+    ));
+    adapter.emit(Event(
+      type: 'channel-deleted',
+      login: bot.login,
+      timestamp: 0,
+    ));
+    await waitFor(
+        () => connection.frames.where((frame) => frame['op'] == 0).length >= 2);
+
+    await connection.close();
+    await connection.socket.done;
+
+    final second = await identify(sn: 1);
+    await waitFor(
+        () => second.frames.where((frame) => frame['op'] == 0).isNotEmpty);
+
+    final replayed = second.frames
+        .where((frame) => frame['op'] == 0)
+        .map((frame) => frame['body'] as Map<String, dynamic>)
+        .toList();
+    expect(replayed.map((event) => event['type']), <String>['channel-deleted']);
+    // The wire timestamp is whatever the adapter supplied.
+    expect(replayed.single['timestamp'], 0);
+
+    await second.close();
+  });
+
+  test('an error on the adapter stream does not stop publishing', () async {
+    final controller = StreamController<Event>.broadcast();
+    final failing = SatoriServer(
+      adapter: _StreamAdapter(controller.stream, bot),
+    );
+    final failingPort = (await failing.bind(
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+    ))
+        .port;
+    addTearDown(failing.close);
+
+    final connection = _Connection(
+        await WebSocket.connect('ws://127.0.0.1:$failingPort/v1/events'));
+    connection.send(3, <String, dynamic>{});
+    await waitFor(() => connection.frames.any((frame) => frame['op'] == 4));
+
+    controller.addError(StateError('adapter blew up'));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    controller.add(Event(type: 'channel-added', login: bot.login));
+
+    await waitFor(() => connection.frames.any((frame) =>
+        (frame['body'] as Map<String, dynamic>)['type'] == 'channel-added'));
+
+    await connection.close();
+    await controller.close();
+  });
+}
+
+/// Never JSON-encodable: `toJson` passes it through and `jsonEncode` throws.
+class _Unencodable {
+  @override
+  String toString() => 'unencodable';
+}
+
+/// An adapter that serves [bot] over an event stream the test controls, so
+/// errors can be injected into it.
+class _StreamAdapter extends SatoriAdapter {
+  _StreamAdapter(this.source, this.bot);
+
+  final Stream<Event> source;
+
+  @override
+  Stream<Event> get events => source;
+
+  final InMemoryBot bot;
+
+  @override
+  List<SatoriBot> get bots => <SatoriBot>[bot];
 }

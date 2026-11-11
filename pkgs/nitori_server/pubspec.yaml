@@ -18,6 +18,7 @@ platforms:
 
 # Add regular dependencies here.
 dependencies:
+  mime: ^2.0.0
   nitori_core: ^0.1.0
 
 dependency_overrides:

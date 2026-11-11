@@ -175,6 +175,28 @@ void main() {
     expect(response.body, 'method not found');
   });
 
+  test('a method the adapter does not implement answers 404', () async {
+    // Use a stub bot with no overrides: every capability throws
+    // UnimplementedError.
+    final stubServer = await SatoriServer(
+      adapter: _StubAdapter(),
+    ).bind(address: InternetAddress.loopbackIPv4, port: 0);
+    addTearDown(stubServer.close);
+
+    final request =
+        await client.post('127.0.0.1', stubServer.port, '/v1/channel.get');
+    request.headers
+      ..set('satori-platform', 'stub')
+      ..set('satori-user-id', 'stub-1')
+      ..contentType = ContentType.json;
+    request.write('{"channel_id":"c1"}');
+    final response = await request.close();
+    final body = await utf8.decoder.bind(response).join();
+
+    expect(response.statusCode, HttpStatus.notFound);
+    expect(body, 'method not supported');
+  });
+
   test('non-POST requests answer 405', () async {
     final request = await client.get('127.0.0.1', port, '/v1/channel.get');
     request.headers.set('authorization', 'Bearer secret');
@@ -217,6 +239,31 @@ void main() {
 
     expect(response.statusCode, HttpStatus.ok);
     expect(jsonDecode(body), <String, dynamic>{'file': 'memory://upload/1'});
+  });
+
+  test('a boundary inside the file content does not split the part', () async {
+    // The old hand-rolled scanner matched any occurrence of the boundary
+    // bytes; a body containing them must still upload as one part.
+    const boundary = 'sep';
+    final request = await client.post('127.0.0.1', port, '/v1/upload.create');
+    request.headers
+      ..set('authorization', 'Bearer secret')
+      ..set('satori-platform', 'memory')
+      ..set('satori-user-id', 'bot-1')
+      ..set('content-type', 'multipart/form-data; boundary=$boundary');
+    request.add(utf8.encode(
+      '--$boundary\r\n'
+      'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
+      '\r\n'
+      'text before --sep in the middle\r\n'
+      '--$boundary--\r\n',
+    ));
+    final response = await request.close();
+    final body = await utf8.decoder.bind(response).join();
+
+    expect(response.statusCode, HttpStatus.ok);
+    // One part, one upload key – not split at the embedded occurrence.
+    expect(jsonDecode(body).keys, <String>{'file'});
   });
 
   test('message.list returns a BidiList payload', () async {
@@ -262,4 +309,32 @@ void main() {
 
     expect(response.statusCode, HttpStatus.requestEntityTooLarge);
   });
+}
+
+/// A bot with no overrides at all: every capability throws
+/// [UnimplementedError].
+class _StubBot extends SatoriBot {
+  @override
+  Login get login => Login(
+        status: Status.online,
+        user: User(id: 'stub-1', name: 'Stub'),
+        platform: 'stub',
+        sn: 1,
+      );
+
+  @override
+  String get platform => 'stub';
+
+  @override
+  String get userId => 'stub-1';
+}
+
+class _StubAdapter extends SatoriAdapter {
+  final _StubBot bot = _StubBot();
+
+  @override
+  List<SatoriBot> get bots => <SatoriBot>[bot];
+
+  @override
+  Stream<Event> get events => const Stream<Event>.empty();
 }
