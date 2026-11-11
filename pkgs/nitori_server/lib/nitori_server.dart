@@ -6,4 +6,6 @@ library;
 
 export 'src/adapter.dart' show SatoriAdapter, SatoriBot;
 export 'src/in_memory_adapter.dart' show InMemoryAdapter, InMemoryBot;
+export 'src/rate_limiter.dart'
+    show RateLimitScope, RateLimiterConfig, RateLimiter;
 export 'src/server.dart' show SatoriServer;
