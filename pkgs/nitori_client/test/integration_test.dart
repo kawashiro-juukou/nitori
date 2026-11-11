@@ -155,7 +155,8 @@ void main() {
       expect(ids, containsAll(['c1', 'c2']));
     });
 
-    test('message.create returns message ID and message.get retrieves it', () async {
+    test('message.create returns message ID and message.get retrieves it',
+        () async {
       final create = await post('message.create',
           <String, dynamic>{'channel_id': 'c1', 'content': 'hello world'});
       expect(create.statusCode, HttpStatus.ok);
@@ -181,26 +182,25 @@ void main() {
       }
 
       // Default list
-      var list = await post('message.list',
-          <String, dynamic>{'channel_id': 'c1'});
+      var list =
+          await post('message.list', <String, dynamic>{'channel_id': 'c1'});
       expect(list.statusCode, HttpStatus.ok);
       var body = jsonDecode(list.body) as Map<String, dynamic>;
       expect((body['data'] as List).length, greaterThanOrEqualTo(5));
 
       // With limit
-      list = await post('message.list',
-          <String, dynamic>{'channel_id': 'c1', 'limit': 2});
+      list = await post(
+          'message.list', <String, dynamic>{'channel_id': 'c1', 'limit': 2});
       body = jsonDecode(list.body) as Map<String, dynamic>;
       expect((body['data'] as List).length, 2);
 
       // With direction=after and order=desc (newest first)
-      list = await post('message.list',
-          <String, dynamic>{
-            'channel_id': 'c1',
-            'direction': 'after',
-            'order': 'desc',
-            'limit': 3,
-          });
+      list = await post('message.list', <String, dynamic>{
+        'channel_id': 'c1',
+        'direction': 'after',
+        'order': 'desc',
+        'limit': 3,
+      });
       body = jsonDecode(list.body) as Map<String, dynamic>;
       expect((body['data'] as List).length, 3);
     });
@@ -211,16 +211,15 @@ void main() {
       final gBody = jsonDecode(guilds.body) as Map<String, dynamic>;
       expect((gBody['data'] as List).length, greaterThanOrEqualTo(1));
 
-      final members = await post('guild.member.list',
-          <String, dynamic>{'guild_id': 'g1'});
+      final members =
+          await post('guild.member.list', <String, dynamic>{'guild_id': 'g1'});
       expect(members.statusCode, HttpStatus.ok);
       final mBody = jsonDecode(members.body) as Map<String, dynamic>;
       expect((mBody['data'] as List).length, greaterThanOrEqualTo(1));
     });
 
     test('user.get', () async {
-      final user = await post('user.get',
-          <String, dynamic>{'user_id': 'u1'});
+      final user = await post('user.get', <String, dynamic>{'user_id': 'u1'});
       expect(user.statusCode, HttpStatus.ok);
       final uBody = jsonDecode(user.body) as Map<String, dynamic>;
       expect(uBody['id'], 'u1');
@@ -229,7 +228,8 @@ void main() {
 
     test('upload.create returns URLs', () async {
       final boundary = '----testboundary';
-      final request = await httpClient.post('127.0.0.1', port, '/v1/upload.create');
+      final request =
+          await httpClient.post('127.0.0.1', port, '/v1/upload.create');
       request.headers
         ..set('authorization', 'Bearer test-token')
         ..set('satori-platform', 'test-1')
@@ -311,7 +311,8 @@ void main() {
         'body': <String, dynamic>{'token': 'iso'},
       }));
       // Wait for READY
-      await waitFor(() => receivedRaw.any((f) => f['op'] == Opcode.ready.value));
+      await waitFor(
+          () => receivedRaw.any((f) => f['op'] == Opcode.ready.value));
 
       // Emit 5 events
       for (var i = 1; i <= 5; i++) {
@@ -322,8 +323,10 @@ void main() {
         ));
       }
 
-      await waitFor(() => receivedRaw.where((f) => f['op'] == Opcode.event.value).length >= 5);
-      final events = receivedRaw.where((f) => f['op'] == Opcode.event.value).toList();
+      await waitFor(() =>
+          receivedRaw.where((f) => f['op'] == Opcode.event.value).length >= 5);
+      final events =
+          receivedRaw.where((f) => f['op'] == Opcode.event.value).toList();
       final sns = events.map((e) => (e['body'] as Map)['sn'] as int).toList();
       expect(sns, orderedEquals([1, 2, 3, 4, 5]));
     });
@@ -360,7 +363,8 @@ void main() {
         'body': <String, dynamic>{'token': 'resume'},
       }));
       // Wait for READY
-      await waitFor(() => receivedRaw.any((f) => f['op'] == Opcode.ready.value));
+      await waitFor(
+          () => receivedRaw.any((f) => f['op'] == Opcode.ready.value));
 
       // Emit 3 events.
       for (var i = 1; i <= 3; i++) {
@@ -372,8 +376,10 @@ void main() {
         ));
       }
       // Wait for EVENT frames
-      await waitFor(() => receivedRaw.where((f) => f['op'] == Opcode.event.value).length >= 3);
-      final events = receivedRaw.where((f) => f['op'] == Opcode.event.value).toList();
+      await waitFor(() =>
+          receivedRaw.where((f) => f['op'] == Opcode.event.value).length >= 3);
+      final events =
+          receivedRaw.where((f) => f['op'] == Opcode.event.value).toList();
       final sns = events.map((e) => (e['body'] as Map)['sn'] as int).toList();
       expect(sns, orderedEquals([1, 2, 3]));
 
@@ -438,14 +444,16 @@ void main() {
         'op': Opcode.identify.value,
         'body': <String, dynamic>{'token': 'resume0'},
       }));
-      await waitFor(() => receivedRaw.any((f) => f['op'] == Opcode.ready.value));
+      await waitFor(
+          () => receivedRaw.any((f) => f['op'] == Opcode.ready.value));
 
       rAdapter.emit(Event(
         type: 'channel-added',
         login: rBot.login,
         selfId: 'r0',
       ));
-      await waitFor(() => receivedRaw.where((f) => f['op'] == Opcode.event.value).isNotEmpty);
+      await waitFor(() =>
+          receivedRaw.where((f) => f['op'] == Opcode.event.value).isNotEmpty);
       await ws.close();
 
       // New connection with sequence = 0
@@ -461,7 +469,8 @@ void main() {
         'op': Opcode.identify.value,
         'body': <String, dynamic>{'token': 'resume0', 'sn': 0},
       }));
-      await waitFor(() => receivedRaw2.any((f) => f['op'] == Opcode.ready.value));
+      await waitFor(
+          () => receivedRaw2.any((f) => f['op'] == Opcode.ready.value));
       await Future<void>.delayed(const Duration(milliseconds: 500));
       // Should not replay any events
       expect(receivedRaw2.where((f) => f['op'] == Opcode.event.value), isEmpty);
@@ -475,11 +484,11 @@ void main() {
       expect(client.proxyUrls, contains('http://proxy.example'));
     });
 
-    test('Multi-bot: HTTP requests with bot2 headers return bot2 data', () async {
-      final response = await post('channel.list',
-          <String, dynamic>{'guild_id': 'g2'},
-          platform: 'test-2',
-          userId: 'bot-2');
+    test('Multi-bot: HTTP requests with bot2 headers return bot2 data',
+        () async {
+      final response = await post(
+          'channel.list', <String, dynamic>{'guild_id': 'g2'},
+          platform: 'test-2', userId: 'bot-2');
       expect(response.statusCode, HttpStatus.ok);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       final data = body['data'] as List<dynamic>;
@@ -506,7 +515,8 @@ void main() {
       ));
 
       await waitFor(() => received.length >= 2);
-      final platforms = received.map((e) => e.data['login']?['platform']).toSet();
+      final platforms =
+          received.map((e) => e.data['login']?['platform']).toSet();
       expect(platforms, {'test-1', 'test-2'});
 
       await sub.cancel();
@@ -515,26 +525,25 @@ void main() {
 
   group('Error Handling', () {
     test('HTTP 403: missing token', () async {
-      final response = await post('channel.get',
-          <String, dynamic>{'channel_id': 'c1'},
+      final response = await post(
+          'channel.get', <String, dynamic>{'channel_id': 'c1'},
           token: null);
       expect(response.statusCode, HttpStatus.forbidden);
       expect(response.body, 'invalid token');
     });
 
     test('HTTP 403: wrong token', () async {
-      final response = await post('channel.get',
-          <String, dynamic>{'channel_id': 'c1'},
+      final response = await post(
+          'channel.get', <String, dynamic>{'channel_id': 'c1'},
           token: 'wrong');
       expect(response.statusCode, HttpStatus.forbidden);
       expect(response.body, 'invalid token');
     });
 
     test('HTTP 403: unknown identity headers', () async {
-      final response = await post('channel.get',
-          <String, dynamic>{'channel_id': 'c1'},
-          platform: 'unknown',
-          userId: 'unknown');
+      final response = await post(
+          'channel.get', <String, dynamic>{'channel_id': 'c1'},
+          platform: 'unknown', userId: 'unknown');
       expect(response.statusCode, HttpStatus.forbidden);
       expect(response.body, 'login not found');
     });
@@ -548,14 +557,13 @@ void main() {
     test('HTTP 404: resource not found returns 500', () async {
       // InMemoryBot throws StateError for missing resources, which
       // the server catches as internal error (500).
-      final response = await post('channel.get',
-          <String, dynamic>{'channel_id': 'nonexistent'});
+      final response = await post(
+          'channel.get', <String, dynamic>{'channel_id': 'nonexistent'});
       expect(response.statusCode, HttpStatus.internalServerError);
     });
 
     test('WS 4004: invalid IDENTIFY token', () async {
-      final socket = await WebSocket.connect(
-          'ws://127.0.0.1:$port/v1/events');
+      final socket = await WebSocket.connect('ws://127.0.0.1:$port/v1/events');
       addTearDown(socket.close);
       final frames = <Map<String, dynamic>>[];
       socket.listen((data) {
@@ -571,8 +579,7 @@ void main() {
     });
 
     test('WS 4000: invalid frame (non-JSON)', () async {
-      final socket = await WebSocket.connect(
-          'ws://127.0.0.1:$port/v1/events');
+      final socket = await WebSocket.connect('ws://127.0.0.1:$port/v1/events');
       addTearDown(socket.close);
       final frames = <Map<String, dynamic>>[];
       socket.listen((data) {
