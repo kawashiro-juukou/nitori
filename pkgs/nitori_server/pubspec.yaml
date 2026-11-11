@@ -6,7 +6,7 @@ repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori_s
 
 
 environment:
-  sdk: ^3.1.4
+  sdk: ^3.2.0
 
 platforms:
   android:
