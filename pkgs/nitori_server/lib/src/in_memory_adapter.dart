@@ -1,4 +1,7 @@
 /// A minimal in-memory adapter, useful for tests and local development.
+///
+/// Holds a single [InMemoryBot] and a broadcast event stream. Call [emit] to
+/// push events onto the gateway; call [close] to shut down the stream.
 library;
 
 import 'dart:async';
@@ -8,10 +11,17 @@ import 'package:nitori_core/nitori_core.dart';
 import 'adapter.dart';
 
 /// Serves one [InMemoryBot] and exposes [emit] to push gateway events.
+///
+/// Intended for unit tests and local development. Not suitable for production
+/// use — all state is in-memory and lost on restart.
 class InMemoryAdapter extends SatoriAdapter {
+  /// Creates an adapter with a single [bot] and optional [proxyUrls].
+  ///
+  /// The [proxyUrls] list is advertised in META and READY frames.
   InMemoryAdapter({required this.bot, List<String>? proxyUrls})
       : proxyUrls = List<String>.unmodifiable(proxyUrls ?? const <String>[]);
 
+  /// The single bot served by this adapter.
   final InMemoryBot bot;
 
   @override
@@ -26,13 +36,24 @@ class InMemoryAdapter extends SatoriAdapter {
   Stream<Event> get events => _events.stream;
 
   /// Broadcasts [event] to every connected gateway client.
+  ///
+  /// The event is added to the internal stream which the server subscribes to.
   void emit(Event event) => _events.add(event);
 
+  /// Closes the event stream, disconnecting all gateway clients.
   Future<void> close() => _events.close();
 }
 
 /// An in-memory bot backed by plain maps.
+///
+/// Provides a fully functional [SatoriBot] implementation using in-memory
+/// collections. Suitable for tests, local development, and prototyping.
+/// All state is ephemeral and reset on construction.
 class InMemoryBot extends SatoriBot {
+  /// Creates a bot for [user] on the given [platform] with initial [sn] and [features].
+  ///
+  /// The [user] becomes the bot's own identity and is added to the user store.
+  /// Default platform is `'memory'`, default sequence number is `1`.
   InMemoryBot({
     required User user,
     String platform = 'memory',
@@ -58,6 +79,7 @@ class InMemoryBot extends SatoriBot {
   @override
   String get userId => login.user?.id ?? '';
 
+  // In-memory stores for each entity type.
   final Map<String, Channel> channels = <String, Channel>{};
   final Map<String, Guild> guilds = <String, Guild>{};
   final Map<String, User> users = <String, User>{};
@@ -66,8 +88,10 @@ class InMemoryBot extends SatoriBot {
   final Map<String, GuildRole> roles = <String, GuildRole>{};
   final Map<String, Friend> friends = <String, Friend>{};
 
+  // Reaction tracking: messageId -> emojiId -> Set of userIds.
   final Map<String, Map<String, Set<String>>> _reactions =
       <String, Map<String, Set<String>>>{};
+  // Member roles: "guildId/userId" -> Set of roleIds.
   final Map<String, Set<String>> _memberRoles = <String, Set<String>>{};
 
   int _messageSequence = 0;

@@ -173,6 +173,14 @@ class SatoriServer {
       if (method.isForm) {
         final parts = await _parseMultipart(
             request.headers.contentType?.toString(), await _readBytes(request));
+        // Detect duplicate part names before building the result map.
+        final seenNames = <String>{};
+        for (final part in parts) {
+          if (!seenNames.add(part.name)) {
+            throw _HttpError(
+                HttpStatus.badRequest, 'duplicate part name: ${part.name}');
+          }
+        }
         final urls = await bot
             .createUpload(<dynamic>[for (final part in parts) part.data]);
         result = <String, dynamic>{
@@ -631,19 +639,30 @@ class SatoriServer {
     final now = DateTime.now().millisecondsSinceEpoch;
     _prune(now);
 
-    // The buffer record and the broadcast both work off a deep copy, so an
-    // adapter keeps ownership of the object it emitted and later mutations of
-    // nested objects (login, channel, guild, message, referrer, eventData, ...)
-    // cannot affect buffered or replayed events.
-    final Event buffered;
-    try {
-      buffered = _deepCopyEvent(event, ++_sequence);
-    } catch (error, stackTrace) {
-      // Deep copy failed (e.g. unserializable referrer/eventData). Report and
-      // drop this event to avoid crashing the publisher.
-      _report(error, stackTrace);
-      return;
-    }
+    // The buffer record and the broadcast both work off a copy, so an adapter
+    // keeps ownership of the object it emitted.
+    final buffered = Event(
+      type: event.type,
+      sn: ++_sequence,
+      login: event.login,
+      selfId: event.selfId,
+      platform: event.platform,
+      timestamp: event.timestamp ?? now,
+      argv: event.argv,
+      channel: event.channel,
+      guild: event.guild,
+      friend: event.friend,
+      member: event.member,
+      message: event.message,
+      operator: event.operator,
+      emoji: event.emoji,
+      role: event.role,
+      user: event.user,
+      button: event.button,
+      referrer: event.referrer,
+      eventType: event.eventType,
+      eventData: event.eventData,
+    );
     if (!_isLoginEvent(buffered.type)) {
       _buffer.add(_BufferedEvent(buffered, now));
       while (_buffer.length > maxBufferSize) {
@@ -668,15 +687,6 @@ class SatoriServer {
       if (!client.authorized) continue;
       _write(client.socket, encoded);
     }
-  }
-
-  /// Creates a deep copy of [event] with a new [sn], preserving the original
-  /// [timestamp] if present.
-  Event _deepCopyEvent(Event event, int sn) {
-    final json = event.toJson();
-    json['sn'] = sn;
-    // Preserve original timestamp (may be null or a specific value from adapter)
-    return Event.fromJson(json);
   }
 
   // Session resume never replays login events.

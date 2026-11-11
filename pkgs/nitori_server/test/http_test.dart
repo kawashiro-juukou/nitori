@@ -304,6 +304,33 @@ void main() {
     expect(body, contains('invalid multipart body'));
   });
 
+  test('duplicate multipart part names are rejected', () async {
+    const boundary = 'dup-boundary';
+    final request = await client.post('127.0.0.1', port, '/v1/upload.create');
+    request.headers
+      ..set('authorization', 'Bearer secret')
+      ..set('satori-platform', 'memory')
+      ..set('satori-user-id', 'bot-1')
+      ..set('content-type', 'multipart/form-data; boundary=$boundary');
+    // Two parts with the same name "file"
+    request.add(utf8.encode(
+      '--$boundary\r\n'
+      'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
+      '\r\n'
+      'hello\r\n'
+      '--$boundary\r\n'
+      'Content-Disposition: form-data; name="file"; filename="b.txt"\r\n'
+      '\r\n'
+      'world\r\n'
+      '--$boundary--\r\n',
+    ));
+    final response = await request.close();
+    final body = await utf8.decoder.bind(response).join();
+
+    expect(response.statusCode, HttpStatus.badRequest);
+    expect(body, 'duplicate part name: file');
+  });
+
   test('message.list returns a BidiList payload', () async {
     await post('message.create', <String, dynamic>{
       'channel_id': 'c1',
