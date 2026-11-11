@@ -51,6 +51,9 @@ class Message {
       _$MessageFromJson(json);
 
   Map<String, dynamic> toJson() => _$MessageToJson(this);
+
+  /// Creates a deep copy by JSON round-trip, ensuring all nested objects are isolated.
+  Message deepCopy() => Message.fromJson(toJson());
 }
 
 abstract interface class MessageInterface {

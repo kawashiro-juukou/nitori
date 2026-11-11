@@ -156,6 +156,9 @@ class Event {
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
 
   Map<String, dynamic> toJson() => _$EventToJson(this);
+
+  /// Creates a deep copy by JSON round-trip, ensuring all nested objects are isolated.
+  Event deepCopy() => Event.fromJson(toJson());
 }
 
 /// Server metadata pushed with the `meta` opcode: the login registry and the

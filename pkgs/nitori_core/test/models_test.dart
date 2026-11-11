@@ -209,6 +209,46 @@ void main() {
       expect(decoded.elements!.last['attrs'],
           {'src': 'https://example.com/a.png'});
     });
+
+    test('deepCopy isolates nested objects', () {
+      const json = <String, dynamic>{
+        'id': 'message-1',
+        'content': 'hello',
+        'channel': {'id': 'channel-1', 'type': 0},
+        'guild': {'id': 'guild-1', 'name': 'Nitori'},
+        'user': {'id': 'user-1', 'name': 'Lucy'},
+        'member': {
+          'user': {'id': 'user-1'},
+          'nick': 'lu'
+        },
+        'timestamp': 1663045572000,
+        'quote': {
+          'id': 'message-0',
+          'content': 'quoted',
+        },
+      };
+
+      final original = Message.fromJson(json);
+      final copy = original.deepCopy();
+
+      // Mutate nested objects in the original
+      original.channel!.name = 'modified';
+      original.guild!.name = 'modified';
+      original.user!.name = 'modified';
+      original.member!.nick = 'modified';
+      original.quote!.content = 'modified';
+
+      // Copy should be unaffected
+      expect(copy.channel!.name, isNull);
+      expect(copy.guild!.name, 'Nitori');
+      expect(copy.user!.name, 'Lucy');
+      expect(copy.member!.nick, 'lu');
+      expect(copy.quote!.content, 'quoted');
+
+      // IDs and primitives should match
+      expect(copy.id, original.id);
+      expect(copy.content, original.content);
+    });
   });
 
   group('Friend', () {
@@ -227,6 +267,83 @@ void main() {
       const json = <String, dynamic>{'id': 'button-1'};
 
       expect(Button.fromJson(json).toJson(), json);
+    });
+  });
+
+  group('Event', () {
+    test('deepCopy isolates all nested objects', () {
+      const json = <String, dynamic>{
+        'type': 'message',
+        'sn': 1,
+        'self_id': 'bot-1',
+        'platform': 'discord',
+        'timestamp': 1663045572000,
+        'login': {
+          'status': 1,
+          'user': {'id': 'user-1', 'name': 'Lucy'},
+          'platform': 'discord',
+          'features': ['guild', 'channel'],
+        },
+        'channel': {'id': 'channel-1', 'type': 0},
+        'guild': {'id': 'guild-1', 'name': 'Nitori'},
+        'friend': {
+          'user': {'id': 'user-1', 'name': 'Lucy'},
+          'nick': 'lu',
+        },
+        'member': {
+          'user': {'id': 'user-1', 'name': 'Lucy'},
+          'nick': 'lu',
+        },
+        'message': {
+          'id': 'message-1',
+          'content': 'hello',
+        },
+        'operator': {'id': 'user-1', 'name': 'Lucy'},
+        'emoji': {'id': 'emoji-1', 'name': 'smile'},
+        'role': {'id': 'role-1', 'name': 'admin'},
+        'user': {'id': 'user-1', 'name': 'Lucy'},
+        'button': {'id': 'button-1'},
+        '_type': 'custom-type',
+        '_data': {'custom': 'data'},
+      };
+
+      final original = Event.fromJson(json);
+      final copy = original.deepCopy();
+
+      // Mutate nested objects in the original
+      original.login!.user!.name = 'modified';
+      original.channel!.name = 'modified';
+      original.guild!.name = 'modified';
+      original.friend!.nick = 'modified';
+      original.member!.nick = 'modified';
+      original.message!.content = 'modified';
+      original.operator!.name = 'modified';
+      original.emoji!.name = 'modified';
+      original.role!.name = 'modified';
+      original.user!.name = 'modified';
+      original.button!.id = 'modified';
+
+      // Copy should be unaffected
+      expect(copy.login!.user!.name, 'Lucy');
+      expect(copy.channel!.name, isNull);
+      expect(copy.guild!.name, 'Nitori');
+      expect(copy.friend!.nick, 'lu');
+      expect(copy.member!.nick, 'lu');
+      expect(copy.message!.content, 'hello');
+      expect(copy.operator!.name, 'Lucy');
+      expect(copy.emoji!.name, 'smile');
+      expect(copy.role!.name, 'admin');
+      expect(copy.user!.name, 'Lucy');
+      expect(copy.button!.id, 'button-1');
+
+      // Primitives should match
+      expect(copy.type, original.type);
+      expect(copy.sn, original.sn);
+      expect(copy.selfId, original.selfId);
+      expect(copy.platform, original.platform);
+      expect(copy.timestamp, original.timestamp);
+      expect(copy.eventType, original.eventType);
+      expect(copy.eventData, original.eventData);
     });
   });
 
