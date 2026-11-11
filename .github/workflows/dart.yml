@@ -145,16 +145,16 @@ jobs:
       - name: mono_repo self validate
         run: dart pub global run mono_repo generate --validate
   job_002:
-    name: "analyze_and_format; linux; Dart 3.1.4; PKGS: .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_core, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_message, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_server, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_client, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_core, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_message, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_server, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_client, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_core, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_message, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_server, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_client, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_core, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_message, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_server, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_client, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_core, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_message, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_server, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_client, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_core, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_client, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_core, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_server, pkgs/nitori, pkgs/nitori_client, pkgs/nitori_core, pkgs/nitori_message; `dart analyze --fatal-infos .`"
+    name: "analyze_and_format; linux; Dart 3.1.4; PKGS: .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_core, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_message, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_server, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_client, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_core, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_message, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_server, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_client, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_core, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_message, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_server, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_client, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_core, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_message, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_server, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_client, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_core, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_message, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_server, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_client, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_core, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_client, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_core, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_server; `dart analyze --fatal-infos .`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4;packages:.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client-.claude/worktrees/a-!!too_long!!-2547-416212708"
+          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4;packages:.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client-.claude/worktrees/a-!!too_long!!-2479-470096131"
           restore-keys: |-
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4;packages:.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client-.claude/worktrees/a-!!too_long!!-2530-206891898
+            os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4;packages:.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client-.claude/worktrees/a-!!too_long!!-2462-522983361
             os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
@@ -518,6 +518,38 @@ jobs:
         run: dart analyze --fatal-infos .
         if: "always() && steps..direnv_flake-inputs_c9a8hap7842r1m66kilkc0pc6qdb2q9r-source_pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
         working-directory: ".direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_server"
+  job_003:
+    name: "analyze_and_format; linux; Dart 3.2.0; PKGS: .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server, pkgs/nitori, pkgs/nitori_client, pkgs/nitori_core, pkgs/nitori_message, pkgs/nitori_server; `dart analyze --fatal-infos .`"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache Pub hosted dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: "~/.pub-cache/hosted"
+          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:.claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server-pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server;commands:analyze"
+          restore-keys: |-
+            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:.claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server-pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server
+            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0
+            os:ubuntu-latest;pub-cache-hosted
+            os:ubuntu-latest
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
+        with:
+          sdk: "3.2.0"
+      - id: checkout
+        name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - id: ".claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade"
+        name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart pub upgrade"
+        run: dart pub upgrade
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
+      - name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart analyze --fatal-infos ."
+        run: dart analyze --fatal-infos .
+        if: "always() && steps..claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
+        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
       - id: pkgs_nitori_pub_upgrade
         name: pkgs/nitori; dart pub upgrade
         run: dart pub upgrade
@@ -554,38 +586,6 @@ jobs:
         run: dart analyze --fatal-infos .
         if: "always() && steps.pkgs_nitori_message_pub_upgrade.conclusion == 'success'"
         working-directory: pkgs/nitori_message
-  job_003:
-    name: "analyze_and_format; linux; Dart 3.2.0; PKGS: .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server, pkgs/nitori_server; `dart analyze --fatal-infos .`"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cache Pub hosted dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:.claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server-pkgs/nitori_server;commands:analyze"
-          restore-keys: |-
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:.claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server-pkgs/nitori_server
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0
-            os:ubuntu-latest;pub-cache-hosted
-            os:ubuntu-latest
-      - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
-        with:
-          sdk: "3.2.0"
-      - id: checkout
-        name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - id: ".claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade"
-        name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart pub upgrade"
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
-      - name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart analyze --fatal-infos ."
-        run: dart analyze --fatal-infos .
-        if: "always() && steps..claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
-        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
       - id: pkgs_nitori_server_pub_upgrade
         name: pkgs/nitori_server; dart pub upgrade
         run: dart pub upgrade
@@ -1452,16 +1452,16 @@ jobs:
         if: "always() && steps.pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
         working-directory: pkgs/nitori_server
   job_006:
-    name: "unit_test; linux; Dart 3.1.4; PKGS: .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_core, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_message, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_server, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_client, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_core, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_message, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_server, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_client, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_core, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_message, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_server, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_client, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_core, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_message, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_server, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_client, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_core, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_message, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_server, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_client, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_core, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_client, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_core, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_server, pkgs/nitori, pkgs/nitori_client, pkgs/nitori_core, pkgs/nitori_message; `dart test --test-randomize-ordering-seed=random`"
+    name: "unit_test; linux; Dart 3.1.4; PKGS: .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_core, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_message, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_server, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_client, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_core, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_message, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_server, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_client, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_core, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_message, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_server, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_client, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_core, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_message, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_server, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_client, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_core, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_message, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_server, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_client, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_core, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_client, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_core, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_server; `dart test --test-randomize-ordering-seed=random`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4;packages:.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client-.claude/worktrees/a-!!too_long!!-2544-452063219"
+          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4;packages:.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client-.claude/worktrees/a-!!too_long!!-2476-913051786"
           restore-keys: |-
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4;packages:.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client-.claude/worktrees/a-!!too_long!!-2530-206891898
+            os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4;packages:.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message-.claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori-.claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client-.claude/worktrees/a-!!too_long!!-2462-522983361
             os:ubuntu-latest;pub-cache-hosted;sdk:3.1.4
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
@@ -1825,6 +1825,44 @@ jobs:
         run: "dart test --test-randomize-ordering-seed=random"
         if: "always() && steps..direnv_flake-inputs_c9a8hap7842r1m66kilkc0pc6qdb2q9r-source_pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
         working-directory: ".direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_server"
+    needs:
+      - job_001
+      - job_002
+      - job_003
+      - job_004
+      - job_005
+  job_007:
+    name: "unit_test; linux; Dart 3.2.0; PKGS: .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server, pkgs/nitori, pkgs/nitori_client, pkgs/nitori_core, pkgs/nitori_message, pkgs/nitori_server; `dart test --test-randomize-ordering-seed=random`"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache Pub hosted dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: "~/.pub-cache/hosted"
+          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:.claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server-pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server;commands:test"
+          restore-keys: |-
+            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:.claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server-pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server
+            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0
+            os:ubuntu-latest;pub-cache-hosted
+            os:ubuntu-latest
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
+        with:
+          sdk: "3.2.0"
+      - id: checkout
+        name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - id: ".claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade"
+        name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart pub upgrade"
+        run: dart pub upgrade
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
+      - name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart test --test-randomize-ordering-seed=random"
+        run: "dart test --test-randomize-ordering-seed=random"
+        if: "always() && steps..claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
+        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
       - id: pkgs_nitori_pub_upgrade
         name: pkgs/nitori; dart pub upgrade
         run: dart pub upgrade
@@ -1861,44 +1899,6 @@ jobs:
         run: "dart test --test-randomize-ordering-seed=random"
         if: "always() && steps.pkgs_nitori_message_pub_upgrade.conclusion == 'success'"
         working-directory: pkgs/nitori_message
-    needs:
-      - job_001
-      - job_002
-      - job_003
-      - job_004
-      - job_005
-  job_007:
-    name: "unit_test; linux; Dart 3.2.0; PKGS: .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server, pkgs/nitori_server; `dart test --test-randomize-ordering-seed=random`"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cache Pub hosted dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:.claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server-pkgs/nitori_server;commands:test"
-          restore-keys: |-
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:.claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server-pkgs/nitori_server
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0
-            os:ubuntu-latest;pub-cache-hosted
-            os:ubuntu-latest
-      - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
-        with:
-          sdk: "3.2.0"
-      - id: checkout
-        name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - id: ".claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade"
-        name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart pub upgrade"
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
-      - name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart test --test-randomize-ordering-seed=random"
-        run: "dart test --test-randomize-ordering-seed=random"
-        if: "always() && steps..claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
-        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
       - id: pkgs_nitori_server_pub_upgrade
         name: pkgs/nitori_server; dart pub upgrade
         run: dart pub upgrade
@@ -2349,7 +2349,7 @@ jobs:
       - job_004
       - job_005
   job_009:
-    name: "unit_test; windows; Dart 3.1.4; PKGS: .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_core, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_message, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_server, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_client, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_core, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_message, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_server, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_client, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_core, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_message, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_server, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_client, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_core, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_message, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_server, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_client, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_core, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_message, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_server, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_client, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_core, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_client, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_core, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_server, pkgs/nitori, pkgs/nitori_client, pkgs/nitori_core, pkgs/nitori_message; `dart test --test-randomize-ordering-seed=random`"
+    name: "unit_test; windows; Dart 3.1.4; PKGS: .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_client, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_core, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_message, .claude/worktrees/agent-a0bdf329c1667bfc5/pkgs/nitori_server, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_client, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_core, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_message, .claude/worktrees/agent-a1f63b06317c593ec/pkgs/nitori_server, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_client, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_core, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_message, .claude/worktrees/agent-a597cb1c6e9a14eb9/pkgs/nitori_server, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_client, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_core, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_message, .claude/worktrees/agent-a6240d279e3809874/pkgs/nitori_server, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_client, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_core, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_message, .claude/worktrees/agent-a706370f5eafb577a/pkgs/nitori_server, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_client, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_core, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_message, .claude/worktrees/agent-ae751a98f0cdba41d/pkgs/nitori_server, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_client, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_core, .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_client, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_core, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_message, .direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_server; `dart test --test-randomize-ordering-seed=random`"
     runs-on: windows-latest
     steps:
       - name: Setup Dart SDK
@@ -2712,6 +2712,34 @@ jobs:
         run: "dart test --test-randomize-ordering-seed=random"
         if: "always() && steps..direnv_flake-inputs_c9a8hap7842r1m66kilkc0pc6qdb2q9r-source_pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
         working-directory: ".direnv/flake-inputs/c9a8hap7842r1m66kilkc0pc6qdb2q9r-source/pkgs/nitori_server"
+    needs:
+      - job_001
+      - job_002
+      - job_003
+      - job_004
+      - job_005
+  job_010:
+    name: "unit_test; windows; Dart 3.2.0; PKGS: .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server, pkgs/nitori, pkgs/nitori_client, pkgs/nitori_core, pkgs/nitori_message, pkgs/nitori_server; `dart test --test-randomize-ordering-seed=random`"
+    runs-on: windows-latest
+    steps:
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
+        with:
+          sdk: "3.2.0"
+      - id: checkout
+        name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - id: ".claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade"
+        name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart pub upgrade"
+        run: dart pub upgrade
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
+      - name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart test --test-randomize-ordering-seed=random"
+        run: "dart test --test-randomize-ordering-seed=random"
+        if: "always() && steps..claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
+        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
       - id: pkgs_nitori_pub_upgrade
         name: pkgs/nitori; dart pub upgrade
         run: dart pub upgrade
@@ -2748,34 +2776,6 @@ jobs:
         run: "dart test --test-randomize-ordering-seed=random"
         if: "always() && steps.pkgs_nitori_message_pub_upgrade.conclusion == 'success'"
         working-directory: pkgs/nitori_message
-    needs:
-      - job_001
-      - job_002
-      - job_003
-      - job_004
-      - job_005
-  job_010:
-    name: "unit_test; windows; Dart 3.2.0; PKGS: .claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server, pkgs/nitori_server; `dart test --test-randomize-ordering-seed=random`"
-    runs-on: windows-latest
-    steps:
-      - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
-        with:
-          sdk: "3.2.0"
-      - id: checkout
-        name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - id: ".claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade"
-        name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart pub upgrade"
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
-      - name: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server; dart test --test-randomize-ordering-seed=random"
-        run: "dart test --test-randomize-ordering-seed=random"
-        if: "always() && steps..claude_worktrees_agent-af36c0132f6c6d874_pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
-        working-directory: ".claude/worktrees/agent-af36c0132f6c6d874/pkgs/nitori_server"
       - id: pkgs_nitori_server_pub_upgrade
         name: pkgs/nitori_server; dart pub upgrade
         run: dart pub upgrade
