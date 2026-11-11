@@ -67,14 +67,20 @@ jobs:
   job_002:
     name: analyze_and_format; linux; Dart 3.2.0
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    strategy:
+      matrix:
+        package: [pkgs/nitori, pkgs/nitori_client, pkgs/nitori_core, pkgs/nitori_message, pkgs/nitori_server]
     steps:
       - name: Cache Pub hosted dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server"
+          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;package:${{ matrix.package }}"
           restore-keys: |-
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server
+            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;package:${{ matrix.package }}
             os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
@@ -87,87 +93,29 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - id: pkgs_nitori_pub_upgrade
-        name: pkgs/nitori pub upgrade
+      - name: pub upgrade
         run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-      - id: pkgs_nitori_analyze
-        name: pkgs/nitori analyze
+      - name: analyze
         run: dart analyze --fatal-infos .
-        if: "always() && steps.pkgs_nitori_pub_upgrade.conclusion == 'success'"
-        working-directory: pkgs/nitori
-      - id: pkgs_nitori_format
-        name: pkgs/nitori format
+      - name: format
         run: dart format --output=none --set-exit-if-changed .
-        if: "always() && steps.pkgs_nitori_analyze.conclusion == 'success'"
-        working-directory: pkgs/nitori
-      - id: pkgs_nitori_client_pub_upgrade
-        name: pkgs/nitori_client pub upgrade
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-      - id: pkgs_nitori_client_analyze
-        name: pkgs/nitori_client analyze
-        run: dart analyze --fatal-infos .
-        if: "always() && steps.pkgs_nitori_client_pub_upgrade.conclusion == 'success'"
-        working-directory: pkgs/nitori_client
-      - id: pkgs_nitori_client_format
-        name: pkgs/nitori_client format
-        run: dart format --output=none --set-exit-if-changed .
-        if: "always() && steps.pkgs_nitori_client_analyze.conclusion == 'success'"
-        working-directory: pkgs/nitori_client
-      - id: pkgs_nitori_core_pub_upgrade
-        name: pkgs/nitori_core pub upgrade
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-      - id: pkgs_nitori_core_analyze
-        name: pkgs/nitori_core analyze
-        run: dart analyze --fatal-infos .
-        if: "always() && steps.pkgs_nitori_core_pub_upgrade.conclusion == 'success'"
-        working-directory: pkgs/nitori_core
-      - id: pkgs_nitori_core_format
-        name: pkgs/nitori_core format
-        run: dart format --output=none --set-exit-if-changed .
-        if: "always() && steps.pkgs_nitori_core_analyze.conclusion == 'success'"
-        working-directory: pkgs/nitori_core
-      - id: pkgs_nitori_message_pub_upgrade
-        name: pkgs/nitori_message pub upgrade
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-      - id: pkgs_nitori_message_analyze
-        name: pkgs/nitori_message analyze
-        run: dart analyze --fatal-infos .
-        if: "always() && steps.pkgs_nitori_message_pub_upgrade.conclusion == 'success'"
-        working-directory: pkgs/nitori_message
-      - id: pkgs_nitori_message_format
-        name: pkgs/nitori_message format
-        run: dart format --output=none --set-exit-if-changed .
-        if: "always() && steps.pkgs_nitori_message_analyze.conclusion == 'success'"
-        working-directory: pkgs/nitori_message
-      - id: pkgs_nitori_server_pub_upgrade
-        name: pkgs/nitori_server pub upgrade
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-      - id: pkgs_nitori_server_analyze
-        name: pkgs/nitori_server analyze
-        run: dart analyze --fatal-infos .
-        if: "always() && steps.pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
-        working-directory: pkgs/nitori_server
-      - id: pkgs_nitori_server_format
-        name: pkgs/nitori_server format
-        run: dart format --output=none --set-exit-if-changed .
-        if: "always() && steps.pkgs_nitori_server_analyze.conclusion == 'success'"
-        working-directory: pkgs/nitori_server
   job_003:
     name: unit_test; linux; Dart 3.2.0
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    strategy:
+      matrix:
+        package: [pkgs/nitori, pkgs/nitori_client, pkgs/nitori_core, pkgs/nitori_message, pkgs/nitori_server]
     steps:
       - name: Cache Pub hosted dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server"
+          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;package:${{ matrix.package }}"
           restore-keys: |-
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;packages:pkgs/nitori-pkgs/nitori_client-pkgs/nitori_core-pkgs/nitori_message-pkgs/nitori_server
+            os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0;package:${{ matrix.package }}
             os:ubuntu-latest;pub-cache-hosted;sdk:3.2.0
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
@@ -180,48 +128,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - id: pkgs_nitori_pub_upgrade
-        name: pkgs/nitori pub upgrade
+      - name: pub upgrade
         run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-      - id: pkgs_nitori_test
-        name: pkgs/nitori test
+      - name: test
         run: dart test
-        if: "always() && steps.pkgs_nitori_pub_upgrade.conclusion == 'success'"
-        working-directory: pkgs/nitori
-      - id: pkgs_nitori_client_pub_upgrade
-        name: pkgs/nitori_client pub upgrade
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-      - id: pkgs_nitori_client_test
-        name: pkgs/nitori_client test
-        run: dart test
-        if: "always() && steps.pkgs_nitori_client_pub_upgrade.conclusion == 'success'"
-        working-directory: pkgs/nitori_client
-      - id: pkgs_nitori_core_pub_upgrade
-        name: pkgs/nitori_core pub upgrade
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-      - id: pkgs_nitori_core_test
-        name: pkgs/nitori_core test
-        run: dart test
-        if: "always() && steps.pkgs_nitori_core_pub_upgrade.conclusion == 'success'"
-        working-directory: pkgs/nitori_core
-      - id: pkgs_nitori_message_pub_upgrade
-        name: pkgs/nitori_message pub upgrade
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-      - id: pkgs_nitori_message_test
-        name: pkgs/nitori_message test
-        run: dart test
-        if: "always() && steps.pkgs_nitori_message_pub_upgrade.conclusion == 'success'"
-        working-directory: pkgs/nitori_message
-      - id: pkgs_nitori_server_pub_upgrade
-        name: pkgs/nitori_server pub upgrade
-        run: dart pub upgrade
-        if: "always() && steps.checkout.conclusion == 'success'"
-      - id: pkgs_nitori_server_test
-        name: pkgs/nitori_server test
-        run: dart test
-        if: "always() && steps.pkgs_nitori_server_pub_upgrade.conclusion == 'success'"
-        working-directory: pkgs/nitori_server
