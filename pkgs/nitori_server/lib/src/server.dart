@@ -3,12 +3,34 @@
 library;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:mime/mime.dart';
 import 'package:nitori_core/nitori_core.dart';
 
 import 'adapter.dart';
+
+/// Constant-time string equality check to avoid timing side-channels.
+bool _constantTimeEquals(String a, String b) {
+  final aBytes = utf8.encode(a);
+  final bBytes = utf8.encode(b);
+  if (aBytes.length != bBytes.length) return false;
+  var diff = 0;
+  for (var i = 0; i < aBytes.length; i++) {
+    diff |= aBytes[i] ^ bBytes[i];
+  }
+  return diff == 0;
+}
+
+/// One [Event] held for replay, stamped with when this server enqueued it.
+class _BufferedEvent {
+  _BufferedEvent(this.event, this.enqueuedAt);
+
+  final Event event;
+  final int enqueuedAt;
+}
 
 /// One connected gateway client.
 class _GatewayClient {
@@ -41,6 +63,7 @@ class SatoriServer {
     this.token,
     this.resumeTimeout = const Duration(minutes: 5),
     this.maxRequestBodySize = 32 * 1024 * 1024,
+    this.maxBufferSize = 1000,
   });
 
   /// Platform integration providing bots and events.
@@ -56,8 +79,11 @@ class SatoriServer {
   /// Largest request body accepted, in bytes.
   final int maxRequestBodySize;
 
+  /// Largest number of events kept in the replay buffer.
+  final int maxBufferSize;
+
   final Set<_GatewayClient> _clients = <_GatewayClient>{};
-  final List<Event> _buffer = <Event>[];
+  final ListQueue<_BufferedEvent> _buffer = ListQueue<_BufferedEvent>();
 
   int _sequence = 0;
   HttpServer? _server;
@@ -77,7 +103,10 @@ class SatoriServer {
   /// Serves requests on an already bound [server].
   Future<void> serve(HttpServer server) async {
     _server = server;
-    _subscription ??= adapter.events.listen(_publish);
+    _subscription ??= adapter.events.listen(
+      _publish,
+      onError: _report,
+    );
     server.listen(_handleRequest);
   }
 
@@ -85,10 +114,11 @@ class SatoriServer {
   Future<void> close() async {
     await _subscription?.cancel();
     _subscription = null;
-    for (final client in _clients.toList()) {
-      await client.socket.close();
-    }
+    final sockets = <Future<void>>[
+      for (final client in _clients) client.socket.close(),
+    ];
     _clients.clear();
+    await Future.wait<void>(sockets, eagerError: false);
     await _server?.close(force: true);
     _server = null;
   }
@@ -136,7 +166,7 @@ class SatoriServer {
       Object? result;
 
       if (method.isForm) {
-        final parts = _parseMultipart(
+        final parts = await _parseMultipart(
             request.headers.contentType?.toString(), await _readBytes(request));
         final urls = await bot
             .createUpload(<dynamic>[for (final part in parts) part.data]);
@@ -156,6 +186,10 @@ class SatoriServer {
     } on _HttpError catch (error) {
       response.statusCode = error.statusCode;
       response.write(error.message);
+    } on UnimplementedError {
+      // An integration that does not implement a method answers 404, not 500.
+      response.statusCode = HttpStatus.notFound;
+      response.write('method not supported');
     } catch (_) {
       response.statusCode = HttpStatus.internalServerError;
       response.write('Internal Server Error');
@@ -166,7 +200,10 @@ class SatoriServer {
 
   void _checkAuth(HttpRequest request) {
     if (token == null) return;
-    if (request.headers.value('authorization') != 'Bearer $token') {
+    final header = request.headers.value('authorization');
+    if (header == null ||
+        !header.startsWith('Bearer ') ||
+        !_constantTimeEquals(header.substring('Bearer '.length), token!)) {
       throw _HttpError(HttpStatus.forbidden, 'invalid token');
     }
   }
@@ -412,6 +449,10 @@ class SatoriServer {
     final value = body[key];
     if (value == null) return null;
     if (value is bool) return value;
+    if (value is String) {
+      if (value == 'true') return true;
+      if (value == 'false') return false;
+    }
     throw _HttpError(HttpStatus.badRequest, 'invalid $key');
   }
 
@@ -443,71 +484,47 @@ class SatoriServer {
     throw _HttpError(HttpStatus.badRequest, 'invalid order');
   }
 
-  List<_FormPart> _parseMultipart(String? contentType, List<int> body) {
-    final match =
-        RegExp(r'boundary="?([^";]+)"?').firstMatch(contentType ?? '');
-    if (match == null) {
+  Future<List<_FormPart>> _parseMultipart(
+      String? contentType, List<int> body) async {
+    final boundary =
+        ContentType.parse(contentType ?? '').parameters['boundary'];
+    if (boundary == null) {
       throw _HttpError(HttpStatus.badRequest, 'missing multipart boundary');
     }
 
-    final boundary = utf8.encode('--${match.group(1)}');
-    final headerEnd = utf8.encode('\r\n\r\n');
     final parts = <_FormPart>[];
-    var position = _indexOf(body, boundary, 0);
-
-    while (position != -1) {
-      final start = position + boundary.length;
-      if (start + 1 < body.length &&
-          body[start] == 45 &&
-          body[start + 1] == 45) {
-        break;
+    await for (final part in MimeMultipartTransformer(boundary)
+        .bind(Stream.fromIterable([body]))) {
+      final name = _partName(part, parts.length + 1);
+      final data = <int>[];
+      await for (final chunk in part) {
+        data.addAll(chunk);
       }
-      final headersEnd = _indexOf(body, headerEnd, start);
-      if (headersEnd == -1) break;
-      final headers =
-          utf8.decode(body.sublist(start, headersEnd), allowMalformed: true);
-      final next = _indexOf(body, boundary, headersEnd + headerEnd.length);
-      if (next == -1) break;
-
-      var contentEnd = next;
-      if (contentEnd >= 2 &&
-          body[contentEnd - 2] == 13 &&
-          body[contentEnd - 1] == 10) {
-        contentEnd -= 2;
-      }
-      final name = RegExp(r'name="([^"]*)"').firstMatch(headers)?.group(1) ??
-          'file${parts.length + 1}';
-      parts.add(_FormPart(
-          name, body.sublist(headersEnd + headerEnd.length, contentEnd)));
-      position = next;
+      parts.add(_FormPart(name, data));
     }
     return parts;
   }
 
-  int _indexOf(List<int> source, List<int> pattern, int start) {
-    for (var i = start; i <= source.length - pattern.length; i++) {
-      var match = true;
-      for (var j = 0; j < pattern.length; j++) {
-        if (source[i + j] != pattern[j]) {
-          match = false;
-          break;
-        }
-      }
-      if (match) return i;
-    }
-    return -1;
+  // The wire name is what the response maps upload URLs back onto.
+  String _partName(MimeMultipart part, int index) {
+    final disposition = part.headers['content-disposition'];
+    if (disposition == null) return 'file$index';
+    final headerValue = HeaderValue.parse(disposition);
+    return headerValue.parameters['name'] ?? 'file$index';
   }
 
   void _attach(WebSocket socket) {
     final client = _GatewayClient(socket);
     _clients.add(client);
+    // Pings reap sockets whose peer vanished without closing.
+    socket.pingInterval = const Duration(seconds: 30);
     _trySend(socket, Opcode.meta, <String, dynamic>{
       'proxy_urls': adapter.proxyUrls,
     });
     socket.listen(
       (data) => _handleFrame(client, data),
-      onDone: () => _clients.remove(client),
-      onError: (Object _) => _clients.remove(client),
+      onDone: () => _drop(client),
+      onError: (Object _) => _drop(client),
       cancelOnError: true,
     );
   }
@@ -529,9 +546,12 @@ class SatoriServer {
     switch (payload['op']) {
       // Opcode.identify
       case 3:
-        if (token != null && identify['token'] != token) {
-          unawaited(client.socket.close(4004, 'invalid token'));
-          return;
+        if (token != null) {
+          final provided = identify['token'];
+          if (provided is! String || !_constantTimeEquals(provided, token!)) {
+            unawaited(client.socket.close(4004, 'invalid token'));
+            return;
+          }
         }
         client.authorized = true;
         final meta = Meta(
@@ -540,7 +560,7 @@ class SatoriServer {
         );
         _trySend(client.socket, Opcode.ready, meta.toJson());
         final sn = identify['sn'];
-        if (sn is int) _replay(client, sn);
+        if (sn is int && sn > 0) _replay(client, sn);
         break;
       // Opcode.ping
       case 1:
@@ -551,45 +571,119 @@ class SatoriServer {
 
   void _replay(_GatewayClient client, int sn) {
     _prune(DateTime.now().millisecondsSinceEpoch);
-    for (final event in _buffer) {
-      if ((event.sn ?? 0) <= sn) continue;
-      _trySend(client.socket, Opcode.event, event.toJson());
+    for (final buffered in _buffer) {
+      if ((buffered.event.sn ?? 0) <= sn) continue;
+      _trySend(client.socket, Opcode.event, buffered.event.toJson());
     }
   }
 
   void _publish(Event event) {
     final now = DateTime.now().millisecondsSinceEpoch;
     _prune(now);
-    event.sn = ++_sequence;
-    event.timestamp ??= now;
-    _buffer.add(event);
 
-    final body = event.toJson();
+    // The buffer record and the broadcast both work off a copy, so an adapter
+    // keeps ownership of the object it emitted.
+    final buffered = Event(
+      type: event.type,
+      sn: ++_sequence,
+      login: event.login,
+      selfId: event.selfId,
+      platform: event.platform,
+      timestamp: event.timestamp ?? now,
+      argv: event.argv,
+      channel: event.channel,
+      guild: event.guild,
+      friend: event.friend,
+      member: event.member,
+      message: event.message,
+      operator: event.operator,
+      emoji: event.emoji,
+      role: event.role,
+      user: event.user,
+      button: event.button,
+      referrer: event.referrer,
+      eventType: event.eventType,
+      eventData: event.eventData,
+    );
+    if (!_isLoginEvent(buffered.type)) {
+      _buffer.add(_BufferedEvent(buffered, now));
+      while (_buffer.length > maxBufferSize) {
+        _buffer.removeFirst();
+      }
+    }
+
+    final String encoded;
+    try {
+      encoded = jsonEncode(<String, dynamic>{
+        'op': Opcode.event.value,
+        'body': buffered.toJson(),
+      });
+    } catch (error, stackTrace) {
+      // A single unserializable event must not cost every client its
+      // connection.
+      _report(error, stackTrace);
+      return;
+    }
+
     for (final client in _clients.toList()) {
       if (!client.authorized) continue;
-      if (!_trySend(client.socket, Opcode.event, body)) {
-        _clients.remove(client);
+      if (!_tryWrite(client.socket, encoded)) {
+        _drop(client);
       }
     }
   }
 
+  // Session resume never replays login events.
+  bool _isLoginEvent(String type) =>
+      type == 'login-added' ||
+      type == 'login-updated' ||
+      type == 'login-removed';
+
+  void _drop(_GatewayClient client) {
+    _clients.remove(client);
+    unawaited(client.socket.close(1001, 'connection lost'));
+  }
+
+  // Reports a failure the protocol has no channel for: an adapter's event
+  // stream erroring, or one event that cannot be encoded.
+  void _report(Object error, StackTrace stackTrace) {
+    stderr.writeln('nitori_server: ${error.runtimeType}: $error');
+  }
+
+  // Ages out by when the server enqueued the event, never by the timestamp the
+  // adapter chose for it.
   void _prune(int now) {
     final cutoff = now - resumeTimeout.inMilliseconds;
-    while (_buffer.isNotEmpty && (_buffer.first.timestamp ?? 0) < cutoff) {
-      _buffer.removeAt(0);
+    while (_buffer.isNotEmpty && _buffer.first.enqueuedAt < cutoff) {
+      _buffer.removeFirst();
     }
   }
 
   void _send(WebSocket socket, Opcode opcode, Object body) {
-    socket.add(jsonEncode(<String, dynamic>{
-      'op': opcode.value,
-      'body': body,
-    }));
+    _write(
+        socket,
+        jsonEncode(<String, dynamic>{
+          'op': opcode.value,
+          'body': body,
+        }));
+  }
+
+  void _write(WebSocket socket, String encoded) {
+    socket.add(encoded);
   }
 
   bool _trySend(WebSocket socket, Opcode opcode, Object body) {
     try {
       _send(socket, opcode, body);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _tryWrite(WebSocket socket, String encoded) {
+    try {
+      _write(socket, encoded);
       return true;
     } catch (_) {
       return false;
