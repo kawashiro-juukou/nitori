@@ -1,6 +1,6 @@
 name: nitori_client
 description: Dart client implementation for the Satori Protocol, providing the HTTP API caller and WebSocket gateway.
-version: 0.1.11
+version: 0.1.12
 repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori_client
 issue_tracker: https://github.com/kawashiro-juukou/nitori/issues
 
@@ -10,17 +10,12 @@ environment:
 dependencies:
   http: ^1.1.0
   web_socket_channel: ^2.4.0
-  nitori_core: ^0.1.0
-
-dependency_overrides:
-  nitori_core:
-    path: ../nitori_core
+  nitori_core: ^0.1.11
 
 dev_dependencies:
   lints: ^2.0.0
   test: ^1.21.0
-  nitori_server:
-    path: ../nitori_server
+  nitori_server: ^0.1.11
 
 topics:
   - nitori

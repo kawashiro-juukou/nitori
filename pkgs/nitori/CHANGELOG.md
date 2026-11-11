@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.12] - 2026-11-11
+
+### Fixed
+- Remove `dependency_overrides` from published package (local dev only)
+- Update dependencies to ^0.1.11
+
 ## [0.1.11] - 2026-11-11
 
 ### Changed

@@ -1,28 +1,17 @@
 name: nitori
 description: Umbrella package for Nitori, a Dart implementation of the Satori Protocol that re-exports all sub-packages.
-version: 0.1.11
+version: 0.1.12
 repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori
-
 
 
 environment:
   sdk: ^3.5.0
 
 dependencies:
-  nitori_core: ^0.1.3
-  nitori_message: ^0.1.3
-  nitori_client: ^0.1.3
-  nitori_server: ^0.1.3
-
-dependency_overrides:
-  nitori_core:
-    path: ../nitori_core
-  nitori_message:
-    path: ../nitori_message
-  nitori_client:
-    path: ../nitori_client
-  nitori_server:
-    path: ../nitori_server
+  nitori_core: ^0.1.11
+  nitori_message: ^0.1.11
+  nitori_client: ^0.1.11
+  nitori_server: ^0.1.11
 
 dev_dependencies:
   lints: ^2.0.0
