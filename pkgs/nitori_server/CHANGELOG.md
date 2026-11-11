@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2026-11-11
+
+### Added
+- Satori HTTP API (`/v1/*`) and WebSocket gateway (`/v1/events`) implementation
+- 37 standard methods with full request/response mapping
+- In-memory adapter (`InMemoryAdapter`) for testing
+
+### Fixed
+- Request body size limit (32 MiB) with 413 response
+- Multipart parsing errors return 400 instead of 500
+- Event encoding done once per broadcast; serialization failures no longer drop clients
+- Replay buffer uses server enqueue time (not adapter timestamp) with O(1) eviction
+- Adapter stream errors logged via `onError` without crashing
+- WebSocket dead connections closed with `pingInterval=30s`
+- Unimplemented adapter methods return 404
+- Resume (`sn > 0` only) and login event filtering per spec
+- Events shallow-copied on publish; caller object never mutated
+- Concurrent socket close in `close()`; server socket always closed
+- Constant-time token comparison for auth
+
+### Changed
+- SDK constraint upgraded to `^3.2.0` for `mime` dependency compatibility
+
 ## [0.1.5] - 2026-11-11
 
 ### Changed

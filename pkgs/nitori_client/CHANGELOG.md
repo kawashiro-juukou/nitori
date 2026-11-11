@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2026-11-11
+
+### Added
+- Satori HTTP API client and WebSocket gateway
+
+### Fixed
+- Body size limit (32 MiB) on HTTP uploads
+- Multipart parser error handling returns 400
+- Constant-time token comparison
+
 ## [0.1.5] - 2026-11-11
 
 ### Changed

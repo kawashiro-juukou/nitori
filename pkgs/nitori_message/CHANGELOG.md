@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2026-11-11
+
+### Added
+- `Button` element (`<button>`) with text and children constructors, plus parser support
+
+### Fixed
+- Parser closing-tag validation for container elements that carry attributes
+
 ## [0.1.5] - 2026-11-11
 
 ### Added
