@@ -241,4 +241,25 @@ void main() {
       expect(response.statusCode, isNot(HttpStatus.notFound), reason: key);
     }
   });
+
+  test('an oversized body answers 413', () async {
+    final smallServer = await SatoriServer(
+      adapter: adapter,
+      token: 'secret',
+      maxRequestBodySize: 16,
+    ).bind(address: InternetAddress.loopbackIPv4, port: 0);
+    addTearDown(smallServer.close);
+
+    final request =
+        await client.post('127.0.0.1', smallServer.port, '/v1/channel.get');
+    request.headers
+      ..set('authorization', 'Bearer secret')
+      ..set('satori-platform', 'memory')
+      ..set('satori-user-id', 'bot-1')
+      ..contentType = ContentType.json;
+    request.write('{"channel_id":"${'x' * 64}"}');
+    final response = await request.close();
+
+    expect(response.statusCode, HttpStatus.requestEntityTooLarge);
+  });
 }

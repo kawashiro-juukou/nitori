@@ -40,6 +40,7 @@ class SatoriServer {
     required this.adapter,
     this.token,
     this.resumeTimeout = const Duration(minutes: 5),
+    this.maxRequestBodySize = 32 * 1024 * 1024,
   });
 
   /// Platform integration providing bots and events.
@@ -51,6 +52,9 @@ class SatoriServer {
 
   /// How long emitted events stay buffered for replay.
   final Duration resumeTimeout;
+
+  /// Largest request body accepted, in bytes.
+  final int maxRequestBodySize;
 
   final Set<_GatewayClient> _clients = <_GatewayClient>{};
   final List<Event> _buffer = <Event>[];
@@ -345,9 +349,18 @@ class SatoriServer {
   }
 
   Future<List<int>> _readBytes(HttpRequest request) async {
+    final declared = request.headers.contentLength;
+    if (declared > maxRequestBodySize) {
+      throw _HttpError(
+          HttpStatus.requestEntityTooLarge, 'request body too large');
+    }
     final bytes = <int>[];
     await for (final chunk in request) {
       bytes.addAll(chunk);
+      if (bytes.length > maxRequestBodySize) {
+        throw _HttpError(
+            HttpStatus.requestEntityTooLarge, 'request body too large');
+      }
     }
     return bytes;
   }
