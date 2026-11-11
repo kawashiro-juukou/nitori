@@ -720,30 +720,11 @@ class SatoriServer {
     final now = DateTime.now().millisecondsSinceEpoch;
     _prune(now);
 
-    // The buffer record and the broadcast both work off a copy, so an adapter
-    // keeps ownership of the object it emitted.
-    final buffered = Event(
-      type: event.type,
-      sn: ++_sequence,
-      login: event.login,
-      selfId: event.selfId,
-      platform: event.platform,
-      timestamp: event.timestamp ?? now,
-      argv: event.argv,
-      channel: event.channel,
-      guild: event.guild,
-      friend: event.friend,
-      member: event.member,
-      message: event.message,
-      operator: event.operator,
-      emoji: event.emoji,
-      role: event.role,
-      user: event.user,
-      button: event.button,
-      referrer: event.referrer,
-      eventType: event.eventType,
-      eventData: event.eventData,
-    );
+    // Use deepCopy to isolate nested objects (login, channel, guild, message,
+    // etc.) so adapter mutations after emit don't affect the replay buffer.
+    final buffered = event.deepCopy()
+      ..sn = ++_sequence
+      ..timestamp = event.timestamp ?? now;
     if (!_isLoginEvent(buffered.type)) {
       _buffer.add(_BufferedEvent(buffered, now));
       while (_buffer.length > maxBufferSize) {

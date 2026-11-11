@@ -264,6 +264,15 @@ class NitoriBot {
         .toList();
   }
 
+  /// Sends a message and returns only the message IDs.
+  ///
+  /// Delegates to [createMessage] and extracts the IDs.
+  Future<List<String>> sendMessage(String channelId, String content,
+      {dynamic referrer, bool? linkPreview}) async {
+    final created = await createMessage(channelId, content, referrer: referrer);
+    return <String>[for (final message in created) message.id!];
+  }
+
   Future<void> editMessage(
       String channelId, String messageId, String content) async {
     await client._request(
@@ -470,6 +479,16 @@ class NitoriBot {
       guildId,
     ]);
     return Channel.fromJson(data as Map<String, dynamic>);
+  }
+
+  /// Sends a private message by creating a direct channel and then sending.
+  ///
+  /// Convenience method matching the upstream SDK's `sendPrivateMessage`.
+  Future<List<String>> sendPrivateMessage(String userId, String content,
+      {String? guildId, dynamic referrer, bool? linkPreview}) async {
+    final channel = await createDirectChannel(userId, guildId: guildId);
+    return sendMessage(channel.id, content,
+        referrer: referrer, linkPreview: linkPreview);
   }
 
   Future<Pagination<Friend>> getFriendList({String? next}) async {

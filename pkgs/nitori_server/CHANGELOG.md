@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.11] - 2026-11-11
+
+### Fixed
+- Use `Event.deepCopy()` in `_publish` to prevent adapter mutations from affecting replay buffer
+
 ## [0.1.10] - 2026-11-11
 
 ### Added

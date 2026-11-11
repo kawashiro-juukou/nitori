@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.11] - 2026-11-11
+
+### Fixed
+- Use `Event.deepCopy()` in server `_publish` to prevent adapter mutations from affecting replay buffer
+
+### Added
+- `NitoriBot.sendPrivateMessage()` convenience method (nitori_client)
+- `NitoriBot.sendMessage()` returning message IDs (nitori_client)
+
 ## [0.1.10] - 2026-11-11
 
 ### Changed
