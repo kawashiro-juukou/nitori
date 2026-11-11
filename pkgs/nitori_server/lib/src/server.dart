@@ -114,11 +114,16 @@ class SatoriServer {
   Future<void> close() async {
     await _subscription?.cancel();
     _subscription = null;
-    final sockets = <Future<void>>[
-      for (final client in _clients) client.socket.close(),
-    ];
+    // Close each socket individually, ignoring individual failures to ensure
+    // the server socket is always closed.
+    for (final client in _clients) {
+      try {
+        await client.socket.close();
+      } catch (_) {
+        // Ignore individual socket close errors.
+      }
+    }
     _clients.clear();
-    await Future.wait<void>(sockets, eagerError: false);
     await _server?.close(force: true);
     _server = null;
   }
