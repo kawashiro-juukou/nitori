@@ -263,7 +263,7 @@ void main() {
 
     expect(response.statusCode, HttpStatus.ok);
     // One part, one upload key – not split at the embedded occurrence.
-    expect(jsonDecode(body).keys, <String>{'file'});
+    expect(jsonDecode(body), <String, dynamic>{'file': 'memory://upload/1'});
   });
 
   test('missing content-type header on multipart returns 400', () async {
