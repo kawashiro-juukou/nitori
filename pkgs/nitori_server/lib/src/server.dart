@@ -114,18 +114,24 @@ class SatoriServer {
   Future<void> close() async {
     await _subscription?.cancel();
     _subscription = null;
-    // Close each socket individually, ignoring individual failures to ensure
-    // the server socket is always closed.
+    // Close each socket individually, collecting any errors to report after
+    // all sockets have been attempted. This ensures the server socket is
+    // always closed while not silently swallowing failures.
+    final errors = <Object>[];
     for (final client in _clients) {
       try {
         await client.socket.close();
-      } catch (_) {
-        // Ignore individual socket close errors.
+      } catch (e) {
+        errors.add(e);
       }
     }
     _clients.clear();
     await _server?.close(force: true);
     _server = null;
+    if (errors.isNotEmpty) {
+      _report(StateError('errors closing ${errors.length} client socket(s)'),
+          StackTrace.current);
+    }
   }
 
   Future<void> _handleRequest(HttpRequest request) async {
