@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2026-11-11
+
+### Changed
+- Unified version bump across the monorepo
+- SDK constraint upgraded to ^3.2.0
+
 ## [0.1.6] - 2026-11-11
 
 ### Added
