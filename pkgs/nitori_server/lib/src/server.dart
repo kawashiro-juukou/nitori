@@ -672,9 +672,7 @@ class SatoriServer {
 
     for (final client in _clients.toList()) {
       if (!client.authorized) continue;
-      if (!_tryWrite(client.socket, encoded)) {
-        _drop(client);
-      }
+      _write(client.socket, encoded);
     }
   }
 
@@ -725,11 +723,6 @@ class SatoriServer {
     } catch (_) {
       return false;
     }
-  }
-
-  bool _tryWrite(WebSocket socket, String encoded) {
-    _write(socket, encoded);
-    return true;
   }
 
   Future<void> _sendError(
