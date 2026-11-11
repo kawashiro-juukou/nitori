@@ -486,21 +486,66 @@ class SatoriServer {
 
   Future<List<_FormPart>> _parseMultipart(
       String? contentType, List<int> body) async {
-    final boundary =
-        ContentType.parse(contentType ?? '').parameters['boundary'];
+    if (contentType == null) {
+      throw _HttpError(HttpStatus.badRequest, 'missing multipart content type');
+    }
+    final boundary = ContentType.parse(contentType).parameters['boundary'];
     if (boundary == null) {
       throw _HttpError(HttpStatus.badRequest, 'missing multipart boundary');
     }
 
     final parts = <_FormPart>[];
-    await for (final part in MimeMultipartTransformer(boundary)
-        .bind(Stream.fromIterable([body]))) {
-      final name = _partName(part, parts.length + 1);
-      final data = <int>[];
-      await for (final chunk in part) {
-        data.addAll(chunk);
+    final stream =
+        MimeMultipartTransformer(boundary).bind(Stream.fromIterable([body]));
+
+    // Use runZonedGuarded to catch errors from microtasks during stream subscription.
+    final completer = Completer<void>();
+    StreamSubscription<MimeMultipart>? subscription;
+    await runZonedGuarded(() async {
+      subscription = stream.listen(
+        (part) async {
+          final name = _partName(part, parts.length + 1);
+          final data = <int>[];
+          try {
+            await for (final chunk in part) {
+              data.addAll(chunk);
+            }
+          } on Object catch (e) {
+            if (!completer.isCompleted) {
+              completer.completeError(_HttpError(
+                  HttpStatus.badRequest, 'invalid multipart body: $e'));
+            }
+            await subscription?.cancel();
+            return;
+          }
+          parts.add(_FormPart(name, data));
+        },
+        onError: (Object e, StackTrace st) {
+          if (!completer.isCompleted) {
+            completer.completeError(_HttpError(
+                HttpStatus.badRequest, 'invalid multipart body: $e'));
+          }
+        },
+        onDone: () {
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+        },
+        cancelOnError: true,
+      );
+    }, (Object e, StackTrace st) {
+      // Catch synchronous errors during listen() call.
+      if (!completer.isCompleted) {
+        completer.completeError(
+            _HttpError(HttpStatus.badRequest, 'invalid multipart body: $e'));
       }
-      parts.add(_FormPart(name, data));
+    });
+
+    // Wait for completion and propagate any error.
+    try {
+      await completer.future;
+    } finally {
+      await subscription?.cancel();
     }
     return parts;
   }
@@ -648,6 +693,7 @@ class SatoriServer {
   // stream erroring, or one event that cannot be encoded.
   void _report(Object error, StackTrace stackTrace) {
     stderr.writeln('nitori_server: ${error.runtimeType}: $error');
+    stderr.writeln(stackTrace);
   }
 
   // Ages out by when the server enqueued the event, never by the timestamp the
@@ -682,12 +728,8 @@ class SatoriServer {
   }
 
   bool _tryWrite(WebSocket socket, String encoded) {
-    try {
-      _write(socket, encoded);
-      return true;
-    } catch (_) {
-      return false;
-    }
+    _write(socket, encoded);
+    return true;
   }
 
   Future<void> _sendError(

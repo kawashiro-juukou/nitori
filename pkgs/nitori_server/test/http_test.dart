@@ -266,6 +266,44 @@ void main() {
     expect(jsonDecode(body).keys, <String>{'file'});
   });
 
+  test('missing content-type header on multipart returns 400', () async {
+    final request = await client.post('127.0.0.1', port, '/v1/upload.create');
+    request.headers
+      ..set('authorization', 'Bearer secret')
+      ..set('satori-platform', 'memory')
+      ..set('satori-user-id', 'bot-1');
+    // No content-type header
+    request.add(utf8.encode('some body'));
+    final response = await request.close();
+    final body = await utf8.decoder.bind(response).join();
+
+    expect(response.statusCode, HttpStatus.badRequest);
+    expect(body, 'missing multipart content type');
+  });
+
+  test('malformed multipart body returns 400', () async {
+    const boundary = 'boundary';
+    final request = await client.post('127.0.0.1', port, '/v1/upload.create');
+    request.headers
+      ..set('authorization', 'Bearer secret')
+      ..set('satori-platform', 'memory')
+      ..set('satori-user-id', 'bot-1')
+      ..set('content-type', 'multipart/form-data; boundary=$boundary');
+    // Malformed: invalid header (missing colon)
+    request.add(utf8.encode(
+      '--$boundary\r\n'
+      'Content-Disposition form-data; name="file"\r\n'
+      '\r\n'
+      'hello\r\n'
+      '--$boundary--\r\n',
+    ));
+    final response = await request.close();
+    final body = await utf8.decoder.bind(response).join();
+
+    expect(response.statusCode, HttpStatus.badRequest);
+    expect(body, contains('invalid multipart body'));
+  });
+
   test('message.list returns a BidiList payload', () async {
     await post('message.create', <String, dynamic>{
       'channel_id': 'c1',
