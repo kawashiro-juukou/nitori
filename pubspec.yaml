@@ -1,0 +1,21 @@
+name: nitori_root
+description: Root pubspec for nitori monorepo with local dependency overrides.
+version: 0.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  nitori_core:
+    path: pkgs/nitori_core
+  nitori_message:
+    path: pkgs/nitori_message
+  nitori_client:
+    path: pkgs/nitori_client
+  nitori_server:
+    path: pkgs/nitori_server
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.0
