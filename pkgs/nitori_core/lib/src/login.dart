@@ -52,6 +52,6 @@ class Login {
   Map<String, dynamic> toJson() => _$LoginToJson(this);
 }
 
-abstract interface class LoginInterface {
+abstract class LoginInterface {
   Future<Login> getLogin();
 }

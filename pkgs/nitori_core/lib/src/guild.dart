@@ -18,10 +18,13 @@ class Guild {
   Map<String, dynamic> toJson() => _$GuildToJson(this);
 }
 
-abstract interface class GuildInterface {
+abstract class GuildInterface {
   Future<Guild> getGuild(String id);
 
   Future<Pagination<Guild>> getGuildList({String? next});
+
+  /// Returns an async iterable of all guilds the bot is in.
+  Stream<Guild> getGuildIter();
 
   Future<void> handleGuildRequest(String messageId, bool approve,
       {String? comment});

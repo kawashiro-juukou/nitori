@@ -52,12 +52,15 @@ class Channel {
   Map<String, dynamic> toJson() => _$ChannelToJson(this);
 }
 
-abstract interface class ChannelInterface {
+abstract class ChannelInterface {
   /// Get Channel by ID
   Future<Channel> getChannel(String id);
 
   /// Get Channels by Guild ID
   Future<Pagination<Channel>> getChannelList(String guildId, {String? next});
+
+  /// Returns an async iterable of all channels in a guild.
+  Stream<Channel> getChannelIter(String guildId);
 
   /// Create Channel
   Future<Channel> createChannel(String guildId, Map<String, dynamic> data);

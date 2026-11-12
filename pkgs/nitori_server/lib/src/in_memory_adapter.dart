@@ -108,6 +108,13 @@ class InMemoryBot extends SatoriBot {
       Pagination<Channel>(channels.values.toList());
 
   @override
+  Stream<Channel> getChannelIter(String guildId) async* {
+    for (final channel in channels.values) {
+      yield channel;
+    }
+  }
+
+  @override
   Future<Channel> createChannel(
       String guildId, Map<String, dynamic> data) async {
     final channel = Channel.fromJson(data);
@@ -168,6 +175,14 @@ class InMemoryBot extends SatoriBot {
   }
 
   @override
+  Future<List<String>> sendPrivateMessage(String userId, String content,
+      {String? guildId, dynamic referrer, bool? linkPreview}) async {
+    final channel = await createDirectChannel(userId, guildId: guildId);
+    return sendMessage(channel.id, content,
+        referrer: referrer, linkPreview: linkPreview);
+  }
+
+  @override
   Future<Message> getMessage(String channelId, String messageId) async =>
       messages[messageId] ??
       (throw StateError('message not found: $messageId'));
@@ -185,6 +200,16 @@ class InMemoryBot extends SatoriBot {
       return BidiList<Message>(data.sublist(0, limit));
     }
     return BidiList<Message>(data);
+  }
+
+  @override
+  Stream<Message> getMessageIter(String channelId) async* {
+    final data = messages.values
+        .where((message) => message.channel?.id == channelId)
+        .toList();
+    for (final message in data) {
+      yield message;
+    }
   }
 
   @override
@@ -235,6 +260,15 @@ class InMemoryBot extends SatoriBot {
   }
 
   @override
+  Stream<User> getReactionIter(
+      String channelId, String messageId, String emojiId) async* {
+    final ids = _reactions[messageId]?[emojiId] ?? const <String>{};
+    for (final id in ids) {
+      yield users[id] ?? User(id: id);
+    }
+  }
+
+  @override
   Future<List<String>> createUpload(List<dynamic> blobs) async => <String>[
         for (var i = 0; i < blobs.length; i++)
           'memory://upload/${++_uploadSequence}',
@@ -247,6 +281,13 @@ class InMemoryBot extends SatoriBot {
   @override
   Future<Pagination<Guild>> getGuildList({String? next}) async =>
       Pagination<Guild>(guilds.values.toList());
+
+  @override
+  Stream<Guild> getGuildIter() async* {
+    for (final guild in guilds.values) {
+      yield guild;
+    }
+  }
 
   @override
   Future<void> handleGuildRequest(String messageId, bool approve,
@@ -269,6 +310,15 @@ class InMemoryBot extends SatoriBot {
         if (entry.key.startsWith('$guildId/')) entry.value,
     ];
     return Pagination<GuildMember>(data);
+  }
+
+  @override
+  Stream<GuildMember> getGuildMemberIter(String guildId) async* {
+    for (final entry in members.entries) {
+      if (entry.key.startsWith('$guildId/')) {
+        yield entry.value;
+      }
+    }
   }
 
   @override
@@ -309,6 +359,13 @@ class InMemoryBot extends SatoriBot {
   Future<Pagination<GuildRole>> getGuildRoleList(String guildId,
           {String? next}) async =>
       Pagination<GuildRole>(roles.values.toList());
+
+  @override
+  Stream<GuildRole> getGuildRoleIter(String guildId) async* {
+    for (final role in roles.values) {
+      yield role;
+    }
+  }
 
   @override
   Future<GuildRole> createGuildRole(String guildId,
@@ -366,6 +423,13 @@ class InMemoryBot extends SatoriBot {
       Pagination<Friend>(friends.values.toList());
 
   @override
+  Stream<Friend> getFriendIter() async* {
+    for (final friend in friends.values) {
+      yield friend;
+    }
+  }
+
+  @override
   Future<void> deleteFriend(String userId) async {
     friends.remove(userId);
   }
@@ -373,4 +437,7 @@ class InMemoryBot extends SatoriBot {
   @override
   Future<void> handleFriendRequest(String messageId, bool approve,
       {String? comment}) async {}
+
+  @override
+  Future<void> updateCommands(List<Command> commands) async {}
 }

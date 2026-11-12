@@ -392,6 +392,11 @@ class _StubBot extends SatoriBot {
 
   @override
   String get userId => 'stub-1';
+
+  @override
+  Future<List<String>> sendPrivateMessage(String userId, String content,
+          {String? guildId, dynamic referrer, bool? linkPreview}) =>
+      throw UnimplementedError();
 }
 
 class _StubAdapter extends SatoriAdapter {

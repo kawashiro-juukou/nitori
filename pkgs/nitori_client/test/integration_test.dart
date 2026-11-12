@@ -7,6 +7,7 @@ import 'dart:io';
 
 import 'package:nitori_client/nitori_client.dart';
 import 'package:nitori_core/nitori_core.dart';
+// ignore: depend_on_referenced_packages
 import 'package:nitori_server/nitori_server.dart';
 import 'package:test/test.dart';
 

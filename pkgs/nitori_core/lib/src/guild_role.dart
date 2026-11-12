@@ -35,7 +35,7 @@ class GuildRole {
   Map<String, dynamic> toJson() => _$GuildRoleToJson(this);
 }
 
-abstract interface class GuildRoleInterface {
+abstract class GuildRoleInterface {
   Future<void> setGuildMemberRole(String guildId, String userId, String roleId);
 
   Future<void> unsetGuildMemberRole(
@@ -43,6 +43,9 @@ abstract interface class GuildRoleInterface {
 
   Future<Pagination<GuildRole>> getGuildRoleList(String guildId,
       {String? next});
+
+  /// Returns an async iterable of all roles in a guild.
+  Stream<GuildRole> getGuildRoleIter(String guildId);
 
   Future<GuildRole> createGuildRole(String guildId,
       {String? name,

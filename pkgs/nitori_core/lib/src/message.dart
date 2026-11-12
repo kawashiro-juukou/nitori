@@ -56,17 +56,26 @@ class Message {
   Message deepCopy() => Message.fromJson(toJson());
 }
 
-abstract interface class MessageInterface {
+abstract class MessageInterface {
   Future<List<Message>> createMessage(String channelId, String content,
       {dynamic referrer, bool? linkPreview});
 
   Future<List<String>> sendMessage(String channelId, String content,
       {dynamic referrer, bool? linkPreview});
 
+  /// Sends a private message by creating a direct channel and then sending.
+  ///
+  /// Convenience method matching the upstream SDK's `sendPrivateMessage`.
+  Future<List<String>> sendPrivateMessage(String userId, String content,
+      {String? guildId, dynamic referrer, bool? linkPreview});
+
   Future<Message> getMessage(String channelId, String messageId);
 
   Future<BidiList<Message>> getMessageList(String channelId,
       {String? next, Direction? direction, int? limit, Order? order});
+
+  /// Returns an async iterable of all messages in a channel.
+  Stream<Message> getMessageIter(String channelId);
 
   /// Named `editMessage` to match the upstream method of `message.update`.
   Future<void> editMessage(String channelId, String messageId, String content);
@@ -86,6 +95,10 @@ abstract interface class MessageInterface {
   Future<Pagination<User>> getReactionList(
       String channelId, String messageId, String emojiId,
       {String? next});
+
+  /// Returns an async iterable of users who reacted with an emoji.
+  Stream<User> getReactionIter(
+      String channelId, String messageId, String emojiId);
 
   Future<List<String>> createUpload(List<dynamic> blobs);
 }

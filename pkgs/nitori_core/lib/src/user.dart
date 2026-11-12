@@ -30,10 +30,13 @@ class User {
   Map<String, dynamic> toJson() => _$UserToJson(this);
 }
 
-abstract interface class UserInterface {
+abstract class UserInterface {
   Future<User> getUser(String userId);
 
   Future<Pagination<Friend>> getFriendList({String? next});
+
+  /// Returns an async iterable of all friends.
+  Stream<Friend> getFriendIter();
 
   Future<void> deleteFriend(String userId);
 }

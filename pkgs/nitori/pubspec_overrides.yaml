@@ -1,0 +1,13 @@
+# Local development overrides. Pub reads this file for `dart pub get`
+# but never publishes it, so pub.dev sees only the hosted constraints in
+# pubspec.yaml. This is the official replacement for `dependency_overrides`
+# in a published package.
+dependency_overrides:
+  nitori_core:
+    path: ../nitori_core
+  nitori_message:
+    path: ../nitori_message
+  nitori_client:
+    path: ../nitori_client
+  nitori_server:
+    path: ../nitori_server

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.13] - 2026-11-12
+
+### Added
+- Async iterator methods to protocol interfaces: `getMessageIter`,
+  `getReactionIter`, `getChannelIter`, `getGuildIter`, `getGuildMemberIter`,
+  `getGuildRoleIter`, `getFriendIter`
+- `sendPrivateMessage` to `MessageInterface`
+- `CommandInterface` with `updateCommands`
+
+### Changed
+- Protocol interfaces changed from `abstract interface class` to
+  `abstract class` so they can be `implements` targets
+
 ## [0.1.12] - 2026-11-11
 
 ### Changed

@@ -23,7 +23,8 @@ abstract class SatoriBot
         GuildMemberInterface,
         GuildRoleInterface,
         UserInterface,
-        LoginInterface {
+        LoginInterface,
+        CommandInterface {
   /// Platform name, matched against the `satori-platform` header.
   String get platform;
 
@@ -46,6 +47,10 @@ abstract class SatoriBot
   @override
   Future<Pagination<Channel>> getChannelList(String guildId, {String? next}) =>
       throw UnimplementedError();
+
+  /// Returns an async iterable of all channels in a guild.
+  @override
+  Stream<Channel> getChannelIter(String guildId) => throw UnimplementedError();
 
   /// Creates a channel in a guild with [data].
   @override
@@ -101,6 +106,11 @@ abstract class SatoriBot
           {String? next, Direction? direction, int? limit, Order? order}) =>
       throw UnimplementedError();
 
+  /// Returns an async iterable of all messages in a channel.
+  @override
+  Stream<Message> getMessageIter(String channelId) =>
+      throw UnimplementedError();
+
   /// Edits a message's content.
   @override
   Future<void> editMessage(
@@ -138,6 +148,12 @@ abstract class SatoriBot
           {String? next}) =>
       throw UnimplementedError();
 
+  /// Returns an async iterable of users who reacted with an emoji.
+  @override
+  Stream<User> getReactionIter(
+          String channelId, String messageId, String emojiId) =>
+      throw UnimplementedError();
+
   // Upload method (1)
 
   /// Uploads blobs and returns their proxy URLs.
@@ -155,6 +171,10 @@ abstract class SatoriBot
   @override
   Future<Pagination<Guild>> getGuildList({String? next}) =>
       throw UnimplementedError();
+
+  /// Returns an async iterable of all guilds the bot is in.
+  @override
+  Stream<Guild> getGuildIter() => throw UnimplementedError();
 
   // Guild request method (1)
 
@@ -175,6 +195,11 @@ abstract class SatoriBot
   @override
   Future<Pagination<GuildMember>> getGuildMemberList(String guildId,
           {String? next}) =>
+      throw UnimplementedError();
+
+  /// Returns an async iterable of all members in a guild.
+  @override
+  Stream<GuildMember> getGuildMemberIter(String guildId) =>
       throw UnimplementedError();
 
   /// Mutes a guild member for an optional duration.
@@ -224,6 +249,11 @@ abstract class SatoriBot
           {String? next}) =>
       throw UnimplementedError();
 
+  /// Returns an async iterable of all roles in a guild.
+  @override
+  Stream<GuildRole> getGuildRoleIter(String guildId) =>
+      throw UnimplementedError();
+
   /// Creates a guild role with optional properties.
   @override
   Future<GuildRole> createGuildRole(String guildId,
@@ -271,6 +301,17 @@ abstract class SatoriBot
   /// Handles a friend request.
   Future<void> handleFriendRequest(String messageId, bool approve,
           {String? comment}) =>
+      throw UnimplementedError();
+
+  /// Returns an async iterable of all friends.
+  @override
+  Stream<Friend> getFriendIter() => throw UnimplementedError();
+
+  // Command methods (1)
+
+  /// Updates the bot's slash command list.
+  @override
+  Future<void> updateCommands(List<Command> commands) =>
       throw UnimplementedError();
 }
 

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.13] - 2026-11-12
+
+### Added
+- `InMemoryBot` implementations for all async iterator methods, `sendPrivateMessage`
+  and `updateCommands`
+
+### Changed
+- Protocol compliance: `SatoriBot` now implements the full upstream method
+  surface including iterators and `updateCommands`
+
 ## [0.1.12] - 2026-11-11
 
 ### Fixed

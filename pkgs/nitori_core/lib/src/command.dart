@@ -81,3 +81,9 @@ class Argv {
 
   Map<String, dynamic> toJson() => _$ArgvToJson(this);
 }
+
+/// Interface for command management (slash commands).
+abstract class CommandInterface {
+  /// Updates the bot's slash command list.
+  Future<void> updateCommands(List<Command> commands);
+}
