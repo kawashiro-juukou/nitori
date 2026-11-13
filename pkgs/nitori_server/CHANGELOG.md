@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.15] - 2026-11-13
+
+### Added
+- `POST /v1/meta` endpoint returning server metadata (logins + proxy_urls)
+- `POST /v1/meta/webhook.create` and `POST /v1/meta/webhook.delete` for webhook management
+- `GET /v1/proxy/*url` media proxy with CORS and proxy URL allowlist
+- `ALL /v1/admin/*path` redirects to `/v1/meta/*path`
+- `ALL /v1/internal/*path` route (stub, returns 404)
+- Configurable `path` prefix (upstream default `/satori`)
+- Event delivery to registered webhooks with `Satori-Opcode` header
+
+### Changed
+- `SatoriServer` constructor adds `path`, `webhooks` parameters
+
 ## [0.1.14] - 2026-11-13
 
 ### Fixed

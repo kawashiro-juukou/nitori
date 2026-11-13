@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:http/http.dart' as http;
 import 'package:nitori_core/nitori_core.dart';
 import 'package:nitori_server/nitori_server.dart';
 import 'package:test/test.dart';
@@ -18,9 +20,11 @@ void main() {
   late SatoriServer server;
   late int port;
   late HttpClient client;
+  late http.Client httpClient;
 
   setUp(() async {
     client = HttpClient();
+    httpClient = http.Client();
     bot = InMemoryBot(
       user: User(id: 'bot-1', name: 'Bot'),
       platform: 'memory',
@@ -47,6 +51,7 @@ void main() {
     await server.close();
     await adapter.close();
     client.close(force: true);
+    httpClient.close();
   });
 
   Future<_Response> post(
@@ -387,6 +392,157 @@ void main() {
     final response = await request.close();
 
     expect(response.statusCode, HttpStatus.requestEntityTooLarge);
+  });
+
+  // P0 route tests
+
+  test('POST /v1/meta returns logins and proxy_urls', () async {
+    final response = await post('meta', <String, dynamic>{});
+    expect(response.statusCode, HttpStatus.ok);
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    expect(body['logins'], isA<List>());
+    expect(body['logins'].length, 1);
+    expect(body['proxy_urls'], <String>['http://proxy.example']);
+  });
+
+  test('POST /v1/meta requires auth', () async {
+    final response = await post('meta', <String, dynamic>{}, token: null);
+    expect(response.statusCode, HttpStatus.forbidden);
+    expect(response.body, 'invalid token');
+  });
+
+  test('POST /v1/meta/webhook.create and delete', () async {
+    // Create webhook
+    var response = await post('meta/webhook.create',
+        <String, dynamic>{'url': 'http://webhook.example/endpoint'});
+    expect(response.statusCode, HttpStatus.ok);
+    expect(response.body, '{}');
+
+    // Duplicate create updates
+    response = await post('meta/webhook.create',
+        <String, dynamic>{'url': 'http://webhook.example/endpoint', 'token': 'tok', 'enabled': false});
+    expect(response.statusCode, HttpStatus.ok);
+
+    // Delete webhook
+    response = await post('meta/webhook.delete',
+        <String, dynamic>{'url': 'http://webhook.example/endpoint'});
+    expect(response.statusCode, HttpStatus.ok);
+    expect(response.body, '{}');
+
+    // Delete non-existent is idempotent
+    response = await post('meta/webhook.delete',
+        <String, dynamic>{'url': 'http://webhook.example/endpoint'});
+    expect(response.statusCode, HttpStatus.ok);
+  });
+
+  test('webhook create/delete require auth', () async {
+    var response = await post('meta/webhook.create',
+        <String, dynamic>{'url': 'http://webhook.example/endpoint'}, token: null);
+    expect(response.statusCode, HttpStatus.forbidden);
+    response = await post('meta/webhook.delete',
+        <String, dynamic>{'url': 'http://webhook.example/endpoint'}, token: null);
+    expect(response.statusCode, HttpStatus.forbidden);
+  });
+
+  test('GET /v1/proxy/*url forwards to allowed URLs', () async {
+    // Start a simple HTTP server to proxy to
+    final targetServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(targetServer.close);
+    targetServer.listen((req) {
+      req.response
+        ..statusCode = HttpStatus.ok
+        ..headers.contentType = ContentType.text
+        ..write('proxied content');
+      req.response.close();
+    });
+    final targetUrl = 'http://127.0.0.1:${targetServer.port}/test.txt';
+
+    // Must be under an allowed proxy URL
+    final proxyServer = await SatoriServer(
+      adapter: InMemoryAdapter(
+        bot: InMemoryBot(user: User(id: 'b', name: 'B')),
+        proxyUrls: <String>['http://127.0.0.1:${targetServer.port}'],
+      ),
+      token: 'secret',
+    ).bind(address: InternetAddress.loopbackIPv4, port: 0);
+    addTearDown(proxyServer.close);
+
+    final request = await client.get(
+        '127.0.0.1', proxyServer.port, '/v1/proxy/$targetUrl');
+    request.headers.set('authorization', 'Bearer secret');
+    final response = await request.close();
+    expect(response.statusCode, HttpStatus.ok);
+    final body = await utf8.decoder.bind(response).join();
+    expect(body, 'proxied content');
+  });
+
+  test('GET /v1/proxy/*url rejects non-allowed URLs', () async {
+    final req = await client.get('127.0.0.1', port,
+        '/v1/proxy/http://evil.example/secret');
+    req.headers.set('authorization', 'Bearer secret');
+    final response = await req.close();
+    expect(response.statusCode, HttpStatus.forbidden);
+    expect(await utf8.decoder.bind(response).join(), 'forbidden');
+  });
+
+  test('GET /v1/proxy/*url rejects invalid URLs', () async {
+    final req = await client.get('127.0.0.1', port,
+        '/v1/proxy/not-a-url');
+    req.headers.set('authorization', 'Bearer secret');
+    final response = await req.close();
+    expect(response.statusCode, HttpStatus.badRequest);
+    expect(await utf8.decoder.bind(response).join(), 'invalid url');
+  });
+
+  test('ALL /v1/admin/* redirects to /v1/meta', () async {
+    // Use raw socket to avoid HttpClient auto-following redirects
+    final socket = await RawSocket.connect(InternetAddress.loopbackIPv4, port);
+    addTearDown(socket.close);
+    final request = 'GET /v1/admin/webhook.create HTTP/1.1\r\n'
+        'Host: 127.0.0.1:$port\r\n'
+        'Authorization: Bearer secret\r\n'
+        'Connection: close\r\n'
+        '\r\n';
+    socket.write(utf8.encode(request));
+    final completer = Completer<String>();
+    final buffer = StringBuffer();
+    socket.listen(
+      (event) {
+        if (event == RawSocketEvent.read) {
+          final data = socket.read();
+          if (data != null) {
+            buffer.write(utf8.decode(data));
+            // Check if we have the full response (headers end with \r\n\r\n)
+            if (buffer.toString().contains('\r\n\r\n')) {
+              completer.complete(buffer.toString());
+            }
+          }
+        } else if (event == RawSocketEvent.closed) {
+          if (!completer.isCompleted) {
+            completer.complete(buffer.toString());
+          }
+        }
+      },
+      onError: (e) => completer.completeError(e),
+    );
+    final responseText = await completer.future.timeout(const Duration(seconds: 5));
+    // Parse status line
+    final statusLine = responseText.split('\r\n').first;
+    expect(statusLine, contains('301'));
+    // Parse Location header
+    final locationMatch = RegExp(r'location:\s*(\S+)', caseSensitive: false)
+        .firstMatch(responseText);
+    expect(locationMatch, isNotNull);
+    expect(locationMatch!.group(1), '/v1/meta/webhook.create');
+  });
+
+  test('GET /v1/internal/* returns 404 (not implemented)', () async {
+    final req = await client.get('127.0.0.1', port,
+        '/v1/internal/_tmp/test.txt');
+    req.headers.set('authorization', 'Bearer secret');
+    final response = await req.close();
+    expect(response.statusCode, HttpStatus.notFound);
+    expect(await utf8.decoder.bind(response).join(), 'internal routes not implemented');
   });
 }
 
