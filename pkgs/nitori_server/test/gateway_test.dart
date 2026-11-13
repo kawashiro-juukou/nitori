@@ -160,6 +160,31 @@ void main() {
     await connection.close();
   });
 
+  test('event aliases are rewritten to the canonical name', () async {
+    final connection = await identify();
+
+    // `message` folds into `message-created`; the newer `guild-deleted`
+    // spellings fold back into the canonical `guild-removed` names.
+    adapter.emit(Event(type: 'message', login: bot.login));
+    adapter.emit(Event(type: 'guild-deleted', login: bot.login));
+    adapter.emit(Event(type: 'guild-member-deleted', login: bot.login));
+
+    await waitFor(
+        () => connection.frames.where((frame) => frame['op'] == 0).length >= 3);
+    final types = connection.frames
+        .where((frame) => frame['op'] == 0)
+        .map((frame) => (frame['body'] as Map<String, dynamic>)['type'])
+        .toList();
+
+    expect(types, <String>[
+      'message-created',
+      'guild-removed',
+      'guild-member-removed',
+    ]);
+
+    await connection.close();
+  });
+
   test('reconnect replays buffered events after the last sn', () async {
     final first = await identify();
     await first.socket.close();

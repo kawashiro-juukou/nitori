@@ -207,7 +207,10 @@ class InMemoryBot extends SatoriBot {
     final data = messages.values
         .where((message) => message.channel?.id == channelId)
         .toList();
-    for (final message in data) {
+    // Upstream derives `getMessageIter` from `getMessageList` and reverses the
+    // page, because the list is ascending (oldest first) while the iterator is
+    // expected to walk newest first.
+    for (final message in data.reversed) {
       yield message;
     }
   }

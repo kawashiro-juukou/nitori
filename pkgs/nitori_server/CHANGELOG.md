@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.14] - 2026-11-13
+
+### Fixed
+- Align gateway dispatch with upstream `eventAliases`: an adapter emitting any
+  member of an alias group now rewrites the emitted type to the canonical
+  (first) name before it is buffered and broadcast
+- `InMemoryBot.getMessageIter` now walks newest first (upstream derives the
+  iterator from `getMessageList` and reverses the page)
+
 ## [0.1.13] - 2026-11-12
 
 ### Added

@@ -347,6 +347,20 @@ void main() {
     expect((body['data'] as List<dynamic>).single['id'], 'm1');
   });
 
+  test('getMessageIter walks newest first', () async {
+    // InMemoryBot.getMessageIter is derived from getMessageList, which is
+    // ascending (oldest first); like the upstream generator, the iterator
+    // reverses the page so the newest message arrives first.
+    for (final content in <String>['first', 'second', 'third']) {
+      await post('message.create', <String, dynamic>{
+        'channel_id': 'c1',
+        'content': content,
+      });
+    }
+    final ids = await bot.getMessageIter('c1').map((m) => m.content).toList();
+    expect(ids, <String>['third', 'second', 'first']);
+  });
+
   test('every registered method is routed', () async {
     for (final key in methodKeys) {
       final response = await post(key, <String, dynamic>{});

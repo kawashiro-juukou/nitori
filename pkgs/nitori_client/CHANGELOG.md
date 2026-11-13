@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.14] - 2026-11-13
+
+### Changed
+- Unified version bump across the monorepo
+
 ## [0.1.13] - 2026-11-12
 
 ### Changed

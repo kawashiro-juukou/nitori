@@ -725,6 +725,7 @@ class SatoriServer {
     final buffered = event.deepCopy()
       ..sn = ++_sequence
       ..timestamp = event.timestamp ?? now;
+    _applyEventAliases(buffered);
     if (!_isLoginEvent(buffered.type)) {
       _buffer.add(_BufferedEvent(buffered, now));
       while (_buffer.length > maxBufferSize) {
@@ -756,6 +757,16 @@ class SatoriServer {
       type == 'login-added' ||
       type == 'login-updated' ||
       type == 'login-removed';
+
+  // An adapter emitting any member of an alias group means the whole group, so
+  // the canonical (first) name replaces the emitted one on the wire.
+  void _applyEventAliases(Event event) {
+    for (final aliases in eventAliases) {
+      if (!aliases.contains(event.type)) continue;
+      event.type = aliases.first;
+      return;
+    }
+  }
 
   void _drop(_GatewayClient client) {
     _clients.remove(client);
