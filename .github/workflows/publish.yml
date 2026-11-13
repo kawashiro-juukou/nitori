@@ -7,11 +7,11 @@ name: Publish
 on:
   push:
     tags:
-      - 'nitori-v[0-9]+.[0-9]+.[0-9]+*'
-      - 'nitori_client-v[0-9]+.[0-9]+.[0-9]+*'
-      - 'nitori_core-v[0-9]+.[0-9]+.[0-9]+*'
-      - 'nitori_message-v[0-9]+.[0-9]+.[0-9]+*'
-      - 'nitori_server-v[0-9]+.[0-9]+.[0-9]+*'
+      - 'nitori-v*'
+      - 'nitori_client-v*'
+      - 'nitori_core-v*'
+      - 'nitori_message-v*'
+      - 'nitori_server-v*'
 
 permissions:
   contents: read
