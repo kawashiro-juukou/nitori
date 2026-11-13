@@ -4,7 +4,8 @@
 
 # Avoid committing pubspec.lock for library packages; see
 # https://dart.dev/guides/libraries/private-files#pubspeclock.
-pubspec.lock
+# Workspace mode only commits the root lockfile.
+pkgs/*/pubspec.lock
 
 # Created by `nix build` / `nix flake check`
 /result
@@ -12,3 +13,7 @@ pubspec.lock
 
 # Created by direnv for `use flake`
 .direnv/
+
+# Created by melos bootstrap
+.idea/
+*.iml

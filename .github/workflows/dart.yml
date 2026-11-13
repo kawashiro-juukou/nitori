@@ -1,5 +1,5 @@
-# Created with package:mono_repo v6.9.0
 name: Dart CI
+
 on:
   push:
     branches:
@@ -7,104 +7,43 @@ on:
       - master
     paths:
       - .github/workflows/dart.yml
-      - mono_repo.yaml
+      - pubspec.yaml
       - analysis_options.yaml
-      - "**/mono_pkg.yaml"
-      - "pkgs/nitori/**"
-      - "pkgs/nitori_client/**"
-      - "pkgs/nitori_core/**"
-      - "pkgs/nitori_message/**"
-      - "pkgs/nitori_server/**"
+      - "pkgs/**"
       - "!**/*.md"
   pull_request:
     paths:
       - .github/workflows/dart.yml
-      - mono_repo.yaml
+      - pubspec.yaml
       - analysis_options.yaml
-      - "**/mono_pkg.yaml"
-      - "pkgs/nitori/**"
-      - "pkgs/nitori_client/**"
-      - "pkgs/nitori_core/**"
-      - "pkgs/nitori_message/**"
-      - "pkgs/nitori_server/**"
+      - "pkgs/**"
       - "!**/*.md"
   schedule:
     - cron: "0 0 * * 0"
-defaults:
-  run:
-    shell: bash
-env:
-  PUB_ENVIRONMENT: bot.github
+
 permissions:
   contents: read
 
 jobs:
-  analyze_and_format:
-    name: analyze_and_format; linux; Dart 3.2.0
+  check:
+    name: analyze, format and test
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ matrix.package }}
-    strategy:
-      matrix:
-        package: [pkgs/nitori, pkgs/nitori_client, pkgs/nitori_core, pkgs/nitori_message, pkgs/nitori_server]
     steps:
-      - name: Cache Pub hosted dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.5.0;package:${{ matrix.package }}"
-          restore-keys: |-
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.5.0;package:${{ matrix.package }}
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.5.0
-            os:ubuntu-latest;pub-cache-hosted
-            os:ubuntu-latest
+          fetch-depth: 0
       - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1
         with:
-          sdk: "3.5.0"
-      - id: checkout
-        name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - name: pub upgrade
-        run: dart pub upgrade
-      - name: analyze
-        run: dart analyze --fatal-infos .
-      - name: format
-        run: dart format --output=none --set-exit-if-changed .
-
-  unit_test:
-    name: unit_test; linux; Dart 3.2.0
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ matrix.package }}
-    strategy:
-      matrix:
-        package: [pkgs/nitori, pkgs/nitori_client, pkgs/nitori_core, pkgs/nitori_message, pkgs/nitori_server]
-    steps:
-      - name: Cache Pub hosted dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;sdk:3.5.0;package:${{ matrix.package }}"
-          restore-keys: |-
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.5.0;package:${{ matrix.package }}
-            os:ubuntu-latest;pub-cache-hosted;sdk:3.5.0
-            os:ubuntu-latest;pub-cache-hosted
-            os:ubuntu-latest
-      - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d
-        with:
-          sdk: "3.5.0"
-      - id: checkout
-        name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - name: pub upgrade
-        run: dart pub upgrade
-      - name: test
-        run: dart test
+          sdk: "3.11.0"
+      - name: Activate melos
+        run: dart pub global activate melos
+      - name: Bootstrap workspace
+        run: melos bootstrap
+      - name: Analyze
+        run: melos run analyze
+      - name: Format
+        run: melos run format
+      - name: Test
+        run: melos run test

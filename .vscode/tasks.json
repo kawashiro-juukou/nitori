@@ -4,13 +4,9 @@
     {
       "label": "Test",
       "type": "shell",
-      "command": "dart",
+      "command": "melos",
       "args": [
-        "pub",
-        "global",
         "run",
-        "mono_repo",
-        "dart",
         "test"
       ],
       "problemMatcher": [],

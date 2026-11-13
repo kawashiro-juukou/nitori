@@ -64,9 +64,19 @@ rec {
         chmod -R +w "$work"
         cd "$work"
 
+        # A root pubspec.yaml means this is a pub workspace: one `pub get`
+        # resolves every member. Otherwise resolve each package on its own.
+        if [ -f pubspec.yaml ]; then
+          echo "==> workspace root: dart pub get"
+          dart pub get
+        else
+          for pkg in ${lib.concatStringsSep " " packages}; do
+            echo "==> pkgs/$pkg: dart pub get"
+            (cd "pkgs/$pkg" && dart pub get)
+          done
+        fi
+
         for pkg in ${lib.concatStringsSep " " packages}; do
-          echo "==> pkgs/$pkg: dart pub get"
-          (cd "pkgs/$pkg" && dart pub get)
           echo "==> pkgs/$pkg: dart analyze --fatal-infos ."
           (cd "pkgs/$pkg" && dart analyze --fatal-infos .)
           echo "==> pkgs/$pkg: dart test"
@@ -79,7 +89,10 @@ rec {
     if sandboxed then
       pkgs.writeShellApplication {
         name = "nitori-check-sandboxed";
-        runtimeInputs = [ pkgs.dart ];
+        runtimeInputs = [
+          pkgs.dart
+          pkgs.melos
+        ];
         text = ''
           # Keep the pub cache out of the user's home during a sandboxed build.
           export HOME=/tmp
@@ -90,7 +103,10 @@ rec {
     else
       pkgs.writeShellApplication {
         name = "nitori-check";
-        runtimeInputs = [ pkgs.dart ];
+        runtimeInputs = [
+          pkgs.dart
+          pkgs.melos
+        ];
         text = body;
       };
 }

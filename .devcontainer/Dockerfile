@@ -39,5 +39,5 @@ CMD ["fish"]
 # Add Dart pub cache to PATH
 ENV PATH="/home/${USERNAME}/.pub-cache/bin:${PATH}"
 
-# Install mono_repo
-RUN dart pub global activate mono_repo
+# Install melos
+RUN dart pub global activate melos

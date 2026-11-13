@@ -5,8 +5,9 @@ repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori
 
 
 environment:
-  sdk: ^3.5.0
+  sdk: ^3.9.0
 
+resolution: workspace
 dependencies:
   nitori_core: ^0.1.13
   nitori_message: ^0.1.13

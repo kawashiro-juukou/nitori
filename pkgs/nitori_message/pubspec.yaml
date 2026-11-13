@@ -5,8 +5,9 @@ repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori_m
 issue_tracker: https://github.com/kawashiro-juukou/nitori/issues
 
 environment:
-  sdk: ^3.5.0
+  sdk: ^3.9.0
 
+resolution: workspace
 platforms:
   android:
   ios:

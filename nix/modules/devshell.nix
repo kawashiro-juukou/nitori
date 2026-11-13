@@ -20,6 +20,7 @@ in
       devShells.default = pkgs.mkShell {
         packages = [
           pkgs.dart
+          pkgs.melos
           pkgs.git
           pkgs.jq
           pkgs.nixfmt
