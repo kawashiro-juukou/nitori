@@ -5,7 +5,10 @@ import './user.dart';
 part 'friend.g.dart';
 
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class Friend {
   User? user;
   String? nick;

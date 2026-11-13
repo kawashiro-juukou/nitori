@@ -4,7 +4,10 @@ part 'command.g.dart';
 
 /// A command the bot exposes to the platform, as advertised by `updateCommands`.
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class Command {
   String name;
 
@@ -18,16 +21,16 @@ class Command {
   /// Nested sub-commands.
   List<Command> children;
 
-  Command(
-      {required this.name,
-      Map<String, String>? description,
-      List<CommandDeclaration>? arguments,
-      List<CommandDeclaration>? options,
-      List<Command>? children})
-      : description = description ?? const <String, String>{},
-        arguments = arguments ?? const <CommandDeclaration>[],
-        options = options ?? const <CommandDeclaration>[],
-        children = children ?? const <Command>[];
+  Command({
+    required this.name,
+    Map<String, String>? description,
+    List<CommandDeclaration>? arguments,
+    List<CommandDeclaration>? options,
+    List<Command>? children,
+  }) : description = description ?? const <String, String>{},
+       arguments = arguments ?? const <CommandDeclaration>[],
+       options = options ?? const <CommandDeclaration>[],
+       children = children ?? const <Command>[];
 
   factory Command.fromJson(Map<String, dynamic> json) =>
       _$CommandFromJson(json);
@@ -37,7 +40,10 @@ class Command {
 
 /// A single argument or option of a [Command].
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class CommandDeclaration {
   String name;
 
@@ -49,12 +55,12 @@ class CommandDeclaration {
   /// Human-readable descriptions keyed by locale code.
   Map<String, String> description;
 
-  CommandDeclaration(
-      {required this.name,
-      required this.type,
-      required this.required,
-      Map<String, String>? description})
-      : description = description ?? const <String, String>{};
+  CommandDeclaration({
+    required this.name,
+    required this.type,
+    required this.required,
+    Map<String, String>? description,
+  }) : description = description ?? const <String, String>{};
 
   factory CommandDeclaration.fromJson(Map<String, dynamic> json) =>
       _$CommandDeclarationFromJson(json);
@@ -64,7 +70,10 @@ class CommandDeclaration {
 
 /// Command invocation carried by `interaction/command` events.
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class Argv {
   /// Name of the invoked command.
   String? name;

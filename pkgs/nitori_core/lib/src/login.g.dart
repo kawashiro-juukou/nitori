@@ -7,18 +7,18 @@ part of 'login.dart';
 // **************************************************************************
 
 Login _$LoginFromJson(Map<String, dynamic> json) => Login(
-      status: $enumDecode(_$StatusEnumMap, json['status']),
-      user: json['user'] == null
-          ? null
-          : User.fromJson(json['user'] as Map<String, dynamic>),
-      platform: json['platform'] as String?,
-      sn: json['sn'] as int?,
-      adapter: json['adapter'] as String?,
-      features: (json['features'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-      hidden: json['hidden'] as bool?,
-    );
+  status: $enumDecode(_$StatusEnumMap, json['status']),
+  user: json['user'] == null
+      ? null
+      : User.fromJson(json['user'] as Map<String, dynamic>),
+  platform: json['platform'] as String?,
+  sn: json['sn'] as int?,
+  adapter: json['adapter'] as String?,
+  features: (json['features'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  hidden: json['hidden'] as bool?,
+);
 
 Map<String, dynamic> _$LoginToJson(Login instance) {
   final val = <String, dynamic>{};

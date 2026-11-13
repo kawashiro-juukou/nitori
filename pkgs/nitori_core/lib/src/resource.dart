@@ -29,12 +29,13 @@ bool _listEquals(List<ElementNode> a, List<ElementNode> b) {
 /// keeps a representation here and `nitori_message` can convert to and from it
 /// when the two need to interoperate.
 class ElementNode {
-  ElementNode(this.type,
-      {Map<String, String>? attributes,
-      List<ElementNode>? children,
-      this.text = ''})
-      : attributes = attributes ?? const <String, String>{},
-        children = children ?? const <ElementNode>[];
+  ElementNode(
+    this.type, {
+    Map<String, String>? attributes,
+    List<ElementNode>? children,
+    this.text = '',
+  }) : attributes = attributes ?? const <String, String>{},
+       children = children ?? const <ElementNode>[];
 
   /// Tag name. Bare text runs are represented as a `text` node.
   final String type;
@@ -362,8 +363,11 @@ class _Parser {
     if (tag.endsWith('/')) {
       return ElementNode(type, attributes: attributes);
     }
-    return ElementNode(type,
-        attributes: attributes, children: _parseNodes(type));
+    return ElementNode(
+      type,
+      attributes: attributes,
+      children: _parseNodes(type),
+    );
   }
 
   Map<String, String> _parseAttributes(String source) {

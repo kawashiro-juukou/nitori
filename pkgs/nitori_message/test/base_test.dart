@@ -26,11 +26,14 @@ void main() {
   group('Base', () {
     test('BaseElement', () {
       expect(n.Base('test').toString(), equals('<test/>'));
-      expect(n.Base('test', attributes: {'id': '001'}).toString(),
-          equals('<test id="001"/>'));
       expect(
-          n.Base('test', attributes: {'id': '001', 'name': 'test'}).toString(),
-          equals('<test id="001" name="test"/>'));
+        n.Base('test', attributes: {'id': '001'}).toString(),
+        equals('<test id="001"/>'),
+      );
+      expect(
+        n.Base('test', attributes: {'id': '001', 'name': 'test'}).toString(),
+        equals('<test id="001" name="test"/>'),
+      );
     });
 
     test('Escape', () {
@@ -61,19 +64,59 @@ void main() {
       final num = String.fromCharCodes(const [0x26, 0x23]);
       final hex = String.fromCharCodes(const [0x26, 0x23, 0x78]);
       final quote = String.fromCharCode(0x27);
-      expect(n.unescape('$num' '39;'), equals(quote));
-      expect(n.unescape('$hex' '27;'), equals(quote));
-      expect(n.unescape('$num' '65;'), equals('A'));
-      expect(n.unescape('$hex' '26;'), equals('&'));
-      expect(n.unescape('$num' '38;'), equals('&'));
-      expect(n.unescape('a$num' '38;b'), equals('a&b'));
+      expect(
+        n.unescape(
+          '$num'
+          '39;',
+        ),
+        equals(quote),
+      );
+      expect(
+        n.unescape(
+          '$hex'
+          '27;',
+        ),
+        equals(quote),
+      );
+      expect(
+        n.unescape(
+          '$num'
+          '65;',
+        ),
+        equals('A'),
+      );
+      expect(
+        n.unescape(
+          '$hex'
+          '26;',
+        ),
+        equals('&'),
+      );
+      expect(
+        n.unescape(
+          '$num'
+          '38;',
+        ),
+        equals('&'),
+      );
+      expect(
+        n.unescape(
+          'a$num'
+          '38;b',
+        ),
+        equals('a&b'),
+      );
     });
 
     test('Boolean attribute serialization', () {
-      expect(n.Base('test', attributes: {'flag': true}).toString(),
-          equals('<test flag/>'));
-      expect(n.Base('test', attributes: {'flag': false}).toString(),
-          equals('<test no-flag/>'));
+      expect(
+        n.Base('test', attributes: {'flag': true}).toString(),
+        equals('<test flag/>'),
+      );
+      expect(
+        n.Base('test', attributes: {'flag': false}).toString(),
+        equals('<test no-flag/>'),
+      );
     });
   });
 }

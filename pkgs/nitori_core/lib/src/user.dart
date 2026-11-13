@@ -6,7 +6,10 @@ import './friend.dart';
 part 'user.g.dart';
 
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class User {
   String id;
   String? name;
@@ -17,13 +20,14 @@ class User {
   String? discriminator;
   bool? isBot;
 
-  User(
-      {required this.id,
-      this.name,
-      this.nick,
-      this.avatar,
-      this.discriminator,
-      this.isBot});
+  User({
+    required this.id,
+    this.name,
+    this.nick,
+    this.avatar,
+    this.discriminator,
+    this.isBot,
+  });
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 

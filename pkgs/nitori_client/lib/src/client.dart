@@ -34,15 +34,15 @@ class NitoriClient {
     Duration retryInterval = const Duration(seconds: 5),
     Duration retryLazy = const Duration(minutes: 1),
     Duration heartbeatInterval = const Duration(seconds: 10),
-  })  : _http = httpClient ?? http.Client(),
-        _gateway = Gateway(
-          baseUrl: baseUrl,
-          token: token,
-          retryTimes: retryTimes,
-          retryInterval: retryInterval,
-          retryLazy: retryLazy,
-          heartbeatInterval: heartbeatInterval,
-        ) {
+  }) : _http = httpClient ?? http.Client(),
+       _gateway = Gateway(
+         baseUrl: baseUrl,
+         token: token,
+         retryTimes: retryTimes,
+         retryInterval: retryInterval,
+         retryLazy: retryLazy,
+         heartbeatInterval: heartbeatInterval,
+       ) {
     _gateway.onReady = _handleReady;
     _gateway.onMeta = (urls) => proxyUrls = urls;
     _gateway.onStatusChanged = (status) => onStatusChanged?.call(status);
@@ -140,7 +140,10 @@ class NitoriClient {
   /// by the matching wire field and passed through [transformKey] so nested
   /// camelCase maps become snake_case on the wire.
   Future<dynamic> _request(
-      NitoriBot bot, String key, List<Object?> args) async {
+    NitoriBot bot,
+    String key,
+    List<Object?> args,
+  ) async {
     final method = methods[key];
     if (method == null) throw StateError('unknown method: $key');
 
@@ -172,17 +175,20 @@ class NitoriClient {
           ? arg
           : transformKey(arg, cashConvertCamelToSnake);
     }
-    final response = await _http.post(uri,
-        headers: _headers(bot), body: jsonEncode(payload));
+    final response = await _http.post(
+      uri,
+      headers: _headers(bot),
+      body: jsonEncode(payload),
+    );
     return _decode(response);
   }
 
   Map<String, String> _headers(NitoriBot bot) => <String, String>{
-        if (token != null) 'Authorization': 'Bearer $token',
-        'satori-platform': bot.platform,
-        'satori-user-id': bot.userId,
-        'content-type': 'application/json',
-      };
+    if (token != null) 'Authorization': 'Bearer $token',
+    'satori-platform': bot.platform,
+    'satori-user-id': bot.userId,
+    'content-type': 'application/json',
+  };
 
   dynamic _decode(http.Response response) {
     final text = utf8.decode(response.bodyBytes);
@@ -197,8 +203,8 @@ class NitoriClient {
 /// A single login: carries the identity headers and exposes the full HTTP API.
 class NitoriBot {
   NitoriBot(this.client, {this.login, String? platform, String? userId})
-      : platform = platform ?? login?.platform ?? '',
-        userId = userId ?? login?.user?.id ?? '';
+    : platform = platform ?? login?.platform ?? '',
+      userId = userId ?? login?.user?.id ?? '';
 
   final NitoriClient client;
 
@@ -221,22 +227,32 @@ class NitoriBot {
     return Channel.fromJson(data as Map<String, dynamic>);
   }
 
-  Future<Pagination<Channel>> getChannelList(String guildId,
-      {String? next}) async {
-    final data =
-        await client._request(this, 'channel.list', <Object?>[guildId, next]);
+  Future<Pagination<Channel>> getChannelList(
+    String guildId, {
+    String? next,
+  }) async {
+    final data = await client._request(this, 'channel.list', <Object?>[
+      guildId,
+      next,
+    ]);
     return _pagination(data, Channel.fromJson);
   }
 
   Future<Channel> createChannel(
-      String guildId, Map<String, dynamic> data) async {
-    final result =
-        await client._request(this, 'channel.create', <Object?>[guildId, data]);
+    String guildId,
+    Map<String, dynamic> data,
+  ) async {
+    final result = await client._request(this, 'channel.create', <Object?>[
+      guildId,
+      data,
+    ]);
     return Channel.fromJson(result as Map<String, dynamic>);
   }
 
   Future<void> updateChannel(
-      String channelId, Map<String, dynamic> data) async {
+    String channelId,
+    Map<String, dynamic> data,
+  ) async {
     await client._request(this, 'channel.update', <Object?>[channelId, data]);
   }
 
@@ -244,16 +260,25 @@ class NitoriBot {
     await client._request(this, 'channel.delete', <Object?>[channelId]);
   }
 
-  Future<void> muteChannel(String channelId,
-      {String? guildId, bool? enable}) async {
-    await client
-        ._request(this, 'channel.mute', <Object?>[channelId, guildId, enable]);
+  Future<void> muteChannel(
+    String channelId, {
+    String? guildId,
+    bool? enable,
+  }) async {
+    await client._request(this, 'channel.mute', <Object?>[
+      channelId,
+      guildId,
+      enable,
+    ]);
   }
 
   // -- message --
 
-  Future<List<Message>> createMessage(String channelId, String content,
-      {dynamic referrer}) async {
+  Future<List<Message>> createMessage(
+    String channelId,
+    String content, {
+    dynamic referrer,
+  }) async {
     final data = await client._request(this, 'message.create', <Object?>[
       channelId,
       content,
@@ -267,16 +292,26 @@ class NitoriBot {
   /// Sends a message and returns only the message IDs.
   ///
   /// Delegates to [createMessage] and extracts the IDs.
-  Future<List<String>> sendMessage(String channelId, String content,
-      {dynamic referrer, bool? linkPreview}) async {
+  Future<List<String>> sendMessage(
+    String channelId,
+    String content, {
+    dynamic referrer,
+    bool? linkPreview,
+  }) async {
     final created = await createMessage(channelId, content, referrer: referrer);
     return <String>[for (final message in created) message.id!];
   }
 
   Future<void> editMessage(
-      String channelId, String messageId, String content) async {
-    await client._request(
-        this, 'message.update', <Object?>[channelId, messageId, content]);
+    String channelId,
+    String messageId,
+    String content,
+  ) async {
+    await client._request(this, 'message.update', <Object?>[
+      channelId,
+      messageId,
+      content,
+    ]);
   }
 
   Future<void> deleteMessage(String channelId, String messageId) async {
@@ -294,8 +329,13 @@ class NitoriBot {
     return Message.fromJson(data as Map<String, dynamic>);
   }
 
-  Future<BidiList<Message>> getMessageList(String channelId,
-      {String? next, Direction? direction, int? limit, Order? order}) async {
+  Future<BidiList<Message>> getMessageList(
+    String channelId, {
+    String? next,
+    Direction? direction,
+    int? limit,
+    Order? order,
+  }) async {
     final data = await client._request(this, 'message.list', <Object?>[
       channelId,
       next,
@@ -309,7 +349,10 @@ class NitoriBot {
   // -- reaction --
 
   Future<void> createReaction(
-      String channelId, String messageId, String emojiId) async {
+    String channelId,
+    String messageId,
+    String emojiId,
+  ) async {
     await client._request(this, 'reaction.create', <Object?>[
       channelId,
       messageId,
@@ -318,8 +361,11 @@ class NitoriBot {
   }
 
   Future<void> deleteReaction(
-      String channelId, String messageId, String emojiId,
-      {String? userId}) async {
+    String channelId,
+    String messageId,
+    String emojiId, {
+    String? userId,
+  }) async {
     await client._request(this, 'reaction.delete', <Object?>[
       channelId,
       messageId,
@@ -328,8 +374,11 @@ class NitoriBot {
     ]);
   }
 
-  Future<void> clearReaction(String channelId, String messageId,
-      {String? emojiId}) async {
+  Future<void> clearReaction(
+    String channelId,
+    String messageId, {
+    String? emojiId,
+  }) async {
     await client._request(this, 'reaction.clear', <Object?>[
       channelId,
       messageId,
@@ -338,8 +387,11 @@ class NitoriBot {
   }
 
   Future<Pagination<User>> getReactionList(
-      String channelId, String messageId, String emojiId,
-      {String? next}) async {
+    String channelId,
+    String messageId,
+    String emojiId, {
+    String? next,
+  }) async {
     final data = await client._request(this, 'reaction.list', <Object?>[
       channelId,
       messageId,
@@ -352,8 +404,11 @@ class NitoriBot {
   // -- upload --
 
   Future<List<String>> createUpload(List<dynamic> blobs) async {
-    final data =
-        await client._request(this, 'upload.create', List<Object?>.of(blobs));
+    final data = await client._request(
+      this,
+      'upload.create',
+      List<Object?>.of(blobs),
+    );
     return (data as Map<String, dynamic>).values.cast<String>().toList();
   }
 
@@ -377,15 +432,22 @@ class NitoriBot {
     return GuildMember.fromJson(data as Map<String, dynamic>);
   }
 
-  Future<Pagination<GuildMember>> getGuildMemberList(String guildId,
-      {String? next}) async {
-    final data = await client
-        ._request(this, 'guild.member.list', <Object?>[guildId, next]);
+  Future<Pagination<GuildMember>> getGuildMemberList(
+    String guildId, {
+    String? next,
+  }) async {
+    final data = await client._request(this, 'guild.member.list', <Object?>[
+      guildId,
+      next,
+    ]);
     return _pagination(data, GuildMember.fromJson);
   }
 
-  Future<void> kickGuildMember(String guildId, String userId,
-      {bool? permanent}) async {
+  Future<void> kickGuildMember(
+    String guildId,
+    String userId, {
+    bool? permanent,
+  }) async {
     await client._request(this, 'guild.member.kick', <Object?>[
       guildId,
       userId,
@@ -393,8 +455,12 @@ class NitoriBot {
     ]);
   }
 
-  Future<void> muteGuildMember(String guildId, String userId,
-      {int? duration, String? reason}) async {
+  Future<void> muteGuildMember(
+    String guildId,
+    String userId, {
+    int? duration,
+    String? reason,
+  }) async {
     await client._request(this, 'guild.member.mute', <Object?>[
       guildId,
       userId,
@@ -404,7 +470,10 @@ class NitoriBot {
   }
 
   Future<void> setGuildMemberRole(
-      String guildId, String userId, String roleId) async {
+    String guildId,
+    String userId,
+    String roleId,
+  ) async {
     await client._request(this, 'guild.member.role.set', <Object?>[
       guildId,
       userId,
@@ -413,7 +482,10 @@ class NitoriBot {
   }
 
   Future<void> unsetGuildMemberRole(
-      String guildId, String userId, String roleId) async {
+    String guildId,
+    String userId,
+    String roleId,
+  ) async {
     await client._request(this, 'guild.member.role.unset', <Object?>[
       guildId,
       userId,
@@ -422,33 +494,45 @@ class NitoriBot {
   }
 
   Future<Pagination<GuildRole>> getGuildMemberRoleList(
-      String guildId, String userId,
-      {String? next}) async {
-    final data =
-        await client._request(this, 'guild.member.role.list', <Object?>[
+    String guildId,
+    String userId, {
+    String? next,
+  }) async {
+    final data = await client._request(
+      this,
+      'guild.member.role.list',
+      <Object?>[guildId, userId, next],
+    );
+    return _pagination(data, GuildRole.fromJson);
+  }
+
+  Future<Pagination<GuildRole>> getGuildRoleList(
+    String guildId, {
+    String? next,
+  }) async {
+    final data = await client._request(this, 'guild.role.list', <Object?>[
       guildId,
-      userId,
       next,
     ]);
     return _pagination(data, GuildRole.fromJson);
   }
 
-  Future<Pagination<GuildRole>> getGuildRoleList(String guildId,
-      {String? next}) async {
-    final data = await client
-        ._request(this, 'guild.role.list', <Object?>[guildId, next]);
-    return _pagination(data, GuildRole.fromJson);
-  }
-
   Future<GuildRole> createGuildRole(
-      String guildId, Map<String, dynamic> data) async {
-    final result = await client
-        ._request(this, 'guild.role.create', <Object?>[guildId, data]);
+    String guildId,
+    Map<String, dynamic> data,
+  ) async {
+    final result = await client._request(this, 'guild.role.create', <Object?>[
+      guildId,
+      data,
+    ]);
     return GuildRole.fromJson(result as Map<String, dynamic>);
   }
 
   Future<void> updateGuildRole(
-      String guildId, String roleId, Map<String, dynamic> data) async {
+    String guildId,
+    String roleId,
+    Map<String, dynamic> data,
+  ) async {
     await client._request(this, 'guild.role.update', <Object?>[
       guildId,
       roleId,
@@ -457,8 +541,10 @@ class NitoriBot {
   }
 
   Future<void> deleteGuildRole(String guildId, String roleId) async {
-    await client
-        ._request(this, 'guild.role.delete', <Object?>[guildId, roleId]);
+    await client._request(this, 'guild.role.delete', <Object?>[
+      guildId,
+      roleId,
+    ]);
   }
 
   // -- login / user / friend --
@@ -484,11 +570,20 @@ class NitoriBot {
   /// Sends a private message by creating a direct channel and then sending.
   ///
   /// Convenience method matching the upstream SDK's `sendPrivateMessage`.
-  Future<List<String>> sendPrivateMessage(String userId, String content,
-      {String? guildId, dynamic referrer, bool? linkPreview}) async {
+  Future<List<String>> sendPrivateMessage(
+    String userId,
+    String content, {
+    String? guildId,
+    dynamic referrer,
+    bool? linkPreview,
+  }) async {
     final channel = await createDirectChannel(userId, guildId: guildId);
-    return sendMessage(channel.id, content,
-        referrer: referrer, linkPreview: linkPreview);
+    return sendMessage(
+      channel.id,
+      content,
+      referrer: referrer,
+      linkPreview: linkPreview,
+    );
   }
 
   Future<Pagination<Friend>> getFriendList({String? next}) async {
@@ -500,8 +595,11 @@ class NitoriBot {
     await client._request(this, 'friend.delete', <Object?>[userId]);
   }
 
-  Future<void> handleFriendRequest(String messageId, bool approve,
-      {String? comment}) async {
+  Future<void> handleFriendRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) async {
     await client._request(this, 'friend.approve', <Object?>[
       messageId,
       approve,
@@ -509,8 +607,11 @@ class NitoriBot {
     ]);
   }
 
-  Future<void> handleGuildRequest(String messageId, bool approve,
-      {String? comment}) async {
+  Future<void> handleGuildRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) async {
     await client._request(this, 'guild.approve', <Object?>[
       messageId,
       approve,
@@ -518,8 +619,11 @@ class NitoriBot {
     ]);
   }
 
-  Future<void> handleGuildMemberRequest(String messageId, bool approve,
-      {String? comment}) async {
+  Future<void> handleGuildMemberRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) async {
     await client._request(this, 'guild.member.approve', <Object?>[
       messageId,
       approve,
@@ -528,7 +632,9 @@ class NitoriBot {
   }
 
   Pagination<T> _pagination<T>(
-      dynamic json, T Function(Map<String, dynamic>) fromJson) {
+    dynamic json,
+    T Function(Map<String, dynamic>) fromJson,
+  ) {
     final map = json as Map<String, dynamic>;
     final data = (map['data'] as List<dynamic>? ?? const <dynamic>[])
         .map((e) => fromJson(e as Map<String, dynamic>))
@@ -537,12 +643,17 @@ class NitoriBot {
   }
 
   BidiList<T> _bidiList<T>(
-      dynamic json, T Function(Map<String, dynamic>) fromJson) {
+    dynamic json,
+    T Function(Map<String, dynamic>) fromJson,
+  ) {
     final map = json as Map<String, dynamic>;
     final data = (map['data'] as List<dynamic>? ?? const <dynamic>[])
         .map((e) => fromJson(e as Map<String, dynamic>))
         .toList();
-    return BidiList<T>(data,
-        prev: map['prev'] as String?, next: map['next'] as String?);
+    return BidiList<T>(
+      data,
+      prev: map['prev'] as String?,
+      next: map['next'] as String?,
+    );
   }
 }

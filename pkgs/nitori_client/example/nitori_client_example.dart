@@ -26,8 +26,10 @@ Future<void> main() async {
     if (!methods.containsKey('message.create')) continue;
     final channelId = Platform.environment['SATORI_CHANNEL_ID'] ?? '123456789';
     try {
-      final messages =
-          await bot.createMessage(channelId, 'hello from nitori_client');
+      final messages = await bot.createMessage(
+        channelId,
+        'hello from nitori_client',
+      );
       print('  sent message: ${messages.map((m) => m.id)}');
     } catch (error) {
       print('  failed to send message: $error');

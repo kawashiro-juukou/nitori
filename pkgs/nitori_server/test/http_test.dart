@@ -26,8 +26,11 @@ void main() {
       platform: 'memory',
       sn: 1,
     );
-    bot.channels['c1'] =
-        Channel(id: 'c1', type: ChannelType.text, name: 'general');
+    bot.channels['c1'] = Channel(
+      id: 'c1',
+      type: ChannelType.text,
+      name: 'general',
+    );
     bot.guilds['g1'] = Guild(id: 'g1', name: 'Guild');
     bot.users['u1'] = User(id: 'u1', name: 'User');
 
@@ -140,16 +143,12 @@ void main() {
   });
 
   test('missing or wrong bearer token is rejected', () async {
-    final missing = await post(
-      'channel.get',
-      <String, dynamic>{'channel_id': 'c1'},
-      token: null,
-    );
-    final wrong = await post(
-      'channel.get',
-      <String, dynamic>{'channel_id': 'c1'},
-      token: 'wrong',
-    );
+    final missing = await post('channel.get', <String, dynamic>{
+      'channel_id': 'c1',
+    }, token: null);
+    final wrong = await post('channel.get', <String, dynamic>{
+      'channel_id': 'c1',
+    }, token: 'wrong');
 
     expect(missing.statusCode, HttpStatus.forbidden);
     expect(missing.body, 'invalid token');
@@ -158,11 +157,9 @@ void main() {
   });
 
   test('unknown identity headers are rejected', () async {
-    final response = await post(
-      'channel.get',
-      <String, dynamic>{'channel_id': 'c1'},
-      platform: 'other',
-    );
+    final response = await post('channel.get', <String, dynamic>{
+      'channel_id': 'c1',
+    }, platform: 'other');
 
     expect(response.statusCode, HttpStatus.forbidden);
     expect(response.body, 'login not found');
@@ -183,8 +180,11 @@ void main() {
     ).bind(address: InternetAddress.loopbackIPv4, port: 0);
     addTearDown(stubServer.close);
 
-    final request =
-        await client.post('127.0.0.1', stubServer.port, '/v1/channel.get');
+    final request = await client.post(
+      '127.0.0.1',
+      stubServer.port,
+      '/v1/channel.get',
+    );
     request.headers
       ..set('satori-platform', 'stub')
       ..set('satori-user-id', 'stub-1')
@@ -226,14 +226,16 @@ void main() {
       ..set('satori-platform', 'memory')
       ..set('satori-user-id', 'bot-1')
       ..set('content-type', 'multipart/form-data; boundary=$boundary');
-    request.add(utf8.encode(
-      '--$boundary\r\n'
-      'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
-      'Content-Type: text/plain\r\n'
-      '\r\n'
-      'hello\r\n'
-      '--$boundary--\r\n',
-    ));
+    request.add(
+      utf8.encode(
+        '--$boundary\r\n'
+        'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
+        'Content-Type: text/plain\r\n'
+        '\r\n'
+        'hello\r\n'
+        '--$boundary--\r\n',
+      ),
+    );
     final response = await request.close();
     final body = await utf8.decoder.bind(response).join();
 
@@ -251,13 +253,15 @@ void main() {
       ..set('satori-platform', 'memory')
       ..set('satori-user-id', 'bot-1')
       ..set('content-type', 'multipart/form-data; boundary=$boundary');
-    request.add(utf8.encode(
-      '--$boundary\r\n'
-      'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
-      '\r\n'
-      'text before --sep in the middle\r\n'
-      '--$boundary--\r\n',
-    ));
+    request.add(
+      utf8.encode(
+        '--$boundary\r\n'
+        'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
+        '\r\n'
+        'text before --sep in the middle\r\n'
+        '--$boundary--\r\n',
+      ),
+    );
     final response = await request.close();
     final body = await utf8.decoder.bind(response).join();
 
@@ -290,13 +294,15 @@ void main() {
       ..set('satori-user-id', 'bot-1')
       ..set('content-type', 'multipart/form-data; boundary=$boundary');
     // Malformed: invalid header (missing colon)
-    request.add(utf8.encode(
-      '--$boundary\r\n'
-      'Content-Disposition form-data; name="file"\r\n'
-      '\r\n'
-      'hello\r\n'
-      '--$boundary--\r\n',
-    ));
+    request.add(
+      utf8.encode(
+        '--$boundary\r\n'
+        'Content-Disposition form-data; name="file"\r\n'
+        '\r\n'
+        'hello\r\n'
+        '--$boundary--\r\n',
+      ),
+    );
     final response = await request.close();
     final body = await utf8.decoder.bind(response).join();
 
@@ -313,17 +319,19 @@ void main() {
       ..set('satori-user-id', 'bot-1')
       ..set('content-type', 'multipart/form-data; boundary=$boundary');
     // Two parts with the same name "file"
-    request.add(utf8.encode(
-      '--$boundary\r\n'
-      'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
-      '\r\n'
-      'hello\r\n'
-      '--$boundary\r\n'
-      'Content-Disposition: form-data; name="file"; filename="b.txt"\r\n'
-      '\r\n'
-      'world\r\n'
-      '--$boundary--\r\n',
-    ));
+    request.add(
+      utf8.encode(
+        '--$boundary\r\n'
+        'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
+        '\r\n'
+        'hello\r\n'
+        '--$boundary\r\n'
+        'Content-Disposition: form-data; name="file"; filename="b.txt"\r\n'
+        '\r\n'
+        'world\r\n'
+        '--$boundary--\r\n',
+      ),
+    );
     final response = await request.close();
     final body = await utf8.decoder.bind(response).join();
 
@@ -376,8 +384,11 @@ void main() {
     ).bind(address: InternetAddress.loopbackIPv4, port: 0);
     addTearDown(smallServer.close);
 
-    final request =
-        await client.post('127.0.0.1', smallServer.port, '/v1/channel.get');
+    final request = await client.post(
+      '127.0.0.1',
+      smallServer.port,
+      '/v1/channel.get',
+    );
     request.headers
       ..set('authorization', 'Bearer secret')
       ..set('satori-platform', 'memory')
@@ -395,11 +406,11 @@ void main() {
 class _StubBot extends SatoriBot {
   @override
   Login get login => Login(
-        status: Status.online,
-        user: User(id: 'stub-1', name: 'Stub'),
-        platform: 'stub',
-        sn: 1,
-      );
+    status: Status.online,
+    user: User(id: 'stub-1', name: 'Stub'),
+    platform: 'stub',
+    sn: 1,
+  );
 
   @override
   String get platform => 'stub';
@@ -408,9 +419,13 @@ class _StubBot extends SatoriBot {
   String get userId => 'stub-1';
 
   @override
-  Future<List<String>> sendPrivateMessage(String userId, String content,
-          {String? guildId, dynamic referrer, bool? linkPreview}) =>
-      throw UnimplementedError();
+  Future<List<String>> sendPrivateMessage(
+    String userId,
+    String content, {
+    String? guildId,
+    dynamic referrer,
+    bool? linkPreview,
+  }) => throw UnimplementedError();
 }
 
 class _StubAdapter extends SatoriAdapter {

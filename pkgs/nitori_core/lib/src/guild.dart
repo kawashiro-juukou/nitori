@@ -5,7 +5,10 @@ import 'package:json_annotation/json_annotation.dart';
 part 'guild.g.dart';
 
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class Guild {
   String id;
   String? name;
@@ -26,9 +29,15 @@ abstract class GuildInterface {
   /// Returns an async iterable of all guilds the bot is in.
   Stream<Guild> getGuildIter();
 
-  Future<void> handleGuildRequest(String messageId, bool approve,
-      {String? comment});
+  Future<void> handleGuildRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  });
 
-  Future<void> handleGuildMemberRequest(String messageId, bool approve,
-      {String? comment});
+  Future<void> handleGuildMemberRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  });
 }

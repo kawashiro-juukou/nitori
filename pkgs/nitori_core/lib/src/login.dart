@@ -19,7 +19,10 @@ enum Status {
 }
 
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class Login {
   /// Sequence number of this login, assigned by the server.
   int? sn;
@@ -37,15 +40,15 @@ class Login {
   /// Whether the bot is hidden from platform user lists.
   bool? hidden;
 
-  Login(
-      {required this.status,
-      this.user,
-      this.platform,
-      this.sn,
-      this.adapter,
-      List<String>? features,
-      this.hidden})
-      : features = features ?? <String>[];
+  Login({
+    required this.status,
+    this.user,
+    this.platform,
+    this.sn,
+    this.adapter,
+    List<String>? features,
+    this.hidden,
+  }) : features = features ?? <String>[];
 
   factory Login.fromJson(Map<String, dynamic> json) => _$LoginFromJson(json);
 

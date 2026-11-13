@@ -70,8 +70,10 @@ class _TokenBucket {
   void _refill() {
     final now = DateTime.now().millisecondsSinceEpoch;
     final elapsedSeconds = (now - _lastRefillMs) / 1000.0;
-    _tokens = (_tokens + elapsedSeconds * refillRatePerSecond)
-        .clamp(0.0, capacity.toDouble());
+    _tokens = (_tokens + elapsedSeconds * refillRatePerSecond).clamp(
+      0.0,
+      capacity.toDouble(),
+    );
     _lastRefillMs = now;
   }
 }
@@ -90,11 +92,12 @@ class RateLimiter {
 
   _TokenBucket _getBucket(String key) {
     return _buckets.putIfAbsent(
-        key,
-        () => _TokenBucket(
-              config.maxRequests,
-              config.maxRequests / (config.window.inMilliseconds / 1000.0),
-            ));
+      key,
+      () => _TokenBucket(
+        config.maxRequests,
+        config.maxRequests / (config.window.inMilliseconds / 1000.0),
+      ),
+    );
   }
 
   /// Extracts the rate limit key from an HTTP request.
@@ -167,8 +170,9 @@ class RateLimiter {
     if (!config.enabled) return null;
     final key = _httpKey(request);
     if (key == null) return null;
-    final bucket =
-        config.scope == RateLimitScope.global ? _globalBucket : _getBucket(key);
+    final bucket = config.scope == RateLimitScope.global
+        ? _globalBucket
+        : _getBucket(key);
     if (!bucket.tryConsume(1)) {
       return bucket.retryAfterMs(1);
     }
@@ -181,8 +185,9 @@ class RateLimiter {
     if (!config.enabled) return null;
     final key = _wsIdentifyKey(identify);
     if (key == null) return null;
-    final bucket =
-        config.scope == RateLimitScope.global ? _globalBucket : _getBucket(key);
+    final bucket = config.scope == RateLimitScope.global
+        ? _globalBucket
+        : _getBucket(key);
     if (!bucket.tryConsume(1)) {
       return bucket.retryAfterMs(1);
     }
@@ -193,8 +198,9 @@ class RateLimiter {
   /// Returns null if allowed, or retry-after milliseconds if rate limited.
   int? checkWsEvent(String key) {
     if (!config.enabled) return null;
-    final bucket =
-        config.scope == RateLimitScope.global ? _globalBucket : _getBucket(key);
+    final bucket = config.scope == RateLimitScope.global
+        ? _globalBucket
+        : _getBucket(key);
     if (!bucket.tryConsume(1)) {
       return bucket.retryAfterMs(1);
     }

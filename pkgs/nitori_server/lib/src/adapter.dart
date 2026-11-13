@@ -83,17 +83,23 @@ abstract class SatoriBot
   /// Returns the created messages. Implementations may split long content
   /// into multiple messages.
   @override
-  Future<List<Message>> createMessage(String channelId, String content,
-          {dynamic referrer, bool? linkPreview}) =>
-      throw UnimplementedError();
+  Future<List<Message>> createMessage(
+    String channelId,
+    String content, {
+    dynamic referrer,
+    bool? linkPreview,
+  }) => throw UnimplementedError();
 
   /// Sends a message and returns only the message ids.
   ///
   /// Default implementation delegates to [createMessage] and extracts ids.
   @override
-  Future<List<String>> sendMessage(String channelId, String content,
-          {dynamic referrer, bool? linkPreview}) =>
-      throw UnimplementedError();
+  Future<List<String>> sendMessage(
+    String channelId,
+    String content, {
+    dynamic referrer,
+    bool? linkPreview,
+  }) => throw UnimplementedError();
 
   /// Returns a message by id.
   @override
@@ -102,9 +108,13 @@ abstract class SatoriBot
 
   /// Returns a bidirectional paginated list of messages in a channel.
   @override
-  Future<BidiList<Message>> getMessageList(String channelId,
-          {String? next, Direction? direction, int? limit, Order? order}) =>
-      throw UnimplementedError();
+  Future<BidiList<Message>> getMessageList(
+    String channelId, {
+    String? next,
+    Direction? direction,
+    int? limit,
+    Order? order,
+  }) => throw UnimplementedError();
 
   /// Returns an async iterable of all messages in a channel.
   @override
@@ -114,8 +124,10 @@ abstract class SatoriBot
   /// Edits a message's content.
   @override
   Future<void> editMessage(
-          String channelId, String messageId, String content) =>
-      throw UnimplementedError();
+    String channelId,
+    String messageId,
+    String content,
+  ) => throw UnimplementedError();
 
   /// Deletes a message.
   @override
@@ -125,34 +137,44 @@ abstract class SatoriBot
   /// Adds a reaction to a message.
   @override
   Future<void> createReaction(
-          String channelId, String messageId, String emojiId) =>
-      throw UnimplementedError();
+    String channelId,
+    String messageId,
+    String emojiId,
+  ) => throw UnimplementedError();
 
   /// Removes a reaction from a message.
   @override
   Future<void> deleteReaction(
-          String channelId, String messageId, String emojiId,
-          {String? userId}) =>
-      throw UnimplementedError();
+    String channelId,
+    String messageId,
+    String emojiId, {
+    String? userId,
+  }) => throw UnimplementedError();
 
   /// Clears all reactions on a message, or all of a specific emoji.
   @override
-  Future<void> clearReaction(String channelId, String messageId,
-          {String? emojiId}) =>
-      throw UnimplementedError();
+  Future<void> clearReaction(
+    String channelId,
+    String messageId, {
+    String? emojiId,
+  }) => throw UnimplementedError();
 
   /// Returns a paginated list of users who reacted with an emoji.
   @override
   Future<Pagination<User>> getReactionList(
-          String channelId, String messageId, String emojiId,
-          {String? next}) =>
-      throw UnimplementedError();
+    String channelId,
+    String messageId,
+    String emojiId, {
+    String? next,
+  }) => throw UnimplementedError();
 
   /// Returns an async iterable of users who reacted with an emoji.
   @override
   Stream<User> getReactionIter(
-          String channelId, String messageId, String emojiId) =>
-      throw UnimplementedError();
+    String channelId,
+    String messageId,
+    String emojiId,
+  ) => throw UnimplementedError();
 
   // Upload method (1)
 
@@ -180,9 +202,11 @@ abstract class SatoriBot
 
   /// Handles a guild join request.
   @override
-  Future<void> handleGuildRequest(String messageId, bool approve,
-          {String? comment}) =>
-      throw UnimplementedError();
+  Future<void> handleGuildRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) => throw UnimplementedError();
 
   // Guild member methods (6)
 
@@ -193,9 +217,10 @@ abstract class SatoriBot
 
   /// Returns a paginated list of guild members.
   @override
-  Future<Pagination<GuildMember>> getGuildMemberList(String guildId,
-          {String? next}) =>
-      throw UnimplementedError();
+  Future<Pagination<GuildMember>> getGuildMemberList(
+    String guildId, {
+    String? next,
+  }) => throw UnimplementedError();
 
   /// Returns an async iterable of all members in a guild.
   @override
@@ -204,50 +229,63 @@ abstract class SatoriBot
 
   /// Mutes a guild member for an optional duration.
   @override
-  Future<void> muteGuildMember(String guildId, String userId,
-          {int? duration, String? reason}) =>
-      throw UnimplementedError();
+  Future<void> muteGuildMember(
+    String guildId,
+    String userId, {
+    int? duration,
+    String? reason,
+  }) => throw UnimplementedError();
 
   /// Kicks a guild member.
   @override
-  Future<void> kickGuildMember(String guildId, String userId,
-          {bool? permanent}) =>
-      throw UnimplementedError();
+  Future<void> kickGuildMember(
+    String guildId,
+    String userId, {
+    bool? permanent,
+  }) => throw UnimplementedError();
 
   /// Assigns a role to a guild member.
   @override
   Future<void> setGuildMemberRole(
-          String guildId, String userId, String roleId) =>
-      throw UnimplementedError();
+    String guildId,
+    String userId,
+    String roleId,
+  ) => throw UnimplementedError();
 
   /// Removes a role from a guild member.
   @override
   Future<void> unsetGuildMemberRole(
-          String guildId, String userId, String roleId) =>
-      throw UnimplementedError();
+    String guildId,
+    String userId,
+    String roleId,
+  ) => throw UnimplementedError();
 
   /// Returns a paginated list of roles assigned to a guild member.
   @override
   Future<Pagination<GuildRole>> getGuildMemberRoleList(
-          String guildId, String userId,
-          {String? next}) =>
-      throw UnimplementedError();
+    String guildId,
+    String userId, {
+    String? next,
+  }) => throw UnimplementedError();
 
   // Guild member request method (1)
 
   /// Handles a guild member join request.
   @override
-  Future<void> handleGuildMemberRequest(String messageId, bool approve,
-          {String? comment}) =>
-      throw UnimplementedError();
+  Future<void> handleGuildMemberRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) => throw UnimplementedError();
 
   // Guild role methods (4)
 
   /// Returns a paginated list of guild roles.
   @override
-  Future<Pagination<GuildRole>> getGuildRoleList(String guildId,
-          {String? next}) =>
-      throw UnimplementedError();
+  Future<Pagination<GuildRole>> getGuildRoleList(
+    String guildId, {
+    String? next,
+  }) => throw UnimplementedError();
 
   /// Returns an async iterable of all roles in a guild.
   @override
@@ -256,25 +294,28 @@ abstract class SatoriBot
 
   /// Creates a guild role with optional properties.
   @override
-  Future<GuildRole> createGuildRole(String guildId,
-          {String? name,
-          int? color,
-          int? position,
-          BigInt? permissions,
-          bool? hoist,
-          bool? mentionable}) =>
-      throw UnimplementedError();
+  Future<GuildRole> createGuildRole(
+    String guildId, {
+    String? name,
+    int? color,
+    int? position,
+    BigInt? permissions,
+    bool? hoist,
+    bool? mentionable,
+  }) => throw UnimplementedError();
 
   /// Updates a guild role's properties.
   @override
-  Future<void> updateGuildRole(String guildId, String roleId,
-          {String? name,
-          int? color,
-          int? position,
-          BigInt? permissions,
-          bool? hoist,
-          bool? mentionable}) =>
-      throw UnimplementedError();
+  Future<void> updateGuildRole(
+    String guildId,
+    String roleId, {
+    String? name,
+    int? color,
+    int? position,
+    BigInt? permissions,
+    bool? hoist,
+    bool? mentionable,
+  }) => throw UnimplementedError();
 
   /// Deletes a guild role.
   @override
@@ -299,9 +340,11 @@ abstract class SatoriBot
   Future<void> deleteFriend(String userId) => throw UnimplementedError();
 
   /// Handles a friend request.
-  Future<void> handleFriendRequest(String messageId, bool approve,
-          {String? comment}) =>
-      throw UnimplementedError();
+  Future<void> handleFriendRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) => throw UnimplementedError();
 
   /// Returns an async iterable of all friends.
   @override

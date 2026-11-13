@@ -18,22 +18,26 @@ class _Connection {
   final List<Map<String, dynamic>> frames = <Map<String, dynamic>>[];
 
   void send(int op, [Map<String, dynamic>? body]) {
-    socket.add(jsonEncode(<String, dynamic>{
-      'op': op,
-      'body': body ?? <String, dynamic>{},
-    }));
+    socket.add(
+      jsonEncode(<String, dynamic>{
+        'op': op,
+        'body': body ?? <String, dynamic>{},
+      }),
+    );
   }
 
   Map<String, dynamic> frame(int op) => frames.firstWhere(
-        (frame) => frame['op'] == op,
-        orElse: () => throw StateError('no frame with op $op'),
-      );
+    (frame) => frame['op'] == op,
+    orElse: () => throw StateError('no frame with op $op'),
+  );
 
   Future<void> close() => socket.close();
 }
 
-Future<void> waitFor(bool Function() condition,
-    {Duration timeout = const Duration(seconds: 3)}) async {
+Future<void> waitFor(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 3),
+}) async {
   final deadline = DateTime.now().add(timeout);
   while (!condition()) {
     if (DateTime.now().isAfter(deadline)) {
@@ -283,8 +287,11 @@ void main() {
         platform: 'memory',
         sn: 1,
       );
-      bot.channels['c1'] =
-          Channel(id: 'c1', type: ChannelType.text, name: 'general');
+      bot.channels['c1'] = Channel(
+        id: 'c1',
+        type: ChannelType.text,
+        name: 'general',
+      );
       bot.guilds['g1'] = Guild(id: 'g1', name: 'Guild');
       bot.users['u1'] = User(id: 'u1', name: 'User');
       adapter = InMemoryAdapter(
@@ -342,20 +349,23 @@ void main() {
     }
 
     test('allows requests under limit', () async {
-      final response =
-          await post('channel.get', <String, dynamic>{'channel_id': 'c1'});
+      final response = await post('channel.get', <String, dynamic>{
+        'channel_id': 'c1',
+      });
       expect(response.statusCode, HttpStatus.ok);
     });
 
     test('returns 429 when rate limited', () async {
       for (var i = 0; i < 3; i++) {
-        final response =
-            await post('channel.get', <String, dynamic>{'channel_id': 'c1'});
+        final response = await post('channel.get', <String, dynamic>{
+          'channel_id': 'c1',
+        });
         expect(response.statusCode, HttpStatus.ok);
       }
 
-      final response =
-          await post('channel.get', <String, dynamic>{'channel_id': 'c1'});
+      final response = await post('channel.get', <String, dynamic>{
+        'channel_id': 'c1',
+      });
       expect(response.statusCode, HttpStatus.tooManyRequests);
       expect(response.body, 'Too Many Requests');
       expect(response.headers.value('Retry-After'), isNotNull);
@@ -366,11 +376,13 @@ void main() {
         await post('channel.get', <String, dynamic>{'channel_id': 'c1'});
       }
 
-      final response =
-          await post('channel.get', <String, dynamic>{'channel_id': 'c1'});
+      final response = await post('channel.get', <String, dynamic>{
+        'channel_id': 'c1',
+      });
       expect(response.statusCode, HttpStatus.tooManyRequests);
-      final retryAfter =
-          int.tryParse(response.headers.value('Retry-After') ?? '');
+      final retryAfter = int.tryParse(
+        response.headers.value('Retry-After') ?? '',
+      );
       expect(retryAfter, isNotNull);
       expect(retryAfter!, greaterThan(0));
       expect(retryAfter, lessThanOrEqualTo(10));
@@ -383,21 +395,26 @@ void main() {
     test('upload.create is also rate limited', () async {
       const boundary = '----nitori-test';
       for (var i = 0; i < 3; i++) {
-        final request =
-            await client.post('127.0.0.1', port, '/v1/upload.create');
+        final request = await client.post(
+          '127.0.0.1',
+          port,
+          '/v1/upload.create',
+        );
         request.headers
           ..set('authorization', 'Bearer secret')
           ..set('satori-platform', 'memory')
           ..set('satori-user-id', 'bot-1')
           ..set('content-type', 'multipart/form-data; boundary=$boundary');
-        request.add(utf8.encode(
-          '--$boundary\r\n'
-          'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
-          'Content-Type: text/plain\r\n'
-          '\r\n'
-          'hello\r\n'
-          '--$boundary--\r\n',
-        ));
+        request.add(
+          utf8.encode(
+            '--$boundary\r\n'
+            'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
+            'Content-Type: text/plain\r\n'
+            '\r\n'
+            'hello\r\n'
+            '--$boundary--\r\n',
+          ),
+        );
         final response = await request.close();
         expect(response.statusCode, HttpStatus.ok);
       }
@@ -408,14 +425,16 @@ void main() {
         ..set('satori-platform', 'memory')
         ..set('satori-user-id', 'bot-1')
         ..set('content-type', 'multipart/form-data; boundary=$boundary');
-      request.add(utf8.encode(
-        '--$boundary\r\n'
-        'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
-        'Content-Type: text/plain\r\n'
-        '\r\n'
-        'hello\r\n'
-        '--$boundary--\r\n',
-      ));
+      request.add(
+        utf8.encode(
+          '--$boundary\r\n'
+          'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
+          'Content-Type: text/plain\r\n'
+          '\r\n'
+          'hello\r\n'
+          '--$boundary--\r\n',
+        ),
+      );
       final response = await request.close();
       expect(response.statusCode, HttpStatus.tooManyRequests);
     });
@@ -462,8 +481,11 @@ void main() {
     Future<_Connection> connect() async =>
         _Connection(await WebSocket.connect('ws://127.0.0.1:$port/v1/events'));
 
-    Future<_Connection> identify(
-        {String token = 'secret', int? sn, String userId = 'bot-1'}) async {
+    Future<_Connection> identify({
+      String token = 'secret',
+      int? sn,
+      String userId = 'bot-1',
+    }) async {
       final connection = await connect();
       await waitFor(() => connection.frames.isNotEmpty);
       connection.send(3, <String, dynamic>{
@@ -587,14 +609,22 @@ void main() {
   });
 }
 
-HttpRequest _mockRequest(String ip,
-    {String? platform, String? userId, String? token}) {
+HttpRequest _mockRequest(
+  String ip, {
+  String? platform,
+  String? userId,
+  String? token,
+}) {
   return _MockHttpRequest(ip, platform: platform, userId: userId, token: token);
 }
 
 class _MockHttpRequest implements HttpRequest {
-  _MockHttpRequest(this.remoteAddress,
-      {this.platform, this.userId, this.token});
+  _MockHttpRequest(
+    this.remoteAddress, {
+    this.platform,
+    this.userId,
+    this.token,
+  });
 
   final String remoteAddress;
   final String? platform;

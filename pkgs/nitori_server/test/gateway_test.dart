@@ -18,22 +18,26 @@ class _Connection {
   final List<Map<String, dynamic>> frames = <Map<String, dynamic>>[];
 
   void send(int op, [Map<String, dynamic>? body]) {
-    socket.add(jsonEncode(<String, dynamic>{
-      'op': op,
-      'body': body ?? <String, dynamic>{},
-    }));
+    socket.add(
+      jsonEncode(<String, dynamic>{
+        'op': op,
+        'body': body ?? <String, dynamic>{},
+      }),
+    );
   }
 
   Map<String, dynamic> frame(int op) => frames.firstWhere(
-        (frame) => frame['op'] == op,
-        orElse: () => throw StateError('no frame with op $op'),
-      );
+    (frame) => frame['op'] == op,
+    orElse: () => throw StateError('no frame with op $op'),
+  );
 
   Future<void> close() => socket.close();
 }
 
-Future<void> waitFor(bool Function() condition,
-    {Duration timeout = const Duration(seconds: 3)}) async {
+Future<void> waitFor(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 3),
+}) async {
   final deadline = DateTime.now().add(timeout);
   while (!condition()) {
     if (DateTime.now().isAfter(deadline)) {
@@ -136,16 +140,19 @@ void main() {
   test('adapter events are broadcast with incrementing sn', () async {
     final connection = await identify();
 
-    adapter.emit(Event(
-      type: 'message-created',
-      login: bot.login,
-      selfId: 'bot-1',
-      message: Message(id: 'm1', content: 'hi'),
-    ));
+    adapter.emit(
+      Event(
+        type: 'message-created',
+        login: bot.login,
+        selfId: 'bot-1',
+        message: Message(id: 'm1', content: 'hi'),
+      ),
+    );
     adapter.emit(Event(type: 'message-deleted', login: bot.login));
 
     await waitFor(
-        () => connection.frames.where((frame) => frame['op'] == 0).length >= 2);
+      () => connection.frames.where((frame) => frame['op'] == 0).length >= 2,
+    );
     final events = connection.frames
         .where((frame) => frame['op'] == 0)
         .map((frame) => frame['body'] as Map<String, dynamic>)
@@ -170,7 +177,8 @@ void main() {
     adapter.emit(Event(type: 'guild-member-deleted', login: bot.login));
 
     await waitFor(
-        () => connection.frames.where((frame) => frame['op'] == 0).length >= 3);
+      () => connection.frames.where((frame) => frame['op'] == 0).length >= 3,
+    );
     final types = connection.frames
         .where((frame) => frame['op'] == 0)
         .map((frame) => (frame['body'] as Map<String, dynamic>)['type'])
@@ -195,7 +203,8 @@ void main() {
 
     final second = await identify(sn: 1);
     await waitFor(
-        () => second.frames.where((frame) => frame['op'] == 0).isNotEmpty);
+      () => second.frames.where((frame) => frame['op'] == 0).isNotEmpty,
+    );
     final replayed = second.frames
         .where((frame) => frame['op'] == 0)
         .map((frame) => frame['body'] as Map<String, dynamic>)
@@ -212,15 +221,21 @@ void main() {
     final connection = await identify();
 
     // referrer is dynamic, so an adapter can smuggle in anything at all.
-    adapter.emit(Event(
-      type: 'message-created',
-      login: bot.login,
-      referrer: _Unencodable(),
-    ));
+    adapter.emit(
+      Event(
+        type: 'message-created',
+        login: bot.login,
+        referrer: _Unencodable(),
+      ),
+    );
     adapter.emit(Event(type: 'channel-added', login: bot.login));
 
-    await waitFor(() => connection.frames.any((frame) =>
-        (frame['body'] as Map<String, dynamic>)['type'] == 'channel-added'));
+    await waitFor(
+      () => connection.frames.any(
+        (frame) =>
+            (frame['body'] as Map<String, dynamic>)['type'] == 'channel-added',
+      ),
+    );
     final events = connection.frames
         .where((frame) => frame['op'] == 0)
         .map((frame) => frame['body'] as Map<String, dynamic>);
@@ -243,10 +258,7 @@ void main() {
     final second = await identify(sn: 0);
     await Future<void>.delayed(const Duration(milliseconds: 100));
 
-    expect(
-      second.frames.where((frame) => frame['op'] == 0),
-      isEmpty,
-    );
+    expect(second.frames.where((frame) => frame['op'] == 0), isEmpty);
 
     await second.close();
   });
@@ -255,7 +267,8 @@ void main() {
     final connection = await identify();
     adapter.emit(Event(type: 'login-added', login: bot.login));
     await waitFor(
-        () => connection.frames.where((frame) => frame['op'] == 0).isNotEmpty);
+      () => connection.frames.where((frame) => frame['op'] == 0).isNotEmpty,
+    );
 
     await connection.close();
     await connection.socket.done;
@@ -281,7 +294,8 @@ void main() {
     adapter.emit(event);
 
     await waitFor(
-        () => connection.frames.where((frame) => frame['op'] == 0).isNotEmpty);
+      () => connection.frames.where((frame) => frame['op'] == 0).isNotEmpty,
+    );
     final sns = connection.frames
         .where((frame) => frame['op'] == 0)
         .map((frame) => (frame['body'] as Map<String, dynamic>)['sn'])
@@ -294,39 +308,41 @@ void main() {
     await connection.close();
   });
 
-  test('a stale adapter timestamp still replays within resumeTimeout',
-      () async {
-    final connection = await identify();
-    adapter.emit(Event(
-      type: 'channel-added',
-      login: bot.login,
-      timestamp: 0,
-    ));
-    adapter.emit(Event(
-      type: 'channel-deleted',
-      login: bot.login,
-      timestamp: 0,
-    ));
-    await waitFor(
-        () => connection.frames.where((frame) => frame['op'] == 0).length >= 2);
+  test(
+    'a stale adapter timestamp still replays within resumeTimeout',
+    () async {
+      final connection = await identify();
+      adapter.emit(
+        Event(type: 'channel-added', login: bot.login, timestamp: 0),
+      );
+      adapter.emit(
+        Event(type: 'channel-deleted', login: bot.login, timestamp: 0),
+      );
+      await waitFor(
+        () => connection.frames.where((frame) => frame['op'] == 0).length >= 2,
+      );
 
-    await connection.close();
-    await connection.socket.done;
+      await connection.close();
+      await connection.socket.done;
 
-    final second = await identify(sn: 1);
-    await waitFor(
-        () => second.frames.where((frame) => frame['op'] == 0).isNotEmpty);
+      final second = await identify(sn: 1);
+      await waitFor(
+        () => second.frames.where((frame) => frame['op'] == 0).isNotEmpty,
+      );
 
-    final replayed = second.frames
-        .where((frame) => frame['op'] == 0)
-        .map((frame) => frame['body'] as Map<String, dynamic>)
-        .toList();
-    expect(replayed.map((event) => event['type']), <String>['channel-deleted']);
-    // The wire timestamp is whatever the adapter supplied.
-    expect(replayed.single['timestamp'], 0);
+      final replayed = second.frames
+          .where((frame) => frame['op'] == 0)
+          .map((frame) => frame['body'] as Map<String, dynamic>)
+          .toList();
+      expect(replayed.map((event) => event['type']), <String>[
+        'channel-deleted',
+      ]);
+      // The wire timestamp is whatever the adapter supplied.
+      expect(replayed.single['timestamp'], 0);
 
-    await second.close();
-  });
+      await second.close();
+    },
+  );
 
   test('an error on the adapter stream does not stop publishing', () async {
     final controller = StreamController<Event>.broadcast();
@@ -336,12 +352,12 @@ void main() {
     final failingPort = (await failing.bind(
       address: InternetAddress.loopbackIPv4,
       port: 0,
-    ))
-        .port;
+    )).port;
     addTearDown(failing.close);
 
     final connection = _Connection(
-        await WebSocket.connect('ws://127.0.0.1:$failingPort/v1/events'));
+      await WebSocket.connect('ws://127.0.0.1:$failingPort/v1/events'),
+    );
     connection.send(3, <String, dynamic>{});
     await waitFor(() => connection.frames.any((frame) => frame['op'] == 4));
 
@@ -349,8 +365,12 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
     controller.add(Event(type: 'channel-added', login: bot.login));
 
-    await waitFor(() => connection.frames.any((frame) =>
-        (frame['body'] as Map<String, dynamic>)['type'] == 'channel-added'));
+    await waitFor(
+      () => connection.frames.any(
+        (frame) =>
+            (frame['body'] as Map<String, dynamic>)['type'] == 'channel-added',
+      ),
+    );
 
     await connection.close();
     await controller.close();

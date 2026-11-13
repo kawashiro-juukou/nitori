@@ -33,27 +33,31 @@ class MockGateway {
           switch (frame['op'] as int) {
             case 3:
               identifies.add(frame);
-              socket.add(jsonEncode(<String, dynamic>{
-                'op': 4,
-                'body': <String, dynamic>{
-                  'logins': <Map<String, dynamic>>[
-                    <String, dynamic>{
-                      'sn': 1,
-                      'status': 1,
-                      'platform': 'mock',
-                      'user': <String, dynamic>{'id': 'bot-1'},
-                      'features': <dynamic>[],
-                    },
-                  ],
-                  'proxy_urls': <String>['http://proxy.example'],
-                },
-              }));
+              socket.add(
+                jsonEncode(<String, dynamic>{
+                  'op': 4,
+                  'body': <String, dynamic>{
+                    'logins': <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'sn': 1,
+                        'status': 1,
+                        'platform': 'mock',
+                        'user': <String, dynamic>{'id': 'bot-1'},
+                        'features': <dynamic>[],
+                      },
+                    ],
+                    'proxy_urls': <String>['http://proxy.example'],
+                  },
+                }),
+              );
             case 1:
               pingCount++;
-              socket.add(jsonEncode(<String, dynamic>{
-                'op': 2,
-                'body': <String, dynamic>{},
-              }));
+              socket.add(
+                jsonEncode(<String, dynamic>{
+                  'op': 2,
+                  'body': <String, dynamic>{},
+                }),
+              );
           }
         });
       });
@@ -80,8 +84,10 @@ class MockGateway {
 }
 
 /// Polls [condition] until it holds or [timeout] elapses.
-Future<void> waitFor(bool Function() condition,
-    {Duration timeout = const Duration(seconds: 3)}) async {
+Future<void> waitFor(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 3),
+}) async {
   final deadline = DateTime.now().add(timeout);
   while (!condition()) {
     if (DateTime.now().isAfter(deadline)) {

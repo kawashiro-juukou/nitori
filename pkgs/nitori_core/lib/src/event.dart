@@ -90,7 +90,10 @@ List<String> expandEventAliases(String type) {
 }
 
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class Event {
   /// Sequence number assigned by the server.
   int? sn;
@@ -131,27 +134,28 @@ class Event {
   @JsonKey(name: '_data')
   dynamic eventData;
 
-  Event(
-      {required this.type,
-      this.sn,
-      this.login,
-      this.selfId,
-      this.platform,
-      this.timestamp,
-      this.argv,
-      this.channel,
-      this.guild,
-      this.friend,
-      this.member,
-      this.message,
-      this.operator,
-      this.emoji,
-      this.role,
-      this.user,
-      this.button,
-      this.referrer,
-      this.eventType,
-      this.eventData});
+  Event({
+    required this.type,
+    this.sn,
+    this.login,
+    this.selfId,
+    this.platform,
+    this.timestamp,
+    this.argv,
+    this.channel,
+    this.guild,
+    this.friend,
+    this.member,
+    this.message,
+    this.operator,
+    this.emoji,
+    this.role,
+    this.user,
+    this.button,
+    this.referrer,
+    this.eventType,
+    this.eventData,
+  });
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
 
@@ -164,7 +168,10 @@ class Event {
 /// Server metadata pushed with the `meta` opcode: the login registry and the
 /// upload proxy endpoints.
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class Meta {
   List<Login> logins;
 
@@ -172,8 +179,8 @@ class Meta {
   List<String> proxyUrls;
 
   Meta({List<Login>? logins, List<String>? proxyUrls})
-      : logins = logins ?? <Login>[],
-        proxyUrls = proxyUrls ?? <String>[];
+    : logins = logins ?? <Login>[],
+      proxyUrls = proxyUrls ?? <String>[];
 
   factory Meta.fromJson(Map<String, dynamic> json) => _$MetaFromJson(json);
 

@@ -98,7 +98,7 @@ void main() {
         'title': 'boss',
         'joined_at': 1663045572000,
         'roles': [
-          {'id': 'role-1', 'name': 'admin'}
+          {'id': 'role-1', 'name': 'admin'},
         ],
       };
 
@@ -142,7 +142,7 @@ void main() {
         'user': {'id': 'user-1', 'name': 'Lucy'},
         'member': {
           'user': {'id': 'user-1'},
-          'nick': 'lu'
+          'nick': 'lu',
         },
         'timestamp': 1663045572000,
         'created_at': 1663045572000,
@@ -166,10 +166,7 @@ void main() {
         'quote': {
           'id': 'message-1',
           'content': 'inner',
-          'quote': {
-            'id': 'message-0',
-            'content': 'deepest',
-          },
+          'quote': {'id': 'message-0', 'content': 'deepest'},
         },
       };
 
@@ -184,11 +181,7 @@ void main() {
 
     test('round-trips structured elements as element maps', () {
       final elements = <Map<String, Object?>>[
-        {
-          'tag': 'text',
-          'attrs': <String, Object?>{},
-          'children': <Object?>[],
-        },
+        {'tag': 'text', 'attrs': <String, Object?>{}, 'children': <Object?>[]},
         {
           'tag': 'img',
           'attrs': <String, Object?>{'src': 'https://example.com/a.png'},
@@ -206,8 +199,9 @@ void main() {
       expect(decoded.elements, isA<List<Map<String, Object?>>>());
       expect(decoded.elements, elements);
       expect(decoded.elements!.first['tag'], 'text');
-      expect(decoded.elements!.last['attrs'],
-          {'src': 'https://example.com/a.png'});
+      expect(decoded.elements!.last['attrs'], {
+        'src': 'https://example.com/a.png',
+      });
     });
 
     test('deepCopy isolates nested objects', () {
@@ -219,13 +213,10 @@ void main() {
         'user': {'id': 'user-1', 'name': 'Lucy'},
         'member': {
           'user': {'id': 'user-1'},
-          'nick': 'lu'
+          'nick': 'lu',
         },
         'timestamp': 1663045572000,
-        'quote': {
-          'id': 'message-0',
-          'content': 'quoted',
-        },
+        'quote': {'id': 'message-0', 'content': 'quoted'},
       };
 
       final original = Message.fromJson(json);
@@ -294,10 +285,7 @@ void main() {
           'user': {'id': 'user-1', 'name': 'Lucy'},
           'nick': 'lu',
         },
-        'message': {
-          'id': 'message-1',
-          'content': 'hello',
-        },
+        'message': {'id': 'message-1', 'content': 'hello'},
         'operator': {'id': 'user-1', 'name': 'Lucy'},
         'emoji': {'id': 'emoji-1', 'name': 'smile'},
         'role': {'id': 'role-1', 'name': 'admin'},
@@ -359,7 +347,7 @@ void main() {
     test('reads a List payload', () {
       const json = <String, dynamic>{
         'data': [1, 2],
-        'next': 'token-2'
+        'next': 'token-2',
       };
 
       final page = Pagination<int>.fromJson(json);

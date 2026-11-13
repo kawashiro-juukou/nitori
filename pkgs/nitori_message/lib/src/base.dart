@@ -29,19 +29,22 @@ String unescape(String text) {
       .replaceAll('&gt;', '>')
       .replaceAll('&quot;', '"')
       .replaceAllMapped(RegExp(r'&#(\d+);'), (match) {
-    // `&#38;` encodes `&` itself; keep it for the final pass below.
-    final code = match.group(1)!;
-    return code == '38'
-        ? match.group(0)!
-        : String.fromCharCode(int.parse(code));
-  }).replaceAllMapped(RegExp(r'&#x([0-9a-f]+);', caseSensitive: false),
-          (match) {
-    // `&#x26;` encodes `&` itself; same treatment as above.
-    final code = match.group(1)!;
-    return code.toLowerCase() == '26'
-        ? match.group(0)!
-        : String.fromCharCode(int.parse(code, radix: 16));
-  }).replaceAllMapped(RegExp(r'&(amp|#38|#x26);'), (match) => '&');
+        // `&#38;` encodes `&` itself; keep it for the final pass below.
+        final code = match.group(1)!;
+        return code == '38'
+            ? match.group(0)!
+            : String.fromCharCode(int.parse(code));
+      })
+      .replaceAllMapped(RegExp(r'&#x([0-9a-f]+);', caseSensitive: false), (
+        match,
+      ) {
+        // `&#x26;` encodes `&` itself; same treatment as above.
+        final code = match.group(1)!;
+        return code.toLowerCase() == '26'
+            ? match.group(0)!
+            : String.fromCharCode(int.parse(code, radix: 16));
+      })
+      .replaceAllMapped(RegExp(r'&(amp|#38|#x26);'), (match) => '&');
 }
 
 /// Returns a new map with all null entries removed from the given [map].

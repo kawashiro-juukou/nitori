@@ -19,7 +19,7 @@ class InMemoryAdapter extends SatoriAdapter {
   ///
   /// The [proxyUrls] list is advertised in META and READY frames.
   InMemoryAdapter({required this.bot, List<String>? proxyUrls})
-      : proxyUrls = List<String>.unmodifiable(proxyUrls ?? const <String>[]);
+    : proxyUrls = List<String>.unmodifiable(proxyUrls ?? const <String>[]);
 
   /// The single bot served by this adapter.
   final InMemoryBot bot;
@@ -60,13 +60,13 @@ class InMemoryBot extends SatoriBot {
     int sn = 1,
     List<String>? features,
   }) : login = Login(
-          status: Status.online,
-          user: user,
-          platform: platform,
-          sn: sn,
-          adapter: 'memory',
-          features: features ?? const <String>[],
-        ) {
+         status: Status.online,
+         user: user,
+         platform: platform,
+         sn: sn,
+         adapter: 'memory',
+         features: features ?? const <String>[],
+       ) {
     users[user.id] = user;
   }
 
@@ -103,9 +103,10 @@ class InMemoryBot extends SatoriBot {
       channels[id] ?? (throw StateError('channel not found: $id'));
 
   @override
-  Future<Pagination<Channel>> getChannelList(String guildId,
-          {String? next}) async =>
-      Pagination<Channel>(channels.values.toList());
+  Future<Pagination<Channel>> getChannelList(
+    String guildId, {
+    String? next,
+  }) async => Pagination<Channel>(channels.values.toList());
 
   @override
   Stream<Channel> getChannelIter(String guildId) async* {
@@ -116,7 +117,9 @@ class InMemoryBot extends SatoriBot {
 
   @override
   Future<Channel> createChannel(
-      String guildId, Map<String, dynamic> data) async {
+    String guildId,
+    Map<String, dynamic> data,
+  ) async {
     final channel = Channel.fromJson(data);
     channels[channel.id] = channel;
     return channel;
@@ -124,7 +127,9 @@ class InMemoryBot extends SatoriBot {
 
   @override
   Future<void> updateChannel(
-      String channelId, Map<String, dynamic> data) async {
+    String channelId,
+    Map<String, dynamic> data,
+  ) async {
     final current = channels[channelId];
     if (current == null) throw StateError('channel not found: $channelId');
     final json = <String, dynamic>{...current.toJson(), ...data};
@@ -150,12 +155,19 @@ class InMemoryBot extends SatoriBot {
   }
 
   @override
-  Future<void> muteChannel(String channelId,
-      {String? guildId, bool? enable}) async {}
+  Future<void> muteChannel(
+    String channelId, {
+    String? guildId,
+    bool? enable,
+  }) async {}
 
   @override
-  Future<List<Message>> createMessage(String channelId, String content,
-      {dynamic referrer, bool? linkPreview}) async {
+  Future<List<Message>> createMessage(
+    String channelId,
+    String content, {
+    dynamic referrer,
+    bool? linkPreview,
+  }) async {
     final message = Message(
       id: 'm${++_messageSequence}',
       content: content,
@@ -167,19 +179,36 @@ class InMemoryBot extends SatoriBot {
   }
 
   @override
-  Future<List<String>> sendMessage(String channelId, String content,
-      {dynamic referrer, bool? linkPreview}) async {
-    final created = await createMessage(channelId, content,
-        referrer: referrer, linkPreview: linkPreview);
+  Future<List<String>> sendMessage(
+    String channelId,
+    String content, {
+    dynamic referrer,
+    bool? linkPreview,
+  }) async {
+    final created = await createMessage(
+      channelId,
+      content,
+      referrer: referrer,
+      linkPreview: linkPreview,
+    );
     return <String>[for (final message in created) message.id!];
   }
 
   @override
-  Future<List<String>> sendPrivateMessage(String userId, String content,
-      {String? guildId, dynamic referrer, bool? linkPreview}) async {
+  Future<List<String>> sendPrivateMessage(
+    String userId,
+    String content, {
+    String? guildId,
+    dynamic referrer,
+    bool? linkPreview,
+  }) async {
     final channel = await createDirectChannel(userId, guildId: guildId);
-    return sendMessage(channel.id, content,
-        referrer: referrer, linkPreview: linkPreview);
+    return sendMessage(
+      channel.id,
+      content,
+      referrer: referrer,
+      linkPreview: linkPreview,
+    );
   }
 
   @override
@@ -188,8 +217,13 @@ class InMemoryBot extends SatoriBot {
       (throw StateError('message not found: $messageId'));
 
   @override
-  Future<BidiList<Message>> getMessageList(String channelId,
-      {String? next, Direction? direction, int? limit, Order? order}) async {
+  Future<BidiList<Message>> getMessageList(
+    String channelId, {
+    String? next,
+    Direction? direction,
+    int? limit,
+    Order? order,
+  }) async {
     final data = messages.values
         .where((message) => message.channel?.id == channelId)
         .toList();
@@ -217,7 +251,10 @@ class InMemoryBot extends SatoriBot {
 
   @override
   Future<void> editMessage(
-      String channelId, String messageId, String content) async {
+    String channelId,
+    String messageId,
+    String content,
+  ) async {
     messages[messageId]?.content = content;
   }
 
@@ -228,7 +265,10 @@ class InMemoryBot extends SatoriBot {
 
   @override
   Future<void> createReaction(
-      String channelId, String messageId, String emojiId) async {
+    String channelId,
+    String messageId,
+    String emojiId,
+  ) async {
     _reactions
         .putIfAbsent(messageId, () => <String, Set<String>>{})
         .putIfAbsent(emojiId, () => <String>{})
@@ -237,14 +277,20 @@ class InMemoryBot extends SatoriBot {
 
   @override
   Future<void> deleteReaction(
-      String channelId, String messageId, String emojiId,
-      {String? userId}) async {
+    String channelId,
+    String messageId,
+    String emojiId, {
+    String? userId,
+  }) async {
     _reactions[messageId]?[emojiId]?.remove(userId ?? this.userId);
   }
 
   @override
-  Future<void> clearReaction(String channelId, String messageId,
-      {String? emojiId}) async {
+  Future<void> clearReaction(
+    String channelId,
+    String messageId, {
+    String? emojiId,
+  }) async {
     if (emojiId != null) {
       _reactions[messageId]?.remove(emojiId);
     } else {
@@ -254,17 +300,23 @@ class InMemoryBot extends SatoriBot {
 
   @override
   Future<Pagination<User>> getReactionList(
-      String channelId, String messageId, String emojiId,
-      {String? next}) async {
+    String channelId,
+    String messageId,
+    String emojiId, {
+    String? next,
+  }) async {
     final ids = _reactions[messageId]?[emojiId] ?? const <String>{};
-    return Pagination<User>(
-      <User>[for (final id in ids) users[id] ?? User(id: id)],
-    );
+    return Pagination<User>(<User>[
+      for (final id in ids) users[id] ?? User(id: id),
+    ]);
   }
 
   @override
   Stream<User> getReactionIter(
-      String channelId, String messageId, String emojiId) async* {
+    String channelId,
+    String messageId,
+    String emojiId,
+  ) async* {
     final ids = _reactions[messageId]?[emojiId] ?? const <String>{};
     for (final id in ids) {
       yield users[id] ?? User(id: id);
@@ -273,9 +325,9 @@ class InMemoryBot extends SatoriBot {
 
   @override
   Future<List<String>> createUpload(List<dynamic> blobs) async => <String>[
-        for (var i = 0; i < blobs.length; i++)
-          'memory://upload/${++_uploadSequence}',
-      ];
+    for (var i = 0; i < blobs.length; i++)
+      'memory://upload/${++_uploadSequence}',
+  ];
 
   @override
   Future<Guild> getGuild(String id) async =>
@@ -293,12 +345,18 @@ class InMemoryBot extends SatoriBot {
   }
 
   @override
-  Future<void> handleGuildRequest(String messageId, bool approve,
-      {String? comment}) async {}
+  Future<void> handleGuildRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) async {}
 
   @override
-  Future<void> handleGuildMemberRequest(String messageId, bool approve,
-      {String? comment}) async {}
+  Future<void> handleGuildMemberRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) async {}
 
   @override
   Future<GuildMember> getGuildMember(String guildId, String userId) async =>
@@ -306,8 +364,10 @@ class InMemoryBot extends SatoriBot {
       (throw StateError('member not found: $guildId/$userId'));
 
   @override
-  Future<Pagination<GuildMember>> getGuildMemberList(String guildId,
-      {String? next}) async {
+  Future<Pagination<GuildMember>> getGuildMemberList(
+    String guildId, {
+    String? next,
+  }) async {
     final data = <GuildMember>[
       for (final entry in members.entries)
         if (entry.key.startsWith('$guildId/')) entry.value,
@@ -325,43 +385,57 @@ class InMemoryBot extends SatoriBot {
   }
 
   @override
-  Future<void> muteGuildMember(String guildId, String userId,
-      {int? duration, String? reason}) async {}
+  Future<void> muteGuildMember(
+    String guildId,
+    String userId, {
+    int? duration,
+    String? reason,
+  }) async {}
 
   @override
-  Future<void> kickGuildMember(String guildId, String userId,
-      {bool? permanent}) async {
+  Future<void> kickGuildMember(
+    String guildId,
+    String userId, {
+    bool? permanent,
+  }) async {
     members.remove('$guildId/$userId');
   }
 
   @override
   Future<void> setGuildMemberRole(
-      String guildId, String userId, String roleId) async {
+    String guildId,
+    String userId,
+    String roleId,
+  ) async {
     _memberRoles.putIfAbsent('$guildId/$userId', () => <String>{}).add(roleId);
   }
 
   @override
   Future<void> unsetGuildMemberRole(
-      String guildId, String userId, String roleId) async {
+    String guildId,
+    String userId,
+    String roleId,
+  ) async {
     _memberRoles['$guildId/$userId']?.remove(roleId);
   }
 
   @override
   Future<Pagination<GuildRole>> getGuildMemberRoleList(
-      String guildId, String userId,
-      {String? next}) async {
+    String guildId,
+    String userId, {
+    String? next,
+  }) async {
     final ids = _memberRoles['$guildId/$userId'] ?? const <String>{};
-    return Pagination<GuildRole>(
-      <GuildRole>[
-        for (final id in ids) roles[id] ?? GuildRole(id: id),
-      ],
-    );
+    return Pagination<GuildRole>(<GuildRole>[
+      for (final id in ids) roles[id] ?? GuildRole(id: id),
+    ]);
   }
 
   @override
-  Future<Pagination<GuildRole>> getGuildRoleList(String guildId,
-          {String? next}) async =>
-      Pagination<GuildRole>(roles.values.toList());
+  Future<Pagination<GuildRole>> getGuildRoleList(
+    String guildId, {
+    String? next,
+  }) async => Pagination<GuildRole>(roles.values.toList());
 
   @override
   Stream<GuildRole> getGuildRoleIter(String guildId) async* {
@@ -371,13 +445,15 @@ class InMemoryBot extends SatoriBot {
   }
 
   @override
-  Future<GuildRole> createGuildRole(String guildId,
-      {String? name,
-      int? color,
-      int? position,
-      BigInt? permissions,
-      bool? hoist,
-      bool? mentionable}) async {
+  Future<GuildRole> createGuildRole(
+    String guildId, {
+    String? name,
+    int? color,
+    int? position,
+    BigInt? permissions,
+    bool? hoist,
+    bool? mentionable,
+  }) async {
     final role = GuildRole(
       id: 'r${++_roleSequence}',
       name: name,
@@ -392,13 +468,16 @@ class InMemoryBot extends SatoriBot {
   }
 
   @override
-  Future<void> updateGuildRole(String guildId, String roleId,
-      {String? name,
-      int? color,
-      int? position,
-      BigInt? permissions,
-      bool? hoist,
-      bool? mentionable}) async {
+  Future<void> updateGuildRole(
+    String guildId,
+    String roleId, {
+    String? name,
+    int? color,
+    int? position,
+    BigInt? permissions,
+    bool? hoist,
+    bool? mentionable,
+  }) async {
     final current = roles[roleId];
     if (current == null) throw StateError('role not found: $roleId');
     roles[roleId] = GuildRole(
@@ -438,8 +517,11 @@ class InMemoryBot extends SatoriBot {
   }
 
   @override
-  Future<void> handleFriendRequest(String messageId, bool approve,
-      {String? comment}) async {}
+  Future<void> handleFriendRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) async {}
 
   @override
   Future<void> updateCommands(List<Command> commands) async {}

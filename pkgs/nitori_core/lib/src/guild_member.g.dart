@@ -7,21 +7,19 @@ part of 'guild_member.dart';
 // **************************************************************************
 
 GuildMember _$GuildMemberFromJson(Map<String, dynamic> json) => GuildMember(
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
-      name: json['name'] as String?,
-      nick: json['nick'] as String?,
-      avatar: json['avatar'] as String?,
-      title: json['title'] as String?,
-      joinedAt: json['joined_at'] as int?,
-      roles: (json['roles'] as List<dynamic>?)
-          ?.map((e) => GuildRole.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+  user: User.fromJson(json['user'] as Map<String, dynamic>),
+  name: json['name'] as String?,
+  nick: json['nick'] as String?,
+  avatar: json['avatar'] as String?,
+  title: json['title'] as String?,
+  joinedAt: json['joined_at'] as int?,
+  roles: (json['roles'] as List<dynamic>?)
+      ?.map((e) => GuildRole.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
 
 Map<String, dynamic> _$GuildMemberToJson(GuildMember instance) {
-  final val = <String, dynamic>{
-    'user': instance.user.toJson(),
-  };
+  final val = <String, dynamic>{'user': instance.user.toJson()};
 
   void writeNotNull(String key, dynamic value) {
     if (value != null) {

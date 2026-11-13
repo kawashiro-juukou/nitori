@@ -21,7 +21,10 @@ enum ChannelType {
 }
 
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class Channel {
   /// Channel ID
   String id;
@@ -38,12 +41,13 @@ class Channel {
   /// Position inside the parent category
   int? position;
 
-  Channel(
-      {required this.id,
-      required this.type,
-      this.name,
-      this.parentId,
-      this.position});
+  Channel({
+    required this.id,
+    required this.type,
+    this.name,
+    this.parentId,
+    this.position,
+  });
 
   factory Channel.fromJson(Map<String, dynamic> json) =>
       _$ChannelFromJson(json);

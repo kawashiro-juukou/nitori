@@ -99,24 +99,26 @@ class SatoriServer {
   final Set<_GatewayClient> _clients = <_GatewayClient>{};
   final ListQueue<_BufferedEvent> _buffer = ListQueue<_BufferedEvent>();
 
-  late final RateLimiter? _httpRateLimiter =
-      httpRateLimit != null ? RateLimiter(httpRateLimit!) : null;
-  late final RateLimiter? _wsConnectRateLimiter =
-      wsConnectRateLimit != null ? RateLimiter(wsConnectRateLimit!) : null;
-  late final RateLimiter? _wsEventRateLimiter =
-      wsEventRateLimit != null ? RateLimiter(wsEventRateLimit!) : null;
+  late final RateLimiter? _httpRateLimiter = httpRateLimit != null
+      ? RateLimiter(httpRateLimit!)
+      : null;
+  late final RateLimiter? _wsConnectRateLimiter = wsConnectRateLimit != null
+      ? RateLimiter(wsConnectRateLimit!)
+      : null;
+  late final RateLimiter? _wsEventRateLimiter = wsEventRateLimit != null
+      ? RateLimiter(wsEventRateLimit!)
+      : null;
 
   int _sequence = 0;
   HttpServer? _server;
   StreamSubscription<Event>? _subscription;
 
   /// Binds to [address] and [port], then starts serving.
-  Future<HttpServer> bind({
-    Object? address,
-    int port = 5140,
-  }) async {
-    final server =
-        await HttpServer.bind(address ?? InternetAddress.anyIPv4, port);
+  Future<HttpServer> bind({Object? address, int port = 5140}) async {
+    final server = await HttpServer.bind(
+      address ?? InternetAddress.anyIPv4,
+      port,
+    );
     await serve(server);
     return server;
   }
@@ -124,10 +126,7 @@ class SatoriServer {
   /// Serves requests on an already bound [server].
   Future<void> serve(HttpServer server) async {
     _server = server;
-    _subscription ??= adapter.events.listen(
-      _publish,
-      onError: _report,
-    );
+    _subscription ??= adapter.events.listen(_publish, onError: _report);
     server.listen(_handleRequest);
   }
 
@@ -150,8 +149,10 @@ class SatoriServer {
     await _server?.close(force: true);
     _server = null;
     if (errors.isNotEmpty) {
-      _report(StateError('errors closing ${errors.length} client socket(s)'),
-          StackTrace.current);
+      _report(
+        StateError('errors closing ${errors.length} client socket(s)'),
+        StackTrace.current,
+      );
     }
   }
 
@@ -171,12 +172,17 @@ class SatoriServer {
 
       if (request.uri.path == '/v1/events') {
         if (!WebSocketTransformer.isUpgradeRequest(request)) {
-          await _sendError(request, HttpStatus.upgradeRequired,
-              'WebSocket upgrade required');
+          await _sendError(
+            request,
+            HttpStatus.upgradeRequired,
+            'WebSocket upgrade required',
+          );
           return;
         }
-        _attach(await WebSocketTransformer.upgrade(request),
-            remoteAddress: request.connectionInfo?.remoteAddress.address);
+        _attach(
+          await WebSocketTransformer.upgrade(request),
+          remoteAddress: request.connectionInfo?.remoteAddress.address,
+        );
         return;
       }
 
@@ -191,19 +197,27 @@ class SatoriServer {
         return;
       }
       if (request.method != 'POST') {
-        await _sendError(request, HttpStatus.methodNotAllowed,
-            'Please use POST method to send requests.');
+        await _sendError(
+          request,
+          HttpStatus.methodNotAllowed,
+          'Please use POST method to send requests.',
+        );
         return;
       }
       await _handlePost(request, key);
     } catch (_) {
       await _sendError(
-          request, HttpStatus.internalServerError, 'Internal Server Error');
+        request,
+        HttpStatus.internalServerError,
+        'Internal Server Error',
+      );
     }
   }
 
   Future<void> _sendRateLimitError(
-      HttpRequest request, int retryAfterMs) async {
+    HttpRequest request,
+    int retryAfterMs,
+  ) async {
     try {
       final seconds = (retryAfterMs / 1000).ceil();
       request.response
@@ -226,17 +240,22 @@ class SatoriServer {
 
       if (method.isForm) {
         final parts = await _parseMultipart(
-            request.headers.contentType?.toString(), await _readBytes(request));
+          request.headers.contentType?.toString(),
+          await _readBytes(request),
+        );
         // Detect duplicate part names before building the result map.
         final seenNames = <String>{};
         for (final part in parts) {
           if (!seenNames.add(part.name)) {
             throw _HttpError(
-                HttpStatus.badRequest, 'duplicate part name: ${part.name}');
+              HttpStatus.badRequest,
+              'duplicate part name: ${part.name}',
+            );
           }
         }
-        final urls = await bot
-            .createUpload(<dynamic>[for (final part in parts) part.data]);
+        final urls = await bot.createUpload(<dynamic>[
+          for (final part in parts) part.data,
+        ]);
         result = <String, dynamic>{
           for (var i = 0; i < parts.length; i++) parts[i].name: urls[i],
         };
@@ -285,167 +304,223 @@ class SatoriServer {
   }
 
   Future<Object?> _invoke(
-      SatoriBot bot, String key, Map<String, dynamic> body) async {
+    SatoriBot bot,
+    String key,
+    Map<String, dynamic> body,
+  ) async {
     switch (key) {
       case 'channel.get':
         return (await bot.getChannel(_string(body, 'channel_id'))).toJson();
       case 'channel.list':
-        return (await bot.getChannelList(_string(body, 'guild_id'),
-                next: _optionalString(body, 'next')))
-            .toJson();
+        return (await bot.getChannelList(
+          _string(body, 'guild_id'),
+          next: _optionalString(body, 'next'),
+        )).toJson();
       case 'channel.create':
         return (await bot.createChannel(
-                _string(body, 'guild_id'), _map(body, 'data')))
-            .toJson();
+          _string(body, 'guild_id'),
+          _map(body, 'data'),
+        )).toJson();
       case 'channel.update':
         await bot.updateChannel(
-            _string(body, 'channel_id'), _map(body, 'data'));
+          _string(body, 'channel_id'),
+          _map(body, 'data'),
+        );
         return null;
       case 'channel.delete':
         await bot.deleteChannel(_string(body, 'channel_id'));
         return null;
       case 'channel.mute':
-        await bot.muteChannel(_string(body, 'channel_id'),
-            guildId: _optionalString(body, 'guild_id'),
-            enable: _optionalBool(body, 'enable'));
+        await bot.muteChannel(
+          _string(body, 'channel_id'),
+          guildId: _optionalString(body, 'guild_id'),
+          enable: _optionalBool(body, 'enable'),
+        );
         return null;
       case 'message.create':
         final messages = await bot.createMessage(
-            _string(body, 'channel_id'), _string(body, 'content'),
-            referrer: body['referrer']);
+          _string(body, 'channel_id'),
+          _string(body, 'content'),
+          referrer: body['referrer'],
+        );
         return <Object?>[for (final message in messages) message.toJson()];
       case 'message.update':
-        await bot.editMessage(_string(body, 'channel_id'),
-            _string(body, 'message_id'), _string(body, 'content'));
+        await bot.editMessage(
+          _string(body, 'channel_id'),
+          _string(body, 'message_id'),
+          _string(body, 'content'),
+        );
         return null;
       case 'message.delete':
         await bot.deleteMessage(
-            _string(body, 'channel_id'), _string(body, 'message_id'));
+          _string(body, 'channel_id'),
+          _string(body, 'message_id'),
+        );
         return null;
       case 'message.get':
         return (await bot.getMessage(
-                _string(body, 'channel_id'), _string(body, 'message_id')))
-            .toJson();
+          _string(body, 'channel_id'),
+          _string(body, 'message_id'),
+        )).toJson();
       case 'message.list':
-        return (await bot.getMessageList(_string(body, 'channel_id'),
-                next: _optionalString(body, 'next'),
-                direction: _direction(body['direction']),
-                limit: _optionalInt(body, 'limit'),
-                order: _order(body['order'])))
-            .toJson();
+        return (await bot.getMessageList(
+          _string(body, 'channel_id'),
+          next: _optionalString(body, 'next'),
+          direction: _direction(body['direction']),
+          limit: _optionalInt(body, 'limit'),
+          order: _order(body['order']),
+        )).toJson();
       case 'reaction.create':
-        await bot.createReaction(_string(body, 'channel_id'),
-            _string(body, 'message_id'), _string(body, 'emoji_id'));
+        await bot.createReaction(
+          _string(body, 'channel_id'),
+          _string(body, 'message_id'),
+          _string(body, 'emoji_id'),
+        );
         return null;
       case 'reaction.delete':
-        await bot.deleteReaction(_string(body, 'channel_id'),
-            _string(body, 'message_id'), _string(body, 'emoji_id'),
-            userId: _optionalString(body, 'user_id'));
+        await bot.deleteReaction(
+          _string(body, 'channel_id'),
+          _string(body, 'message_id'),
+          _string(body, 'emoji_id'),
+          userId: _optionalString(body, 'user_id'),
+        );
         return null;
       case 'reaction.clear':
         await bot.clearReaction(
-            _string(body, 'channel_id'), _string(body, 'message_id'),
-            emojiId: _optionalString(body, 'emoji_id'));
+          _string(body, 'channel_id'),
+          _string(body, 'message_id'),
+          emojiId: _optionalString(body, 'emoji_id'),
+        );
         return null;
       case 'reaction.list':
-        return (await bot.getReactionList(_string(body, 'channel_id'),
-                _string(body, 'message_id'), _string(body, 'emoji_id'),
-                next: _optionalString(body, 'next')))
-            .toJson();
+        return (await bot.getReactionList(
+          _string(body, 'channel_id'),
+          _string(body, 'message_id'),
+          _string(body, 'emoji_id'),
+          next: _optionalString(body, 'next'),
+        )).toJson();
       case 'guild.get':
         return (await bot.getGuild(_string(body, 'guild_id'))).toJson();
       case 'guild.list':
-        return (await bot.getGuildList(next: _optionalString(body, 'next')))
-            .toJson();
+        return (await bot.getGuildList(
+          next: _optionalString(body, 'next'),
+        )).toJson();
       case 'guild.member.get':
         return (await bot.getGuildMember(
-                _string(body, 'guild_id'), _string(body, 'user_id')))
-            .toJson();
+          _string(body, 'guild_id'),
+          _string(body, 'user_id'),
+        )).toJson();
       case 'guild.member.list':
-        return (await bot.getGuildMemberList(_string(body, 'guild_id'),
-                next: _optionalString(body, 'next')))
-            .toJson();
+        return (await bot.getGuildMemberList(
+          _string(body, 'guild_id'),
+          next: _optionalString(body, 'next'),
+        )).toJson();
       case 'guild.member.kick':
         await bot.kickGuildMember(
-            _string(body, 'guild_id'), _string(body, 'user_id'),
-            permanent: _optionalBool(body, 'permanent'));
+          _string(body, 'guild_id'),
+          _string(body, 'user_id'),
+          permanent: _optionalBool(body, 'permanent'),
+        );
         return null;
       case 'guild.member.mute':
         await bot.muteGuildMember(
-            _string(body, 'guild_id'), _string(body, 'user_id'),
-            duration: _optionalInt(body, 'duration'),
-            reason: _optionalString(body, 'reason'));
+          _string(body, 'guild_id'),
+          _string(body, 'user_id'),
+          duration: _optionalInt(body, 'duration'),
+          reason: _optionalString(body, 'reason'),
+        );
         return null;
       case 'guild.member.role.set':
-        await bot.setGuildMemberRole(_string(body, 'guild_id'),
-            _string(body, 'user_id'), _string(body, 'role_id'));
+        await bot.setGuildMemberRole(
+          _string(body, 'guild_id'),
+          _string(body, 'user_id'),
+          _string(body, 'role_id'),
+        );
         return null;
       case 'guild.member.role.unset':
-        await bot.unsetGuildMemberRole(_string(body, 'guild_id'),
-            _string(body, 'user_id'), _string(body, 'role_id'));
+        await bot.unsetGuildMemberRole(
+          _string(body, 'guild_id'),
+          _string(body, 'user_id'),
+          _string(body, 'role_id'),
+        );
         return null;
       case 'guild.member.role.list':
         return (await bot.getGuildMemberRoleList(
-                _string(body, 'guild_id'), _string(body, 'user_id'),
-                next: _optionalString(body, 'next')))
-            .toJson();
+          _string(body, 'guild_id'),
+          _string(body, 'user_id'),
+          next: _optionalString(body, 'next'),
+        )).toJson();
       case 'guild.role.list':
-        return (await bot.getGuildRoleList(_string(body, 'guild_id'),
-                next: _optionalString(body, 'next')))
-            .toJson();
+        return (await bot.getGuildRoleList(
+          _string(body, 'guild_id'),
+          next: _optionalString(body, 'next'),
+        )).toJson();
       case 'guild.role.create':
         final data = _map(body, 'data');
-        return (await bot.createGuildRole(_string(body, 'guild_id'),
-                name: _optionalString(data, 'name'),
-                color: _optionalInt(data, 'color'),
-                position: _optionalInt(data, 'position'),
-                permissions: _optionalBigInt(data, 'permissions'),
-                hoist: _optionalBool(data, 'hoist'),
-                mentionable: _optionalBool(data, 'mentionable')))
-            .toJson();
+        return (await bot.createGuildRole(
+          _string(body, 'guild_id'),
+          name: _optionalString(data, 'name'),
+          color: _optionalInt(data, 'color'),
+          position: _optionalInt(data, 'position'),
+          permissions: _optionalBigInt(data, 'permissions'),
+          hoist: _optionalBool(data, 'hoist'),
+          mentionable: _optionalBool(data, 'mentionable'),
+        )).toJson();
       case 'guild.role.update':
         final data = _map(body, 'data');
         await bot.updateGuildRole(
-            _string(body, 'guild_id'), _string(body, 'role_id'),
-            name: _optionalString(data, 'name'),
-            color: _optionalInt(data, 'color'),
-            position: _optionalInt(data, 'position'),
-            permissions: _optionalBigInt(data, 'permissions'),
-            hoist: _optionalBool(data, 'hoist'),
-            mentionable: _optionalBool(data, 'mentionable'));
+          _string(body, 'guild_id'),
+          _string(body, 'role_id'),
+          name: _optionalString(data, 'name'),
+          color: _optionalInt(data, 'color'),
+          position: _optionalInt(data, 'position'),
+          permissions: _optionalBigInt(data, 'permissions'),
+          hoist: _optionalBool(data, 'hoist'),
+          mentionable: _optionalBool(data, 'mentionable'),
+        );
         return null;
       case 'guild.role.delete':
         await bot.deleteGuildRole(
-            _string(body, 'guild_id'), _string(body, 'role_id'));
+          _string(body, 'guild_id'),
+          _string(body, 'role_id'),
+        );
         return null;
       case 'login.get':
         return (await bot.getLogin()).toJson();
       case 'user.get':
         return (await bot.getUser(_string(body, 'user_id'))).toJson();
       case 'user.channel.create':
-        return (await bot.createDirectChannel(_string(body, 'user_id'),
-                guildId: _optionalString(body, 'guild_id')))
-            .toJson();
+        return (await bot.createDirectChannel(
+          _string(body, 'user_id'),
+          guildId: _optionalString(body, 'guild_id'),
+        )).toJson();
       case 'friend.list':
-        return (await bot.getFriendList(next: _optionalString(body, 'next')))
-            .toJson();
+        return (await bot.getFriendList(
+          next: _optionalString(body, 'next'),
+        )).toJson();
       case 'friend.delete':
         await bot.deleteFriend(_string(body, 'user_id'));
         return null;
       case 'friend.approve':
-        await bot.handleFriendRequest(_string(body, 'message_id'),
-            _optionalBool(body, 'approve') ?? false,
-            comment: _optionalString(body, 'comment'));
+        await bot.handleFriendRequest(
+          _string(body, 'message_id'),
+          _optionalBool(body, 'approve') ?? false,
+          comment: _optionalString(body, 'comment'),
+        );
         return null;
       case 'guild.approve':
-        await bot.handleGuildRequest(_string(body, 'message_id'),
-            _optionalBool(body, 'approve') ?? false,
-            comment: _optionalString(body, 'comment'));
+        await bot.handleGuildRequest(
+          _string(body, 'message_id'),
+          _optionalBool(body, 'approve') ?? false,
+          comment: _optionalString(body, 'comment'),
+        );
         return null;
       case 'guild.member.approve':
-        await bot.handleGuildMemberRequest(_string(body, 'message_id'),
-            _optionalBool(body, 'approve') ?? false,
-            comment: _optionalString(body, 'comment'));
+        await bot.handleGuildMemberRequest(
+          _string(body, 'message_id'),
+          _optionalBool(body, 'approve') ?? false,
+          comment: _optionalString(body, 'comment'),
+        );
         return null;
       default:
         throw _HttpError(HttpStatus.notFound, 'method not found');
@@ -456,14 +531,18 @@ class SatoriServer {
     final declared = request.headers.contentLength;
     if (declared > maxRequestBodySize) {
       throw _HttpError(
-          HttpStatus.requestEntityTooLarge, 'request body too large');
+        HttpStatus.requestEntityTooLarge,
+        'request body too large',
+      );
     }
     final bytes = <int>[];
     await for (final chunk in request) {
       bytes.addAll(chunk);
       if (bytes.length > maxRequestBodySize) {
         throw _HttpError(
-            HttpStatus.requestEntityTooLarge, 'request body too large');
+          HttpStatus.requestEntityTooLarge,
+          'request body too large',
+        );
       }
     }
     return bytes;
@@ -552,7 +631,9 @@ class SatoriServer {
   }
 
   Future<List<_FormPart>> _parseMultipart(
-      String? contentType, List<int> body) async {
+    String? contentType,
+    List<int> body,
+  ) async {
     if (contentType == null) {
       throw _HttpError(HttpStatus.badRequest, 'missing multipart content type');
     }
@@ -562,51 +643,61 @@ class SatoriServer {
     }
 
     final parts = <_FormPart>[];
-    final stream =
-        MimeMultipartTransformer(boundary).bind(Stream.fromIterable([body]));
+    final stream = MimeMultipartTransformer(
+      boundary,
+    ).bind(Stream.fromIterable([body]));
 
     // Use runZonedGuarded to catch errors from microtasks during stream subscription.
     final completer = Completer<void>();
     StreamSubscription<MimeMultipart>? subscription;
-    await runZonedGuarded(() async {
-      subscription = stream.listen(
-        (part) async {
-          final name = _partName(part, parts.length + 1);
-          final data = <int>[];
-          try {
-            await for (final chunk in part) {
-              data.addAll(chunk);
+    await runZonedGuarded(
+      () async {
+        subscription = stream.listen(
+          (part) async {
+            final name = _partName(part, parts.length + 1);
+            final data = <int>[];
+            try {
+              await for (final chunk in part) {
+                data.addAll(chunk);
+              }
+            } on Object catch (e) {
+              if (!completer.isCompleted) {
+                completer.completeError(
+                  _HttpError(
+                    HttpStatus.badRequest,
+                    'invalid multipart body: $e',
+                  ),
+                );
+              }
+              await subscription?.cancel();
+              return;
             }
-          } on Object catch (e) {
+            parts.add(_FormPart(name, data));
+          },
+          onError: (Object e, StackTrace st) {
             if (!completer.isCompleted) {
-              completer.completeError(_HttpError(
-                  HttpStatus.badRequest, 'invalid multipart body: $e'));
+              completer.completeError(
+                _HttpError(HttpStatus.badRequest, 'invalid multipart body: $e'),
+              );
             }
-            await subscription?.cancel();
-            return;
-          }
-          parts.add(_FormPart(name, data));
-        },
-        onError: (Object e, StackTrace st) {
-          if (!completer.isCompleted) {
-            completer.completeError(_HttpError(
-                HttpStatus.badRequest, 'invalid multipart body: $e'));
-          }
-        },
-        onDone: () {
-          if (!completer.isCompleted) {
-            completer.complete();
-          }
-        },
-        cancelOnError: true,
-      );
-    }, (Object e, StackTrace st) {
-      // Catch synchronous errors during listen() call.
-      if (!completer.isCompleted) {
-        completer.completeError(
-            _HttpError(HttpStatus.badRequest, 'invalid multipart body: $e'));
-      }
-    });
+          },
+          onDone: () {
+            if (!completer.isCompleted) {
+              completer.complete();
+            }
+          },
+          cancelOnError: true,
+        );
+      },
+      (Object e, StackTrace st) {
+        // Catch synchronous errors during listen() call.
+        if (!completer.isCompleted) {
+          completer.completeError(
+            _HttpError(HttpStatus.badRequest, 'invalid multipart body: $e'),
+          );
+        }
+      },
+    );
 
     // Wait for completion and propagate any error.
     try {
@@ -667,8 +758,9 @@ class SatoriServer {
     }
 
     final body = payload['body'];
-    final identify =
-        body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+    final identify = body is Map
+        ? Map<String, dynamic>.from(body)
+        : <String, dynamic>{};
 
     switch (payload['op']) {
       // Opcode.identify
@@ -791,11 +883,9 @@ class SatoriServer {
 
   void _send(WebSocket socket, Opcode opcode, Object body) {
     _write(
-        socket,
-        jsonEncode(<String, dynamic>{
-          'op': opcode.value,
-          'body': body,
-        }));
+      socket,
+      jsonEncode(<String, dynamic>{'op': opcode.value, 'body': body}),
+    );
   }
 
   void _write(WebSocket socket, String encoded) {
@@ -812,7 +902,10 @@ class SatoriServer {
   }
 
   Future<void> _sendError(
-      HttpRequest request, int statusCode, String message) async {
+    HttpRequest request,
+    int statusCode,
+    String message,
+  ) async {
     try {
       request.response
         ..statusCode = statusCode

@@ -36,7 +36,8 @@ class MockApi {
     paths.add(request.uri.path);
     bodies.add(body);
 
-    final result = await handler?.call(request, body) ??
+    final result =
+        await handler?.call(request, body) ??
         (status: HttpStatus.notFound, body: <String, dynamic>{});
     request.response
       ..statusCode = result.status
@@ -51,10 +52,10 @@ class MockApi {
 }
 
 NitoriBot botFor(MockApi api) => NitoriBot(
-      NitoriClient(baseUrl: 'http://127.0.0.1:${api.server.port}'),
-      platform: 'mock',
-      userId: 'bot-1',
-    );
+  NitoriClient(baseUrl: 'http://127.0.0.1:${api.server.port}'),
+  platform: 'mock',
+  userId: 'bot-1',
+);
 
 void main() {
   late MockApi api;
@@ -129,8 +130,10 @@ void main() {
 
   test('getMessageList parses a BidiList payload', () async {
     api.handler = (request, body) async {
-      expect(body,
-          '{"channel_id":"c1","direction":"after","limit":10,"order":"desc"}');
+      expect(
+        body,
+        '{"channel_id":"c1","direction":"after","limit":10,"order":"desc"}',
+      );
       return (
         status: HttpStatus.ok,
         body: <String, dynamic>{
@@ -144,8 +147,12 @@ void main() {
     };
 
     final bot = botFor(api);
-    final page = await bot.getMessageList('c1',
-        direction: Direction.after, limit: 10, order: Order.desc);
+    final page = await bot.getMessageList(
+      'c1',
+      direction: Direction.after,
+      limit: 10,
+      order: Order.desc,
+    );
 
     expect(page.data.single.id, 'm1');
     expect(page.prev, 'p');
@@ -177,7 +184,7 @@ void main() {
       );
       return (
         status: HttpStatus.ok,
-        body: <String, dynamic>{'id': 'ch1', 'type': 0}
+        body: <String, dynamic>{'id': 'ch1', 'type': 0},
       );
     };
 
@@ -193,15 +200,20 @@ void main() {
 
   test('non-200 responses raise SatoriApiException', () async {
     api.handler = (request, body) async => (
-          status: HttpStatus.forbidden,
-          body: <String, dynamic>{'error': 'nope'}
-        );
+      status: HttpStatus.forbidden,
+      body: <String, dynamic>{'error': 'nope'},
+    );
 
     final bot = botFor(api);
     await expectLater(
       bot.getGuild('g1'),
-      throwsA(isA<SatoriApiException>()
-          .having((e) => e.statusCode, 'statusCode', HttpStatus.forbidden)),
+      throwsA(
+        isA<SatoriApiException>().having(
+          (e) => e.statusCode,
+          'statusCode',
+          HttpStatus.forbidden,
+        ),
+      ),
     );
   });
 
@@ -218,7 +230,7 @@ void main() {
 
     final bot = botFor(api);
     final urls = await bot.createUpload(<dynamic>[
-      <int>[104, 105]
+      <int>[104, 105],
     ]);
 
     expect(urls, <String>['http://example/1']);

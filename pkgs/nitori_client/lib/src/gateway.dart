@@ -22,8 +22,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 /// the map payload with a typed model once it lands.
 class GatewayEvent {
   GatewayEvent(this.raw)
-      : data =
-            transformKey(raw, cashConvertSnakeToCamel) as Map<String, dynamic>;
+    : data = transformKey(raw, cashConvertSnakeToCamel) as Map<String, dynamic>;
 
   /// Original snake_case event body.
   final Map<String, dynamic> raw;
@@ -218,7 +217,8 @@ class Gateway {
       // Opcode.ready (4)
       case 4:
         proxyUrls = List<String>.from(
-            body['proxy_urls'] as List<dynamic>? ?? const <dynamic>[]);
+          body['proxy_urls'] as List<dynamic>? ?? const <dynamic>[],
+        );
         final logins = <Login>[
           for (final json
               in body['logins'] as List<dynamic>? ?? const <dynamic>[])
@@ -228,7 +228,8 @@ class Gateway {
       // Opcode.meta (5)
       case 5:
         proxyUrls = List<String>.from(
-            body['proxy_urls'] as List<dynamic>? ?? const <dynamic>[]);
+          body['proxy_urls'] as List<dynamic>? ?? const <dynamic>[],
+        );
         onMeta?.call(proxyUrls);
       // Opcode.pong (2)
       case 2:
@@ -237,15 +238,17 @@ class Gateway {
   }
 
   String _identify() => jsonEncode(<String, dynamic>{
-        'op': Opcode.identify.value,
-        'body': <String, dynamic>{
-          if (token != null) 'token': token,
-          if (sequence != null) 'sn': sequence,
-        },
-      });
+    'op': Opcode.identify.value,
+    'body': <String, dynamic>{
+      if (token != null) 'token': token,
+      if (sequence != null) 'sn': sequence,
+    },
+  });
 
-  String _ping() => jsonEncode(
-      <String, dynamic>{'op': Opcode.ping.value, 'body': <String, dynamic>{}});
+  String _ping() => jsonEncode(<String, dynamic>{
+    'op': Opcode.ping.value,
+    'body': <String, dynamic>{},
+  });
 
   Uri _wsUri() {
     final uri = Uri.parse(baseUrl);

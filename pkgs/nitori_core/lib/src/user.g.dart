@@ -7,18 +7,16 @@ part of 'user.dart';
 // **************************************************************************
 
 User _$UserFromJson(Map<String, dynamic> json) => User(
-      id: json['id'] as String,
-      name: json['name'] as String?,
-      nick: json['nick'] as String?,
-      avatar: json['avatar'] as String?,
-      discriminator: json['discriminator'] as String?,
-      isBot: json['is_bot'] as bool?,
-    );
+  id: json['id'] as String,
+  name: json['name'] as String?,
+  nick: json['nick'] as String?,
+  avatar: json['avatar'] as String?,
+  discriminator: json['discriminator'] as String?,
+  isBot: json['is_bot'] as bool?,
+);
 
 Map<String, dynamic> _$UserToJson(User instance) {
-  final val = <String, dynamic>{
-    'id': instance.id,
-  };
+  final val = <String, dynamic>{'id': instance.id};
 
   void writeNotNull(String key, dynamic value) {
     if (value != null) {

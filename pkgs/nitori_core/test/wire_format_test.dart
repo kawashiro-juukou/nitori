@@ -7,8 +7,12 @@ import 'package:test/test.dart';
 void main() {
   group('ChannelType', () {
     test('matches the protocol order', () {
-      expect(
-          ChannelType.values.map((type) => type.value).toList(), [0, 1, 2, 3]);
+      expect(ChannelType.values.map((type) => type.value).toList(), [
+        0,
+        1,
+        2,
+        3,
+      ]);
       expect(ChannelType.text.value, 0);
       expect(ChannelType.direct.value, 1);
       expect(ChannelType.category.value, 2);
@@ -21,17 +25,26 @@ void main() {
     });
 
     test('deserializes from an integer', () {
-      expect(Channel.fromJson(const {'id': 'c', 'type': 1}).type,
-          ChannelType.direct);
-      expect(Channel.fromJson(const {'id': 'c', 'type': 3}).type,
-          ChannelType.voice);
+      expect(
+        Channel.fromJson(const {'id': 'c', 'type': 1}).type,
+        ChannelType.direct,
+      );
+      expect(
+        Channel.fromJson(const {'id': 'c', 'type': 3}).type,
+        ChannelType.voice,
+      );
     });
   });
 
   group('Status', () {
     test('matches the protocol order', () {
-      expect(Status.values.map((status) => status.value).toList(),
-          [0, 1, 2, 3, 4]);
+      expect(Status.values.map((status) => status.value).toList(), [
+        0,
+        1,
+        2,
+        3,
+        4,
+      ]);
       expect(Status.offline.value, 0);
       expect(Status.online.value, 1);
       expect(Status.connect.value, 2);
@@ -76,7 +89,7 @@ void main() {
     test('GuildMember keeps the raw wire number', () {
       final member = GuildMember.fromJson(const {
         'user': {'id': 'u'},
-        'joined_at': 1663045572000
+        'joined_at': 1663045572000,
       });
 
       expect(member.joinedAt, isA<int>());

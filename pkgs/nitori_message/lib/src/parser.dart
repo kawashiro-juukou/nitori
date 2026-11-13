@@ -25,53 +25,62 @@ bool? _boolean(Map<String, Object> attributes, String key) {
 
 /// create a [Node] by tag name
 Node? _createTag(
-    String tag, Map<String, Object> attributes, List<Node> children) {
+  String tag,
+  Map<String, Object> attributes,
+  List<Node> children,
+) {
   switch (tag) {
     case 'at':
       return At(
-          id: _string(attributes, 'id'),
-          name: _string(attributes, 'name'),
-          role: _string(attributes, 'role'),
-          type: _string(attributes, 'type'));
+        id: _string(attributes, 'id'),
+        name: _string(attributes, 'name'),
+        role: _string(attributes, 'role'),
+        type: _string(attributes, 'type'),
+      );
     case 'sharp':
       return Sharp(
-          id: _string(attributes, 'id') ?? '',
-          name: _string(attributes, 'name'));
+        id: _string(attributes, 'id') ?? '',
+        name: _string(attributes, 'name'),
+      );
     case 'a':
       return Anchor(href: _string(attributes, 'href') ?? '');
     case 'img':
       return Image(
-          src: _string(attributes, 'src') ?? '',
-          cache: _boolean(attributes, 'cache'),
-          timeout: _string(attributes, 'timeout'),
-          title: _string(attributes, 'title'),
-          width: int.tryParse(_string(attributes, 'width') ?? ''),
-          height: int.tryParse(_string(attributes, 'height') ?? ''));
+        src: _string(attributes, 'src') ?? '',
+        cache: _boolean(attributes, 'cache'),
+        timeout: _string(attributes, 'timeout'),
+        title: _string(attributes, 'title'),
+        width: int.tryParse(_string(attributes, 'width') ?? ''),
+        height: int.tryParse(_string(attributes, 'height') ?? ''),
+      );
     case 'audio':
       return Audio(
-          src: _string(attributes, 'src') ?? '',
-          cache: _boolean(attributes, 'cache'),
-          timeout: _string(attributes, 'timeout'),
-          title: _string(attributes, 'title'),
-          duration: _string(attributes, 'duration'),
-          poster: _string(attributes, 'poster'));
+        src: _string(attributes, 'src') ?? '',
+        cache: _boolean(attributes, 'cache'),
+        timeout: _string(attributes, 'timeout'),
+        title: _string(attributes, 'title'),
+        duration: _string(attributes, 'duration'),
+        poster: _string(attributes, 'poster'),
+      );
     case 'video':
       return Video(
-          src: _string(attributes, 'src') ?? '',
-          cache: _boolean(attributes, 'cache'),
-          timeout: _string(attributes, 'timeout'),
-          title: _string(attributes, 'title'),
-          width: int.tryParse(_string(attributes, 'width') ?? ''),
-          height: int.tryParse(_string(attributes, 'height') ?? ''),
-          duration: _string(attributes, 'duration'),
-          poster: _string(attributes, 'poster'));
+        src: _string(attributes, 'src') ?? '',
+        cache: _boolean(attributes, 'cache'),
+        timeout: _string(attributes, 'timeout'),
+        title: _string(attributes, 'title'),
+        width: int.tryParse(_string(attributes, 'width') ?? ''),
+        height: int.tryParse(_string(attributes, 'height') ?? ''),
+        duration: _string(attributes, 'duration'),
+        poster: _string(attributes, 'poster'),
+      );
     case 'file':
       return File(
-          src: _string(attributes, 'src') ?? '',
-          cache: _boolean(attributes, 'cache'),
-          timeout: _string(attributes, 'timeout'),
-          title: _string(attributes, 'title'),
-          poster: _string(attributes, 'poster'));
+        src: _string(attributes, 'src') ?? '',
+        cache: _boolean(attributes, 'cache'),
+        timeout: _string(attributes, 'timeout'),
+        title: _string(attributes, 'title'),
+        poster: _string(attributes, 'poster'),
+      );
     case 'b':
     case 'strong':
       return Bold.children(children);
@@ -98,19 +107,21 @@ Node? _createTag(
       return Paragraph(attributes: attributes, children: children);
     case 'message':
       return Message(
-          id: _string(attributes, 'id'),
-          forward: _boolean(attributes, 'forward'),
-          children: children);
+        id: _string(attributes, 'id'),
+        forward: _boolean(attributes, 'forward'),
+        children: children,
+      );
     case 'quote':
       return Quote(attributes: attributes, children: children);
     case 'author':
       // The official spelling is `id` / `name`; the legacy `user-id` /
       // `nickname` spellings are still honored when reading.
       return Author(
-          userId: _string(attributes, 'id') ?? _string(attributes, 'user-id'),
-          nickname:
-              _string(attributes, 'name') ?? _string(attributes, 'nickname'),
-          avatar: _string(attributes, 'avatar'));
+        userId: _string(attributes, 'id') ?? _string(attributes, 'user-id'),
+        nickname:
+            _string(attributes, 'name') ?? _string(attributes, 'nickname'),
+        avatar: _string(attributes, 'avatar'),
+      );
     case 'button':
       return Button.children(children, id: _string(attributes, 'id'));
     default:
@@ -220,8 +231,9 @@ class Parser {
       var attributesStr = tagNameIndex == -1
           ? ''
           : tagName.substring(tagNameIndex + 1, tagName.length);
-      tagName =
-          tagNameIndex == -1 ? tagName : tagName.substring(0, tagNameIndex);
+      tagName = tagNameIndex == -1
+          ? tagName
+          : tagName.substring(0, tagNameIndex);
 
       if (!isClosingTag && !isSelfClosingTag) {
         // Parse attributes and children
@@ -237,7 +249,8 @@ class Parser {
           var expected = '</$tagName>';
           if (closingTag != expected) {
             throw Exception(
-                'Mismatched closing tag: expected $expected, got $closingTag');
+              'Mismatched closing tag: expected $expected, got $closingTag',
+            );
           }
         }
       }
@@ -250,9 +263,11 @@ class Parser {
       // The single-quote alternatives are assembled from a code point to keep
       // the regexp literal readable in source.
       var sq = String.fromCharCode(39);
-      var attributeRegex = RegExp('([^\\s=]+)(?:="([^"]*)"|='
-          '$sq([^$sq]*)$sq'
-          ')?');
+      var attributeRegex = RegExp(
+        '([^\\s=]+)(?:="([^"]*)"|='
+        '$sq([^$sq]*)$sq'
+        ')?',
+      );
       var match = attributeRegex.firstMatch(attributesStr);
       while (match != null) {
         var key = match.group(1);
@@ -280,7 +295,8 @@ class Parser {
       }
       // Whitespace before a tag is handled by peeking ahead: a trailing
       // newline right before the next tag is dropped too.
-      var nextTagFollows = tokenizer.hasNext() &&
+      var nextTagFollows =
+          tokenizer.hasNext() &&
           (tokenizer.peek()!.startsWith('</') ||
               tokenizer.peek()!.startsWith('<'));
       if (nextTagFollows) {

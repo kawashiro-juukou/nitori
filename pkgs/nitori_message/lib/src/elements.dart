@@ -11,17 +11,11 @@ class At extends Base {
   String? role;
   String? type;
 
-  At({
-    this.id,
-    this.name,
-    this.role,
-    this.type,
-  }) : super('at', attributes: {
-          'id': id,
-          'name': name,
-          'role': role,
-          'type': type,
-        });
+  At({this.id, this.name, this.role, this.type})
+    : super(
+        'at',
+        attributes: {'id': id, 'name': name, 'role': role, 'type': type},
+      );
 }
 
 /// Represents a `<sharp>` element.
@@ -31,13 +25,8 @@ class Sharp extends Base {
   String id;
   String? name;
 
-  Sharp({
-    required this.id,
-    this.name,
-  }) : super('sharp', attributes: {
-          'id': id,
-          'name': name,
-        });
+  Sharp({required this.id, this.name})
+    : super('sharp', attributes: {'id': id, 'name': name});
 }
 
 /// Represents an `<a> element.
@@ -46,11 +35,7 @@ class Sharp extends Base {
 class Anchor extends Base {
   String href;
 
-  Anchor({
-    required this.href,
-  }) : super('a', attributes: {
-          'href': href,
-        });
+  Anchor({required this.href}) : super('a', attributes: {'href': href});
 }
 
 // #endregion
@@ -69,7 +54,7 @@ class LineBreak extends Base {
 /// See also: https://satori.chat/zh-CN/protocol/elements.html#%E6%AE%B5%E8%90%BD
 class Paragraph extends Base {
   Paragraph({Map<String, Object?>? attributes, List<Node>? children})
-      : super('p', attributes: attributes, children: children);
+    : super('p', attributes: attributes, children: children);
 }
 
 // #endregion
@@ -84,8 +69,11 @@ class Message extends Base {
   bool? forward;
 
   Message({this.id, this.forward, List<Node>? children})
-      : super('message',
-            attributes: {'id': id, 'forward': forward}, children: children);
+    : super(
+        'message',
+        attributes: {'id': id, 'forward': forward},
+        children: children,
+      );
 }
 
 /// Represents a `<quote>` element.
@@ -93,7 +81,7 @@ class Message extends Base {
 /// See also: https://satori.chat/zh-CN/protocol/elements.html#%E5%BC%95%E7%94%A8
 class Quote extends Base {
   Quote({Map<String, Object?>? attributes, List<Node>? children})
-      : super('quote', attributes: attributes, children: children);
+    : super('quote', attributes: attributes, children: children);
 }
 
 /// Represents an `<author>` element.
@@ -105,16 +93,18 @@ class Author extends Base {
   String? avatar;
 
   Author({this.userId, this.nickname, this.avatar, List<Node>? children})
-      : super('author',
-            attributes: {
-              // The official spec uses `id` / `name` / `avatar`; the older
-              // `user-id` / `nickname` spellings are still accepted by the
-              // parser for backward compatibility with existing content.
-              'id': userId,
-              'name': nickname,
-              'avatar': avatar
-            },
-            children: children);
+    : super(
+        'author',
+        attributes: {
+          // The official spec uses `id` / `name` / `avatar`; the older
+          // `user-id` / `nickname` spellings are still accepted by the
+          // parser for backward compatibility with existing content.
+          'id': userId,
+          'name': nickname,
+          'avatar': avatar,
+        },
+        children: children,
+      );
 }
 
 // #endregion
@@ -127,10 +117,7 @@ class Author extends Base {
 /// `<b>x<u>y</u></b>` keeps the `<u>` inside the `<b>`.
 abstract class Modifier extends Base {
   Modifier._(String tag, {String? text, List<Node>? children})
-      : super(tag, children: [
-          if (text != null) Text(text),
-          ...?children,
-        ]);
+    : super(tag, children: [if (text != null) Text(text), ...?children]);
 
   /// The plain text content of this modifier, including nested text.
   String get text =>
@@ -167,7 +154,7 @@ class Underline extends Modifier {
 class Strikethrough extends Modifier {
   Strikethrough(String text) : super._('s', text: text);
   Strikethrough.children(List<Node> children)
-      : super._('s', children: children);
+    : super._('s', children: children);
 }
 
 /// Represents a `<spl>` element.
@@ -192,7 +179,7 @@ class Code extends Modifier {
 class Superscript extends Modifier {
   Superscript(String text) : super._('sup', text: text);
   Superscript.children(List<Node> children)
-      : super._('sup', children: children);
+    : super._('sup', children: children);
 }
 
 /// Represents a `<sub>` element.
@@ -213,19 +200,22 @@ class Subscript extends Modifier {
 class Button extends Base {
   String? id;
 
-  Button(
-    String text, {
-    this.id,
-    Map<String, Object?>? attributes,
-  }) : super('button',
-            attributes: {...?attributes, 'id': id}, children: [Text(text)]);
+  Button(String text, {this.id, Map<String, Object?>? attributes})
+    : super(
+        'button',
+        attributes: {...?attributes, 'id': id},
+        children: [Text(text)],
+      );
 
   Button.children(
     List<Node> children, {
     this.id,
     Map<String, Object?>? attributes,
-  }) : super('button',
-            attributes: {...?attributes, 'id': id}, children: children);
+  }) : super(
+         'button',
+         attributes: {...?attributes, 'id': id},
+         children: children,
+       );
 }
 
 // #endregion
@@ -246,13 +236,15 @@ class _ResourceElement extends Base {
     this.timeout,
     this.title,
     Map<String, Object?>? attributes,
-  }) : super(tag,
-            attributes: {
-              'src': src,
-              'cache': cache,
-              'timeout': timeout,
-              'title': title,
-            }..addAll(attributes ?? {}));
+  }) : super(
+         tag,
+         attributes: {
+           'src': src,
+           'cache': cache,
+           'timeout': timeout,
+           'title': title,
+         }..addAll(attributes ?? {}),
+       );
 }
 
 /// Represents an `<img>` element.
@@ -270,16 +262,13 @@ class Image extends _ResourceElement {
     String? timeout,
     String? title,
   }) : super(
-          tag: 'img',
-          src: src,
-          cache: cache,
-          timeout: timeout,
-          title: title,
-          attributes: {
-            'width': width,
-            'height': height,
-          },
-        );
+         tag: 'img',
+         src: src,
+         cache: cache,
+         timeout: timeout,
+         title: title,
+         attributes: {'width': width, 'height': height},
+       );
 }
 
 /// Represents an `<audio>` element.
@@ -297,16 +286,13 @@ class Audio extends _ResourceElement {
     this.duration,
     this.poster,
   }) : super(
-          tag: 'audio',
-          src: src,
-          cache: cache,
-          timeout: timeout,
-          title: title,
-          attributes: {
-            'duration': duration,
-            'poster': poster,
-          },
-        );
+         tag: 'audio',
+         src: src,
+         cache: cache,
+         timeout: timeout,
+         title: title,
+         attributes: {'duration': duration, 'poster': poster},
+       );
 }
 
 /// Represents a `<video>` element.
@@ -328,18 +314,18 @@ class Video extends _ResourceElement {
     this.duration,
     this.poster,
   }) : super(
-          tag: 'video',
-          src: src,
-          cache: cache,
-          timeout: timeout,
-          title: title,
-          attributes: {
-            'width': width,
-            'height': height,
-            'duration': duration,
-            'poster': poster,
-          },
-        );
+         tag: 'video',
+         src: src,
+         cache: cache,
+         timeout: timeout,
+         title: title,
+         attributes: {
+           'width': width,
+           'height': height,
+           'duration': duration,
+           'poster': poster,
+         },
+       );
 }
 
 /// Represents a `<file>` element.
@@ -355,15 +341,13 @@ class File extends _ResourceElement {
     String? title,
     this.poster,
   }) : super(
-          tag: 'file',
-          src: src,
-          cache: cache,
-          timeout: timeout,
-          title: title,
-          attributes: {
-            'poster': poster,
-          },
-        );
+         tag: 'file',
+         src: src,
+         cache: cache,
+         timeout: timeout,
+         title: title,
+         attributes: {'poster': poster},
+       );
 }
 
 // #endregion

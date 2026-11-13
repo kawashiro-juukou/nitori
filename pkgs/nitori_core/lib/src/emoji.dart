@@ -3,7 +3,10 @@ import 'package:json_annotation/json_annotation.dart';
 part 'emoji.g.dart';
 
 @JsonSerializable(
-    fieldRename: FieldRename.snake, explicitToJson: true, includeIfNull: false)
+  fieldRename: FieldRename.snake,
+  explicitToJson: true,
+  includeIfNull: false,
+)
 class Emoji {
   String id;
   String? name;

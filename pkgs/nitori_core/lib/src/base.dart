@@ -8,9 +8,11 @@ import 'package:json_annotation/json_annotation.dart';
 class Pagination<T> {
   Pagination(this.data, {this.next, this.prev});
 
-  factory Pagination.fromJson(Map<String, dynamic> json) =>
-      Pagination<T>((json['data'] as List<dynamic>).cast<T>(),
-          next: json['next'] as String?, prev: json['prev'] as String?);
+  factory Pagination.fromJson(Map<String, dynamic> json) => Pagination<T>(
+    (json['data'] as List<dynamic>).cast<T>(),
+    next: json['next'] as String?,
+    prev: json['prev'] as String?,
+  );
 
   List<T> data;
   String? next;
@@ -19,29 +21,31 @@ class Pagination<T> {
   String? prev;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'data': data,
-        if (next != null) 'next': next,
-        if (prev != null) 'prev': prev,
-      };
+    'data': data,
+    if (next != null) 'next': next,
+    if (prev != null) 'prev': prev,
+  };
 }
 
 /// The `BidiList` payload shape: a page that can be walked in both directions.
 class BidiList<T> {
   BidiList(this.data, {this.prev, this.next});
 
-  factory BidiList.fromJson(Map<String, dynamic> json) =>
-      BidiList<T>((json['data'] as List<dynamic>).cast<T>(),
-          prev: json['prev'] as String?, next: json['next'] as String?);
+  factory BidiList.fromJson(Map<String, dynamic> json) => BidiList<T>(
+    (json['data'] as List<dynamic>).cast<T>(),
+    prev: json['prev'] as String?,
+    next: json['next'] as String?,
+  );
 
   List<T> data;
   String? prev;
   String? next;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'data': data,
-        if (prev != null) 'prev': prev,
-        if (next != null) 'next': next,
-      };
+    'data': data,
+    if (prev != null) 'prev': prev,
+    if (next != null) 'next': next,
+  };
 }
 
 /// Direction of a paginated request, carried by the `direction` field.
@@ -86,15 +90,19 @@ String cashConvertSnakeToCamel(String key) {
   return parts.first +
       parts
           .skip(1)
-          .map((part) => part.isEmpty
-              ? part
-              : '${part[0].toUpperCase()}${part.substring(1)}')
+          .map(
+            (part) => part.isEmpty
+                ? part
+                : '${part[0].toUpperCase()}${part.substring(1)}',
+          )
           .join();
 }
 
 /// Converts a `camelCase` Dart field name to its `snake_case` wire key.
 String cashConvertCamelToSnake(String key) => key.replaceAllMapped(
-    RegExp('[A-Z]'), (match) => '_${match[0]!.toLowerCase()}');
+  RegExp('[A-Z]'),
+  (match) => '_${match[0]!.toLowerCase()}',
+);
 
 /// Recursively rewrites the keys of a JSON object.
 ///
@@ -111,8 +119,9 @@ dynamic transformKey(dynamic source, dynamic Function(String key) callback) {
   source.forEach((key, value) {
     final name = key.toString();
     final skip = name.startsWith('_') || name == 'referrer';
-    result[skip ? name : callback(name)] =
-        skip ? value : transformKey(value, callback);
+    result[skip ? name : callback(name)] = skip
+        ? value
+        : transformKey(value, callback);
   });
   return result;
 }

@@ -14,7 +14,7 @@ import 'package:test/test.dart';
 /// Creates a multi-bot adapter for multi-login tests.
 class _MultiBotAdapter extends SatoriAdapter {
   _MultiBotAdapter(this.bot1, this.bot2, {List<String>? proxyUrls})
-      : proxyUrls = List<String>.unmodifiable(proxyUrls ?? const <String>[]) {
+    : proxyUrls = List<String>.unmodifiable(proxyUrls ?? const <String>[]) {
     _events = StreamController<Event>.broadcast();
   }
 
@@ -39,8 +39,10 @@ class _MultiBotAdapter extends SatoriAdapter {
   }
 }
 
-Future<void> waitFor(bool Function() condition,
-    {Duration timeout = const Duration(seconds: 3)}) async {
+Future<void> waitFor(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 3),
+}) async {
   final deadline = DateTime.now().add(timeout);
   while (!condition()) {
     if (DateTime.now().isAfter(deadline)) {
@@ -75,22 +77,34 @@ void main() {
     );
 
     // Pre-populate bot1 with channels and guilds for API tests.
-    bot1.channels['c1'] =
-        Channel(id: 'c1', type: ChannelType.text, name: 'general');
-    bot1.channels['c2'] =
-        Channel(id: 'c2', type: ChannelType.text, name: 'random');
+    bot1.channels['c1'] = Channel(
+      id: 'c1',
+      type: ChannelType.text,
+      name: 'general',
+    );
+    bot1.channels['c2'] = Channel(
+      id: 'c2',
+      type: ChannelType.text,
+      name: 'random',
+    );
     bot1.guilds['g1'] = Guild(id: 'g1', name: 'Test Guild');
     bot1.users['u1'] = User(id: 'u1', name: 'User One');
     bot1.members['g1/u1'] = GuildMember(user: bot1.users['u1']!);
 
     // Pre-populate bot2 with different data.
-    bot2.channels['c1'] =
-        Channel(id: 'c1', type: ChannelType.text, name: 'bot2-general');
+    bot2.channels['c1'] = Channel(
+      id: 'c1',
+      type: ChannelType.text,
+      name: 'bot2-general',
+    );
     bot2.guilds['g2'] = Guild(id: 'g2', name: 'Bot2 Guild');
     bot2.users['u2'] = User(id: 'u2', name: 'User Two');
 
-    adapter = _MultiBotAdapter(bot1, bot2,
-        proxyUrls: const <String>['http://proxy.example']);
+    adapter = _MultiBotAdapter(
+      bot1,
+      bot2,
+      proxyUrls: const <String>['http://proxy.example'],
+    );
 
     server = SatoriServer(
       adapter: adapter,
@@ -147,8 +161,10 @@ void main() {
 
   group('HTTP API', () {
     test('channel.list with pagination', () async {
-      final response = await post('channel.list',
-          <String, dynamic>{'guild_id': 'g1', 'next': 'page-2'});
+      final response = await post('channel.list', <String, dynamic>{
+        'guild_id': 'g1',
+        'next': 'page-2',
+      });
       expect(response.statusCode, HttpStatus.ok);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       expect(body['data'], hasLength(2));
@@ -156,42 +172,53 @@ void main() {
       expect(ids, containsAll(['c1', 'c2']));
     });
 
-    test('message.create returns message ID and message.get retrieves it',
-        () async {
-      final create = await post('message.create',
-          <String, dynamic>{'channel_id': 'c1', 'content': 'hello world'});
-      expect(create.statusCode, HttpStatus.ok);
-      final messages = jsonDecode(create.body) as List<dynamic>;
-      expect(messages, hasLength(1));
-      final msgId = messages.single['id'] as String;
-      expect(msgId, startsWith('m'));
+    test(
+      'message.create returns message ID and message.get retrieves it',
+      () async {
+        final create = await post('message.create', <String, dynamic>{
+          'channel_id': 'c1',
+          'content': 'hello world',
+        });
+        expect(create.statusCode, HttpStatus.ok);
+        final messages = jsonDecode(create.body) as List<dynamic>;
+        expect(messages, hasLength(1));
+        final msgId = messages.single['id'] as String;
+        expect(msgId, startsWith('m'));
 
-      // Retrieve the message
-      final get = await post('message.get',
-          <String, dynamic>{'channel_id': 'c1', 'message_id': msgId});
-      expect(get.statusCode, HttpStatus.ok);
-      final msg = jsonDecode(get.body) as Map<String, dynamic>;
-      expect(msg['id'], msgId);
-      expect(msg['content'], 'hello world');
-    });
+        // Retrieve the message
+        final get = await post('message.get', <String, dynamic>{
+          'channel_id': 'c1',
+          'message_id': msgId,
+        });
+        expect(get.statusCode, HttpStatus.ok);
+        final msg = jsonDecode(get.body) as Map<String, dynamic>;
+        expect(msg['id'], msgId);
+        expect(msg['content'], 'hello world');
+      },
+    );
 
     test('message.list supports pagination, direction, limit, order', () async {
       // Create a few messages
       for (var i = 0; i < 5; i++) {
-        await post('message.create',
-            <String, dynamic>{'channel_id': 'c1', 'content': 'msg $i'});
+        await post('message.create', <String, dynamic>{
+          'channel_id': 'c1',
+          'content': 'msg $i',
+        });
       }
 
       // Default list
-      var list =
-          await post('message.list', <String, dynamic>{'channel_id': 'c1'});
+      var list = await post('message.list', <String, dynamic>{
+        'channel_id': 'c1',
+      });
       expect(list.statusCode, HttpStatus.ok);
       var body = jsonDecode(list.body) as Map<String, dynamic>;
       expect((body['data'] as List).length, greaterThanOrEqualTo(5));
 
       // With limit
-      list = await post(
-          'message.list', <String, dynamic>{'channel_id': 'c1', 'limit': 2});
+      list = await post('message.list', <String, dynamic>{
+        'channel_id': 'c1',
+        'limit': 2,
+      });
       body = jsonDecode(list.body) as Map<String, dynamic>;
       expect((body['data'] as List).length, 2);
 
@@ -212,8 +239,9 @@ void main() {
       final gBody = jsonDecode(guilds.body) as Map<String, dynamic>;
       expect((gBody['data'] as List).length, greaterThanOrEqualTo(1));
 
-      final members =
-          await post('guild.member.list', <String, dynamic>{'guild_id': 'g1'});
+      final members = await post('guild.member.list', <String, dynamic>{
+        'guild_id': 'g1',
+      });
       expect(members.statusCode, HttpStatus.ok);
       final mBody = jsonDecode(members.body) as Map<String, dynamic>;
       expect((mBody['data'] as List).length, greaterThanOrEqualTo(1));
@@ -229,21 +257,26 @@ void main() {
 
     test('upload.create returns URLs', () async {
       final boundary = '----testboundary';
-      final request =
-          await httpClient.post('127.0.0.1', port, '/v1/upload.create');
+      final request = await httpClient.post(
+        '127.0.0.1',
+        port,
+        '/v1/upload.create',
+      );
       request.headers
         ..set('authorization', 'Bearer test-token')
         ..set('satori-platform', 'test-1')
         ..set('satori-user-id', 'bot-1')
         ..set('content-type', 'multipart/form-data; boundary=$boundary');
-      request.add(utf8.encode(
-        '--$boundary\r\n'
-        'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
-        'Content-Type: text/plain\r\n'
-        '\r\n'
-        'hello\r\n'
-        '--$boundary--\r\n',
-      ));
+      request.add(
+        utf8.encode(
+          '--$boundary\r\n'
+          'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
+          'Content-Type: text/plain\r\n'
+          '\r\n'
+          'hello\r\n'
+          '--$boundary--\r\n',
+        ),
+      );
       final response = await request.close();
       final body = await utf8.decoder.bind(response).join();
 
@@ -269,12 +302,14 @@ void main() {
       // the connection is alive by emitting and receiving an event.
       final received = <GatewayEvent>[];
       final sub = client.events.listen(received.add);
-      adapter.emitFromBot1(Event(
-        type: 'message-created',
-        login: bot1.login,
-        selfId: 'bot-1',
-        message: Message(id: 'hb1', content: 'heartbeat test'),
-      ));
+      adapter.emitFromBot1(
+        Event(
+          type: 'message-created',
+          login: bot1.login,
+          selfId: 'bot-1',
+          message: Message(id: 'hb1', content: 'heartbeat test'),
+        ),
+      );
       await waitFor(() => received.isNotEmpty);
       expect(received.single.type, 'message-created');
       await sub.cancel();
@@ -298,7 +333,8 @@ void main() {
 
       // Use raw WebSocket for reliable event delivery
       final ws = await WebSocket.connect(
-          'ws://127.0.0.1:${isoHttpServer.port}/v1/events');
+        'ws://127.0.0.1:${isoHttpServer.port}/v1/events',
+      );
       addTearDown(ws.close);
       final receivedRaw = <Map<String, dynamic>>[];
       ws.listen((data) {
@@ -307,27 +343,31 @@ void main() {
       // Wait for META
       await waitFor(() => receivedRaw.isNotEmpty);
       // Send IDENTIFY
-      ws.add(jsonEncode(<String, dynamic>{
-        'op': Opcode.identify.value,
-        'body': <String, dynamic>{'token': 'iso'},
-      }));
+      ws.add(
+        jsonEncode(<String, dynamic>{
+          'op': Opcode.identify.value,
+          'body': <String, dynamic>{'token': 'iso'},
+        }),
+      );
       // Wait for READY
       await waitFor(
-          () => receivedRaw.any((f) => f['op'] == Opcode.ready.value));
+        () => receivedRaw.any((f) => f['op'] == Opcode.ready.value),
+      );
 
       // Emit 5 events
       for (var i = 1; i <= 5; i++) {
-        isoAdapter.emit(Event(
-          type: 'channel-added',
-          login: isoBot.login,
-          selfId: 'iso',
-        ));
+        isoAdapter.emit(
+          Event(type: 'channel-added', login: isoBot.login, selfId: 'iso'),
+        );
       }
 
-      await waitFor(() =>
-          receivedRaw.where((f) => f['op'] == Opcode.event.value).length >= 5);
-      final events =
-          receivedRaw.where((f) => f['op'] == Opcode.event.value).toList();
+      await waitFor(
+        () =>
+            receivedRaw.where((f) => f['op'] == Opcode.event.value).length >= 5,
+      );
+      final events = receivedRaw
+          .where((f) => f['op'] == Opcode.event.value)
+          .toList();
       final sns = events.map((e) => (e['body'] as Map)['sn'] as int).toList();
       expect(sns, orderedEquals([1, 2, 3, 4, 5]));
     });
@@ -350,7 +390,8 @@ void main() {
 
       // First connection: receive events using RAW WebSocket.
       final ws = await WebSocket.connect(
-          'ws://127.0.0.1:${rHttpServer.port}/v1/events');
+        'ws://127.0.0.1:${rHttpServer.port}/v1/events',
+      );
       addTearDown(ws.close);
       final receivedRaw = <Map<String, dynamic>>[];
       ws.listen((data) {
@@ -359,28 +400,36 @@ void main() {
       // Wait for META
       await waitFor(() => receivedRaw.isNotEmpty);
       // Send IDENTIFY
-      ws.add(jsonEncode(<String, dynamic>{
-        'op': Opcode.identify.value,
-        'body': <String, dynamic>{'token': 'resume'},
-      }));
+      ws.add(
+        jsonEncode(<String, dynamic>{
+          'op': Opcode.identify.value,
+          'body': <String, dynamic>{'token': 'resume'},
+        }),
+      );
       // Wait for READY
       await waitFor(
-          () => receivedRaw.any((f) => f['op'] == Opcode.ready.value));
+        () => receivedRaw.any((f) => f['op'] == Opcode.ready.value),
+      );
 
       // Emit 3 events.
       for (var i = 1; i <= 3; i++) {
-        rAdapter.emit(Event(
-          type: 'message-created',
-          login: rBot.login,
-          selfId: 'r',
-          message: Message(id: 'm$i', content: 'msg $i'),
-        ));
+        rAdapter.emit(
+          Event(
+            type: 'message-created',
+            login: rBot.login,
+            selfId: 'r',
+            message: Message(id: 'm$i', content: 'msg $i'),
+          ),
+        );
       }
       // Wait for EVENT frames
-      await waitFor(() =>
-          receivedRaw.where((f) => f['op'] == Opcode.event.value).length >= 3);
-      final events =
-          receivedRaw.where((f) => f['op'] == Opcode.event.value).toList();
+      await waitFor(
+        () =>
+            receivedRaw.where((f) => f['op'] == Opcode.event.value).length >= 3,
+      );
+      final events = receivedRaw
+          .where((f) => f['op'] == Opcode.event.value)
+          .toList();
       final sns = events.map((e) => (e['body'] as Map)['sn'] as int).toList();
       expect(sns, orderedEquals([1, 2, 3]));
 
@@ -434,44 +483,52 @@ void main() {
       addTearDown(rAdapter.close);
 
       final ws = await WebSocket.connect(
-          'ws://127.0.0.1:${rHttpServer.port}/v1/events');
+        'ws://127.0.0.1:${rHttpServer.port}/v1/events',
+      );
       addTearDown(ws.close);
       final receivedRaw = <Map<String, dynamic>>[];
       ws.listen((data) {
         receivedRaw.add(jsonDecode(data as String) as Map<String, dynamic>);
       });
       await waitFor(() => receivedRaw.isNotEmpty);
-      ws.add(jsonEncode(<String, dynamic>{
-        'op': Opcode.identify.value,
-        'body': <String, dynamic>{'token': 'resume0'},
-      }));
+      ws.add(
+        jsonEncode(<String, dynamic>{
+          'op': Opcode.identify.value,
+          'body': <String, dynamic>{'token': 'resume0'},
+        }),
+      );
       await waitFor(
-          () => receivedRaw.any((f) => f['op'] == Opcode.ready.value));
+        () => receivedRaw.any((f) => f['op'] == Opcode.ready.value),
+      );
 
-      rAdapter.emit(Event(
-        type: 'channel-added',
-        login: rBot.login,
-        selfId: 'r0',
-      ));
-      await waitFor(() =>
-          receivedRaw.where((f) => f['op'] == Opcode.event.value).isNotEmpty);
+      rAdapter.emit(
+        Event(type: 'channel-added', login: rBot.login, selfId: 'r0'),
+      );
+      await waitFor(
+        () =>
+            receivedRaw.where((f) => f['op'] == Opcode.event.value).isNotEmpty,
+      );
       await ws.close();
 
       // New connection with sequence = 0
       final ws2 = await WebSocket.connect(
-          'ws://127.0.0.1:${rHttpServer.port}/v1/events');
+        'ws://127.0.0.1:${rHttpServer.port}/v1/events',
+      );
       addTearDown(ws2.close);
       final receivedRaw2 = <Map<String, dynamic>>[];
       ws2.listen((data) {
         receivedRaw2.add(jsonDecode(data as String) as Map<String, dynamic>);
       });
       await waitFor(() => receivedRaw2.isNotEmpty);
-      ws2.add(jsonEncode(<String, dynamic>{
-        'op': Opcode.identify.value,
-        'body': <String, dynamic>{'token': 'resume0', 'sn': 0},
-      }));
+      ws2.add(
+        jsonEncode(<String, dynamic>{
+          'op': Opcode.identify.value,
+          'body': <String, dynamic>{'token': 'resume0', 'sn': 0},
+        }),
+      );
       await waitFor(
-          () => receivedRaw2.any((f) => f['op'] == Opcode.ready.value));
+        () => receivedRaw2.any((f) => f['op'] == Opcode.ready.value),
+      );
       await Future<void>.delayed(const Duration(milliseconds: 500));
       // Should not replay any events
       expect(receivedRaw2.where((f) => f['op'] == Opcode.event.value), isEmpty);
@@ -485,39 +542,49 @@ void main() {
       expect(client.proxyUrls, contains('http://proxy.example'));
     });
 
-    test('Multi-bot: HTTP requests with bot2 headers return bot2 data',
-        () async {
-      final response = await post(
-          'channel.list', <String, dynamic>{'guild_id': 'g2'},
-          platform: 'test-2', userId: 'bot-2');
-      expect(response.statusCode, HttpStatus.ok);
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      final data = body['data'] as List<dynamic>;
-      expect(data.length, 1);
-      expect(data.single['id'], 'c1');
-      expect(data.single['name'], 'bot2-general');
-    });
+    test(
+      'Multi-bot: HTTP requests with bot2 headers return bot2 data',
+      () async {
+        final response = await post(
+          'channel.list',
+          <String, dynamic>{'guild_id': 'g2'},
+          platform: 'test-2',
+          userId: 'bot-2',
+        );
+        expect(response.statusCode, HttpStatus.ok);
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = body['data'] as List<dynamic>;
+        expect(data.length, 1);
+        expect(data.single['id'], 'c1');
+        expect(data.single['name'], 'bot2-general');
+      },
+    );
 
     test('Multi-bot: events from both bots carry login identity', () async {
       final received = <GatewayEvent>[];
       final sub = client.events.listen(received.add);
 
-      adapter.emitFromBot1(Event(
-        type: 'message-created',
-        login: bot1.login,
-        selfId: 'bot-1',
-        message: Message(id: 'm1', content: 'from bot1'),
-      ));
-      adapter.emitFromBot2(Event(
-        type: 'message-created',
-        login: bot2.login,
-        selfId: 'bot-2',
-        message: Message(id: 'm2', content: 'from bot2'),
-      ));
+      adapter.emitFromBot1(
+        Event(
+          type: 'message-created',
+          login: bot1.login,
+          selfId: 'bot-1',
+          message: Message(id: 'm1', content: 'from bot1'),
+        ),
+      );
+      adapter.emitFromBot2(
+        Event(
+          type: 'message-created',
+          login: bot2.login,
+          selfId: 'bot-2',
+          message: Message(id: 'm2', content: 'from bot2'),
+        ),
+      );
 
       await waitFor(() => received.length >= 2);
-      final platforms =
-          received.map((e) => e.data['login']?['platform']).toSet();
+      final platforms = received
+          .map((e) => e.data['login']?['platform'])
+          .toSet();
       expect(platforms, {'test-1', 'test-2'});
 
       await sub.cancel();
@@ -526,25 +593,28 @@ void main() {
 
   group('Error Handling', () {
     test('HTTP 403: missing token', () async {
-      final response = await post(
-          'channel.get', <String, dynamic>{'channel_id': 'c1'},
-          token: null);
+      final response = await post('channel.get', <String, dynamic>{
+        'channel_id': 'c1',
+      }, token: null);
       expect(response.statusCode, HttpStatus.forbidden);
       expect(response.body, 'invalid token');
     });
 
     test('HTTP 403: wrong token', () async {
-      final response = await post(
-          'channel.get', <String, dynamic>{'channel_id': 'c1'},
-          token: 'wrong');
+      final response = await post('channel.get', <String, dynamic>{
+        'channel_id': 'c1',
+      }, token: 'wrong');
       expect(response.statusCode, HttpStatus.forbidden);
       expect(response.body, 'invalid token');
     });
 
     test('HTTP 403: unknown identity headers', () async {
       final response = await post(
-          'channel.get', <String, dynamic>{'channel_id': 'c1'},
-          platform: 'unknown', userId: 'unknown');
+        'channel.get',
+        <String, dynamic>{'channel_id': 'c1'},
+        platform: 'unknown',
+        userId: 'unknown',
+      );
       expect(response.statusCode, HttpStatus.forbidden);
       expect(response.body, 'login not found');
     });
@@ -558,8 +628,9 @@ void main() {
     test('HTTP 404: resource not found returns 500', () async {
       // InMemoryBot throws StateError for missing resources, which
       // the server catches as internal error (500).
-      final response = await post(
-          'channel.get', <String, dynamic>{'channel_id': 'nonexistent'});
+      final response = await post('channel.get', <String, dynamic>{
+        'channel_id': 'nonexistent',
+      });
       expect(response.statusCode, HttpStatus.internalServerError);
     });
 
@@ -571,10 +642,12 @@ void main() {
         frames.add(jsonDecode(data as String) as Map<String, dynamic>);
       });
       await waitFor(() => frames.isNotEmpty); // META
-      socket.add(jsonEncode(<String, dynamic>{
-        'op': Opcode.identify.value,
-        'body': <String, dynamic>{'token': 'wrong'},
-      }));
+      socket.add(
+        jsonEncode(<String, dynamic>{
+          'op': Opcode.identify.value,
+          'body': <String, dynamic>{'token': 'wrong'},
+        }),
+      );
       await socket.done.timeout(const Duration(seconds: 3));
       expect(socket.closeCode, 4004);
     });

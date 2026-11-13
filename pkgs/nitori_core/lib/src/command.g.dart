@@ -7,28 +7,28 @@ part of 'command.dart';
 // **************************************************************************
 
 Command _$CommandFromJson(Map<String, dynamic> json) => Command(
-      name: json['name'] as String,
-      description: (json['description'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(k, e as String),
-      ),
-      arguments: (json['arguments'] as List<dynamic>?)
-          ?.map((e) => CommandDeclaration.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      options: (json['options'] as List<dynamic>?)
-          ?.map((e) => CommandDeclaration.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      children: (json['children'] as List<dynamic>?)
-          ?.map((e) => Command.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+  name: json['name'] as String,
+  description: (json['description'] as Map<String, dynamic>?)?.map(
+    (k, e) => MapEntry(k, e as String),
+  ),
+  arguments: (json['arguments'] as List<dynamic>?)
+      ?.map((e) => CommandDeclaration.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  options: (json['options'] as List<dynamic>?)
+      ?.map((e) => CommandDeclaration.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  children: (json['children'] as List<dynamic>?)
+      ?.map((e) => Command.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
 
 Map<String, dynamic> _$CommandToJson(Command instance) => <String, dynamic>{
-      'name': instance.name,
-      'description': instance.description,
-      'arguments': instance.arguments.map((e) => e.toJson()).toList(),
-      'options': instance.options.map((e) => e.toJson()).toList(),
-      'children': instance.children.map((e) => e.toJson()).toList(),
-    };
+  'name': instance.name,
+  'description': instance.description,
+  'arguments': instance.arguments.map((e) => e.toJson()).toList(),
+  'options': instance.options.map((e) => e.toJson()).toList(),
+  'children': instance.children.map((e) => e.toJson()).toList(),
+};
 
 CommandDeclaration _$CommandDeclarationFromJson(Map<String, dynamic> json) =>
     CommandDeclaration(
@@ -49,10 +49,10 @@ Map<String, dynamic> _$CommandDeclarationToJson(CommandDeclaration instance) =>
     };
 
 Argv _$ArgvFromJson(Map<String, dynamic> json) => Argv(
-      name: json['name'] as String?,
-      arguments: json['arguments'] as List<dynamic>?,
-      options: json['options'] as Map<String, dynamic>?,
-    );
+  name: json['name'] as String?,
+  arguments: json['arguments'] as List<dynamic>?,
+  options: json['options'] as Map<String, dynamic>?,
+);
 
 Map<String, dynamic> _$ArgvToJson(Argv instance) {
   final val = <String, dynamic>{};
