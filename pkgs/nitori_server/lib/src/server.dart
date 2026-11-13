@@ -86,8 +86,10 @@ class SatoriServer {
     this.httpRateLimit,
     this.wsConnectRateLimit,
     this.wsEventRateLimit,
-  })  : _webhooks = List<SatoriWebhook>.from(webhooks ?? const <SatoriWebhook>[]),
-        _httpClient = http.Client();
+  }) : _webhooks = List<SatoriWebhook>.from(
+         webhooks ?? const <SatoriWebhook>[],
+       ),
+       _httpClient = http.Client();
 
   /// Platform integration providing bots and events.
   final SatoriAdapter adapter;
@@ -237,8 +239,11 @@ class SatoriServer {
       // Meta endpoint
       if (key == 'meta') {
         if (request.method != 'POST') {
-          await _sendError(request, HttpStatus.methodNotAllowed,
-              'Please use POST method to send requests.');
+          await _sendError(
+            request,
+            HttpStatus.methodNotAllowed,
+            'Please use POST method to send requests.',
+          );
           return;
         }
         await _handleMeta(request);
@@ -248,8 +253,11 @@ class SatoriServer {
       // Webhook management
       if (key == 'meta/webhook.create' || key == 'meta/webhook.delete') {
         if (request.method != 'POST') {
-          await _sendError(request, HttpStatus.methodNotAllowed,
-              'Please use POST method to send requests.');
+          await _sendError(
+            request,
+            HttpStatus.methodNotAllowed,
+            'Please use POST method to send requests.',
+          );
           return;
         }
         await _handleWebhook(request, key);
@@ -373,7 +381,11 @@ class SatoriServer {
     }
   }
 
-  Future<void> _sendRedirect(HttpRequest request, int status, String location) async {
+  Future<void> _sendRedirect(
+    HttpRequest request,
+    int status,
+    String location,
+  ) async {
     try {
       request.response
         ..statusCode = status
@@ -422,11 +434,18 @@ class SatoriServer {
         }
         final index = _webhooks.indexWhere((w) => w.url == url);
         if (index == -1) {
-          _webhooks.add(SatoriWebhook(url: url, token: token, enabled: enabled));
+          _webhooks.add(
+            SatoriWebhook(url: url, token: token, enabled: enabled),
+          );
         } else {
-          _webhooks[index] = SatoriWebhook(url: url, token: token, enabled: enabled);
+          _webhooks[index] = SatoriWebhook(
+            url: url,
+            token: token,
+            enabled: enabled,
+          );
         }
-      } else { // meta/webhook.delete
+      } else {
+        // meta/webhook.delete
         final url = _string(body, 'url');
         _webhooks.removeWhere((w) => w.url == url);
       }

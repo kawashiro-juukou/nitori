@@ -424,34 +424,42 @@ void main() {
 
   test('POST /v1/meta/webhook.create and delete', () async {
     // Create webhook
-    var response = await post('meta/webhook.create',
-        <String, dynamic>{'url': 'http://webhook.example/endpoint'});
+    var response = await post('meta/webhook.create', <String, dynamic>{
+      'url': 'http://webhook.example/endpoint',
+    });
     expect(response.statusCode, HttpStatus.ok);
     expect(response.body, '{}');
 
     // Duplicate create updates
-    response = await post('meta/webhook.create',
-        <String, dynamic>{'url': 'http://webhook.example/endpoint', 'token': 'tok', 'enabled': false});
+    response = await post('meta/webhook.create', <String, dynamic>{
+      'url': 'http://webhook.example/endpoint',
+      'token': 'tok',
+      'enabled': false,
+    });
     expect(response.statusCode, HttpStatus.ok);
 
     // Delete webhook
-    response = await post('meta/webhook.delete',
-        <String, dynamic>{'url': 'http://webhook.example/endpoint'});
+    response = await post('meta/webhook.delete', <String, dynamic>{
+      'url': 'http://webhook.example/endpoint',
+    });
     expect(response.statusCode, HttpStatus.ok);
     expect(response.body, '{}');
 
     // Delete non-existent is idempotent
-    response = await post('meta/webhook.delete',
-        <String, dynamic>{'url': 'http://webhook.example/endpoint'});
+    response = await post('meta/webhook.delete', <String, dynamic>{
+      'url': 'http://webhook.example/endpoint',
+    });
     expect(response.statusCode, HttpStatus.ok);
   });
 
   test('webhook create/delete require auth', () async {
-    var response = await post('meta/webhook.create',
-        <String, dynamic>{'url': 'http://webhook.example/endpoint'}, token: null);
+    var response = await post('meta/webhook.create', <String, dynamic>{
+      'url': 'http://webhook.example/endpoint',
+    }, token: null);
     expect(response.statusCode, HttpStatus.forbidden);
-    response = await post('meta/webhook.delete',
-        <String, dynamic>{'url': 'http://webhook.example/endpoint'}, token: null);
+    response = await post('meta/webhook.delete', <String, dynamic>{
+      'url': 'http://webhook.example/endpoint',
+    }, token: null);
     expect(response.statusCode, HttpStatus.forbidden);
   });
 
@@ -471,7 +479,9 @@ void main() {
     // Must be under an allowed proxy URL
     final proxyServer = await SatoriServer(
       adapter: InMemoryAdapter(
-        bot: InMemoryBot(user: User(id: 'b', name: 'B')),
+        bot: InMemoryBot(
+          user: User(id: 'b', name: 'B'),
+        ),
         proxyUrls: <String>['http://127.0.0.1:${targetServer.port}'],
       ),
       token: 'secret',
@@ -479,7 +489,10 @@ void main() {
     addTearDown(proxyServer.close);
 
     final request = await client.get(
-        '127.0.0.1', proxyServer.port, '/v1/proxy/$targetUrl');
+      '127.0.0.1',
+      proxyServer.port,
+      '/v1/proxy/$targetUrl',
+    );
     request.headers.set('authorization', 'Bearer secret');
     final response = await request.close();
     expect(response.statusCode, HttpStatus.ok);
@@ -488,8 +501,11 @@ void main() {
   });
 
   test('GET /v1/proxy/*url rejects non-allowed URLs', () async {
-    final req = await client.get('127.0.0.1', port,
-        '/v1/proxy/http://evil.example/secret');
+    final req = await client.get(
+      '127.0.0.1',
+      port,
+      '/v1/proxy/http://evil.example/secret',
+    );
     req.headers.set('authorization', 'Bearer secret');
     final response = await req.close();
     expect(response.statusCode, HttpStatus.forbidden);
@@ -497,8 +513,7 @@ void main() {
   });
 
   test('GET /v1/proxy/*url rejects invalid URLs', () async {
-    final req = await client.get('127.0.0.1', port,
-        '/v1/proxy/not-a-url');
+    final req = await client.get('127.0.0.1', port, '/v1/proxy/not-a-url');
     req.headers.set('authorization', 'Bearer secret');
     final response = await req.close();
     expect(response.statusCode, HttpStatus.badRequest);
@@ -509,7 +524,8 @@ void main() {
     // Use raw socket to avoid HttpClient auto-following redirects
     final socket = await RawSocket.connect(InternetAddress.loopbackIPv4, port);
     addTearDown(socket.close);
-    final request = 'GET /v1/admin/webhook.create HTTP/1.1\r\n'
+    final request =
+        'GET /v1/admin/webhook.create HTTP/1.1\r\n'
         'Host: 127.0.0.1:$port\r\n'
         'Authorization: Bearer secret\r\n'
         'Connection: close\r\n'
@@ -517,43 +533,50 @@ void main() {
     socket.write(utf8.encode(request));
     final completer = Completer<String>();
     final buffer = StringBuffer();
-    socket.listen(
-      (event) {
-        if (event == RawSocketEvent.read) {
-          final data = socket.read();
-          if (data != null) {
-            buffer.write(utf8.decode(data));
-            // Check if we have the full response (headers end with \r\n\r\n)
-            if (buffer.toString().contains('\r\n\r\n')) {
-              completer.complete(buffer.toString());
-            }
-          }
-        } else if (event == RawSocketEvent.closed) {
-          if (!completer.isCompleted) {
+    socket.listen((event) {
+      if (event == RawSocketEvent.read) {
+        final data = socket.read();
+        if (data != null) {
+          buffer.write(utf8.decode(data));
+          // Check if we have the full response (headers end with \r\n\r\n)
+          if (buffer.toString().contains('\r\n\r\n')) {
             completer.complete(buffer.toString());
           }
         }
-      },
-      onError: (e) => completer.completeError(e),
+      } else if (event == RawSocketEvent.closed) {
+        if (!completer.isCompleted) {
+          completer.complete(buffer.toString());
+        }
+      }
+    }, onError: (e) => completer.completeError(e));
+    final responseText = await completer.future.timeout(
+      const Duration(seconds: 5),
     );
-    final responseText = await completer.future.timeout(const Duration(seconds: 5));
     // Parse status line
     final statusLine = responseText.split('\r\n').first;
     expect(statusLine, contains('301'));
     // Parse Location header
-    final locationMatch = RegExp(r'location:\s*(\S+)', caseSensitive: false)
-        .firstMatch(responseText);
+    final locationMatch = RegExp(
+      r'location:\s*(\S+)',
+      caseSensitive: false,
+    ).firstMatch(responseText);
     expect(locationMatch, isNotNull);
     expect(locationMatch!.group(1), '/v1/meta/webhook.create');
   });
 
   test('GET /v1/internal/* returns 404 (not implemented)', () async {
-    final req = await client.get('127.0.0.1', port,
-        '/v1/internal/_tmp/test.txt');
+    final req = await client.get(
+      '127.0.0.1',
+      port,
+      '/v1/internal/_tmp/test.txt',
+    );
     req.headers.set('authorization', 'Bearer secret');
     final response = await req.close();
     expect(response.statusCode, HttpStatus.notFound);
-    expect(await utf8.decoder.bind(response).join(), 'internal routes not implemented');
+    expect(
+      await utf8.decoder.bind(response).join(),
+      'internal routes not implemented',
+    );
   });
 }
 
