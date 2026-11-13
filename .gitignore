@@ -17,6 +17,3 @@ pkgs/*/pubspec.lock
 # Created by melos bootstrap
 .idea/
 *.iml
-
-# Created by `melos version` (monorepo-wide summary; packages keep their own)
-/CHANGELOG.md
