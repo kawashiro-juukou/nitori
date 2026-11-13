@@ -9,10 +9,10 @@ environment:
 
 resolution: workspace
 dependencies:
-  nitori_core: ^0.1.13
-  nitori_message: ^0.1.13
-  nitori_client: ^0.1.13
-  nitori_server: ^0.1.13
+  nitori_core: ^0.1.14
+  nitori_message: ^0.1.14
+  nitori_client: ^0.1.14
+  nitori_server: ^0.1.14
 
 dev_dependencies:
   lints: ^2.0.0

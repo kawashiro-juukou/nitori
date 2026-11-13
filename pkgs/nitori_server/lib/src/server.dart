@@ -7,11 +7,26 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
 import 'package:nitori_core/nitori_core.dart';
 
 import 'adapter.dart';
 import 'rate_limiter.dart';
+
+/// A webhook configuration for event delivery.
+class SatoriWebhook {
+  SatoriWebhook({required this.url, this.token, this.enabled = true});
+
+  /// Target URL to receive events.
+  final String url;
+
+  /// Optional Bearer token for Authorization header.
+  final String? token;
+
+  /// Whether the webhook is active.
+  bool enabled;
+}
 
 /// Constant-time string equality check to avoid timing side-channels.
 bool _constantTimeEquals(String a, String b) {
@@ -63,13 +78,16 @@ class SatoriServer {
   SatoriServer({
     required this.adapter,
     this.token,
+    this.path = '',
+    List<SatoriWebhook>? webhooks,
     this.resumeTimeout = const Duration(minutes: 5),
     this.maxRequestBodySize = 32 * 1024 * 1024,
     this.maxBufferSize = 1000,
     this.httpRateLimit,
     this.wsConnectRateLimit,
     this.wsEventRateLimit,
-  });
+  })  : _webhooks = List<SatoriWebhook>.from(webhooks ?? const <SatoriWebhook>[]),
+        _httpClient = http.Client();
 
   /// Platform integration providing bots and events.
   final SatoriAdapter adapter;
@@ -77,6 +95,13 @@ class SatoriServer {
   /// When set, HTTP requests need `Authorization: Bearer <token>` and gateways
   /// need the same value in the IDENTIFY body.
   final String? token;
+
+  /// Path prefix for all endpoints (e.g. '/satori'). Defaults to empty for
+  /// backward compatibility. Upstream default is '/satori'.
+  final String path;
+
+  /// Registered webhooks for event delivery.
+  final List<SatoriWebhook> _webhooks;
 
   /// How long emitted events stay buffered for replay.
   final Duration resumeTimeout;
@@ -95,6 +120,8 @@ class SatoriServer {
 
   /// Rate limit configuration for WebSocket event frames (upstream).
   final RateLimiterConfig? wsEventRateLimit;
+
+  final http.Client _httpClient;
 
   final Set<_GatewayClient> _clients = <_GatewayClient>{};
   final ListQueue<_BufferedEvent> _buffer = ListQueue<_BufferedEvent>();
@@ -148,12 +175,23 @@ class SatoriServer {
     _clients.clear();
     await _server?.close(force: true);
     _server = null;
+    _httpClient.close();
     if (errors.isNotEmpty) {
       _report(
         StateError('errors closing ${errors.length} client socket(s)'),
         StackTrace.current,
       );
     }
+  }
+
+  /// Normalizes a request path by stripping the configured [path] prefix.
+  String _normalizePath(String requestPath) {
+    if (path.isEmpty) return requestPath;
+    if (requestPath == path) return '/';
+    if (requestPath.startsWith('$path/')) {
+      return requestPath.substring(path.length);
+    }
+    return requestPath;
   }
 
   Future<void> _handleRequest(HttpRequest request) async {
@@ -170,7 +208,10 @@ class SatoriServer {
         return;
       }
 
-      if (request.uri.path == '/v1/events') {
+      final normPath = _normalizePath(request.uri.path);
+
+      // WebSocket gateway
+      if (normPath == '/v1/events') {
         if (!WebSocketTransformer.isUpgradeRequest(request)) {
           await _sendError(
             request,
@@ -186,12 +227,60 @@ class SatoriServer {
         return;
       }
 
-      if (!request.uri.path.startsWith('/v1/')) {
+      if (!normPath.startsWith('/v1/')) {
         await _sendError(request, HttpStatus.notFound, 'Not Found');
         return;
       }
 
-      final key = request.uri.path.substring('/v1/'.length);
+      final key = normPath.substring('/v1/'.length);
+
+      // Meta endpoint
+      if (key == 'meta') {
+        if (request.method != 'POST') {
+          await _sendError(request, HttpStatus.methodNotAllowed,
+              'Please use POST method to send requests.');
+          return;
+        }
+        await _handleMeta(request);
+        return;
+      }
+
+      // Webhook management
+      if (key == 'meta/webhook.create' || key == 'meta/webhook.delete') {
+        if (request.method != 'POST') {
+          await _sendError(request, HttpStatus.methodNotAllowed,
+              'Please use POST method to send requests.');
+          return;
+        }
+        await _handleWebhook(request, key);
+        return;
+      }
+
+      // Admin redirect
+      if (key.startsWith('admin/')) {
+        final target = '$path/v1/meta/${key.substring('admin/'.length)}';
+        await _sendRedirect(request, HttpStatus.movedPermanently, target);
+        return;
+      }
+
+      // Proxy
+      if (key.startsWith('proxy/')) {
+        if (request.method != 'GET') {
+          await _sendError(request, HttpStatus.notFound, 'Not Found');
+          return;
+        }
+        final targetUrl = normPath.substring('/v1/proxy/'.length);
+        await _handleProxy(request, targetUrl);
+        return;
+      }
+
+      // Internal routes
+      if (key.startsWith('internal/')) {
+        await _handleInternal(request, normPath);
+        return;
+      }
+
+      // Standard methods
       if (!methods.containsKey(key)) {
         await _sendError(request, HttpStatus.notFound, 'method not found');
         return;
@@ -282,6 +371,123 @@ class SatoriServer {
     } finally {
       await response.close();
     }
+  }
+
+  Future<void> _sendRedirect(HttpRequest request, int status, String location) async {
+    try {
+      request.response
+        ..statusCode = status
+        ..headers.set('location', location)
+        ..write('Moved Permanently');
+      await request.response.close();
+    } catch (_) {
+      return;
+    }
+  }
+
+  Future<void> _handleMeta(HttpRequest request) async {
+    final response = request.response;
+    try {
+      _checkAuth(request);
+      final meta = Meta(
+        logins: <Login>[for (final bot in adapter.bots) bot.login],
+        proxyUrls: adapter.proxyUrls,
+      );
+      response.statusCode = HttpStatus.ok;
+      response.headers.contentType = ContentType.json;
+      response.write(jsonEncode(meta.toJson()));
+    } on _HttpError catch (error) {
+      response.statusCode = error.statusCode;
+      response.write(error.message);
+    } catch (_) {
+      response.statusCode = HttpStatus.internalServerError;
+      response.write('Internal Server Error');
+    } finally {
+      await response.close();
+    }
+  }
+
+  Future<void> _handleWebhook(HttpRequest request, String key) async {
+    final response = request.response;
+    try {
+      _checkAuth(request);
+      final body = _decodeJson(await _readBytes(request));
+
+      if (key == 'meta/webhook.create') {
+        final url = _string(body, 'url');
+        final token = _optionalString(body, 'token');
+        final enabled = _optionalBool(body, 'enabled') ?? true;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          throw _HttpError(HttpStatus.badRequest, 'url must be http or https');
+        }
+        final index = _webhooks.indexWhere((w) => w.url == url);
+        if (index == -1) {
+          _webhooks.add(SatoriWebhook(url: url, token: token, enabled: enabled));
+        } else {
+          _webhooks[index] = SatoriWebhook(url: url, token: token, enabled: enabled);
+        }
+      } else { // meta/webhook.delete
+        final url = _string(body, 'url');
+        _webhooks.removeWhere((w) => w.url == url);
+      }
+
+      response.statusCode = HttpStatus.ok;
+      response.headers.contentType = ContentType.json;
+      response.write('{}');
+    } on _HttpError catch (error) {
+      response.statusCode = error.statusCode;
+      response.write(error.message);
+    } catch (_) {
+      response.statusCode = HttpStatus.internalServerError;
+      response.write('Internal Server Error');
+    } finally {
+      await response.close();
+    }
+  }
+
+  Future<void> _handleProxy(HttpRequest request, String targetUrl) async {
+    final response = request.response;
+    try {
+      final url = Uri.tryParse(targetUrl);
+      if (url == null || !url.hasScheme) {
+        throw _HttpError(HttpStatus.badRequest, 'invalid url');
+      }
+      // Check against allowed proxy URLs
+      if (!adapter.proxyUrls.any((p) => targetUrl.startsWith(p))) {
+        throw _HttpError(HttpStatus.forbidden, 'forbidden');
+      }
+
+      // Set CORS header
+      response.headers.set('access-control-allow-origin', '*');
+
+      final upstream = await _httpClient.send(http.Request('GET', url));
+      response.statusCode = upstream.statusCode;
+      upstream.headers.forEach((k, v) {
+        if (k.toLowerCase() != 'content-length') {
+          response.headers.set(k, v);
+        }
+      });
+      await response.addStream(upstream.stream);
+    } on _HttpError catch (error) {
+      response.statusCode = error.statusCode;
+      response.write(error.message);
+    } catch (e) {
+      _report(e, StackTrace.current);
+      response.statusCode = HttpStatus.internalServerError;
+      response.write('Internal Server Error');
+    } finally {
+      await response.close();
+    }
+  }
+
+  Future<void> _handleInternal(HttpRequest request, String normPath) async {
+    // Internal routes are not yet implemented in nitori.
+    // Upstream handles /_tmp/:id (temp upload store) and /_api/:name (bot internal API).
+    // This would require an InternalRouter and bot.internal infrastructure.
+    final response = request.response;
+    response.statusCode = HttpStatus.notFound;
+    response.write('internal routes not implemented');
+    await response.close();
   }
 
   void _checkAuth(HttpRequest request) {
@@ -841,6 +1047,31 @@ class SatoriServer {
     for (final client in _clients.toList()) {
       if (!client.authorized) continue;
       _write(client.socket, encoded);
+    }
+    _dispatchWebhooks(buffered.toJson());
+  }
+
+  Future<void> _dispatchWebhooks(Map<String, dynamic> body) async {
+    final payload = jsonEncode(body);
+    for (final webhook in _webhooks) {
+      if (!webhook.enabled) continue;
+      unawaited(_postWebhook(webhook, payload));
+    }
+  }
+
+  Future<void> _postWebhook(SatoriWebhook webhook, String payload) async {
+    try {
+      final request = http.Request('POST', Uri.parse(webhook.url))
+        ..headers['content-type'] = 'application/json'
+        ..headers['Satori-Opcode'] = Opcode.event.value.toString()
+        ..body = payload;
+      if (webhook.token != null) {
+        request.headers['authorization'] = 'Bearer ${webhook.token}';
+      }
+      final response = await _httpClient.send(request);
+      await response.stream.drain();
+    } catch (e, st) {
+      _report(e, st);
     }
   }
 
