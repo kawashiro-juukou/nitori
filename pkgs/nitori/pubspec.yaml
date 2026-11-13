@@ -1,6 +1,6 @@
 name: nitori
 description: Umbrella package for Nitori, a Dart implementation of the Satori Protocol that re-exports all sub-packages.
-version: 0.1.15
+version: 0.1.17
 repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori
 
 

@@ -1,3 +1,13 @@
+## 0.1.17
+
+ - **FEAT**(server): merge P0 routes (meta, webhook, proxy, admin, internal). ([f622fe80](https://github.com/kawashiro-juukou/nitori/commit/f622fe80fc3ef2fbbe0d4044a016ef29daea9252))
+ - **FEAT**: implement P0 server routes (meta, webhook, proxy, admin, internal). ([33dc57bb](https://github.com/kawashiro-juukou/nitori/commit/33dc57bb3a2f33032ab5077eb03267ee69e64a31))
+
+## 0.1.16
+
+ - **FEAT**(server): merge P0 routes (meta, webhook, proxy, admin, internal). ([f622fe80](https://github.com/kawashiro-juukou/nitori/commit/f622fe80fc3ef2fbbe0d4044a016ef29daea9252))
+ - **FEAT**: implement P0 server routes (meta, webhook, proxy, admin, internal). ([33dc57bb](https://github.com/kawashiro-juukou/nitori/commit/33dc57bb3a2f33032ab5077eb03267ee69e64a31))
+
 ## 0.1.15
 
  - **REFACTOR**: migrate to melos 8 and pub workspaces. ([da3748fd](https://github.com/kawashiro-juukou/nitori/commit/da3748fd1e34875a81cfcc38bb14ea637bfb77f8))
