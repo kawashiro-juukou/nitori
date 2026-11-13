@@ -1,6 +1,6 @@
 name: nitori_server
 description: Dart server implementation for the Satori Protocol, providing the HTTP API and WebSocket gateway handlers.
-version: 0.1.14
+version: 0.1.15
 repository: https://github.com/kawashiro-juukou/nitori/tree/master/pkgs/nitori_server
 
 

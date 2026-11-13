@@ -1,3 +1,7 @@
+## 0.1.15
+
+ - **REFACTOR**: migrate to melos 8 and pub workspaces. ([da3748fd](https://github.com/kawashiro-juukou/nitori/commit/da3748fd1e34875a81cfcc38bb14ea637bfb77f8))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
