@@ -7,6 +7,39 @@ library;
 
 import 'package:nitori_core/nitori_core.dart';
 
+/// Sentinel object for [SatoriBot.internal]; throws on any access.
+///
+/// Subclasses (e.g. [InMemoryBot]) override [internal] with a real proxy that
+/// exposes the bot's internal HTTP endpoints.
+class _EmptyInternal {
+  @override
+  @pragma('vm:prefer-inline')
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('internal not implemented');
+}
+
+/// Minimal [SessionHost] backed by a [SatoriBot].
+///
+/// Provides the identity fields a [Session] needs: platform, selfId, login,
+/// and the current sequence number (from the bot's login).
+class _BotSessionHost implements SessionHost {
+  _BotSessionHost(this._bot);
+
+  final SatoriBot _bot;
+
+  @override
+  String get platform => _bot.platform;
+
+  @override
+  String get selfId => _bot.userId;
+
+  @override
+  Login get login => _bot.login;
+
+  @override
+  int get sequence => _bot.login.sn ?? 0;
+}
+
 /// One login served through the HTTP API and the WebSocket gateway.
 ///
 /// Methods default to throwing [UnimplementedError]; an integration only
@@ -36,6 +69,77 @@ abstract class SatoriBot
 
   @override
   Future<Login> getLogin() async => login;
+
+  /// The set of method keys this bot actually implements.
+  ///
+  /// Defaults to all 37 standard methods (conservative). Subclasses override
+  /// to declare the precise subset they support (e.g. a remote bot returns
+  /// only the methods advertised by the upstream gateway).
+  Set<String> get supportedMethods => methodKeys.toSet();
+
+  /// The features this bot advertises in READY / META.
+  ///
+  /// Mirrors the upstream `features` field: the set of method names the bot
+  /// can handle. Defaults to [supportedMethods]; override if the advertised
+  /// set differs from the implemented set.
+  Set<String> get features => supportedMethods;
+
+  /// Creates a [Session] for [event] with this bot as the host.
+  ///
+  /// The returned session carries the event plus this bot's identity
+  /// (platform, selfId, login, sequence) for context-aware handlers.
+  Session session(Event event) => Session(event, host: _BotSessionHost(this));
+
+  /// Dispatches [session] through the bot's event pipeline.
+  ///
+  /// Implements the upstream `dispatch` semantics exactly:
+  /// 1. Finds the alias group containing `session.event.type` in
+  ///    [eventAliases] (from nitori_core).
+  /// 2. If found, replaces `session.event.type` with the canonical (first)
+  ///    name of the group.
+  /// 3. Emits `internal/session` first (for internal routing).
+  /// 4. Then emits each alias member (including the canonical) as a separate
+  ///    event.
+  ///
+  /// NOTE: [SatoriServer._publish] ALREADY performs alias rewriting via
+  /// [_applyEventAliases]. The server does NOT call [bot.dispatch] — its
+  /// single normalization point is [_publish]. This method exists so that
+  /// any external caller invoking [bot.dispatch] behaves identically to
+  /// upstream.
+  void dispatch(Session session) {
+    final event = session.event;
+    final aliases = expandEventAliases(event.type);
+    if (aliases.length > 1) {
+      // Canonical name replaces the emitted type on the wire.
+      event.type = aliases.first;
+    }
+    // Emit internal/session first.
+    _emitInternalSession(session);
+    // Then emit each alias member.
+    for (final alias in aliases) {
+      final copy = event.deepCopy()..type = alias;
+      _emitEvent(copy);
+    }
+  }
+
+  /// Hook for subclasses to emit the internal/session event.
+  ///
+  /// Default does nothing; adapters that need internal routing (e.g. for
+  /// middleware) override this.
+  void _emitInternalSession(Session session) {}
+
+  /// Hook for subclasses to emit a regular event.
+  ///
+  /// Default does nothing; adapters override to broadcast to their event
+  /// stream.
+  void _emitEvent(Event event) {}
+
+  /// Internal HTTP endpoint proxy.
+  ///
+  /// Returns a sentinel that throws [UnimplementedError] on any access.
+  /// Subclasses override with a real proxy that exposes the bot's internal
+  /// routes (e.g. via [InternalRouter]).
+  dynamic get internal => _EmptyInternal();
 
   // Channel methods (6)
 
@@ -355,6 +459,14 @@ abstract class SatoriBot
   /// Updates the bot's slash command list.
   @override
   Future<void> updateCommands(List<Command> commands) =>
+      throw UnimplementedError();
+
+  /// Handles a bot-level internal route request.
+  ///
+  /// Called by the server for paths under `/v1/internal/<platform>/<selfId>/`
+  /// that don't match the global routes (/_tmp, /_api). Returns an
+  /// [InternalResponse] if the route is handled, or null to fall through to 404.
+  Future<InternalResponse?> handleInternalRoute(InternalRequest request) =>
       throw UnimplementedError();
 }
 

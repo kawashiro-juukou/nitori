@@ -73,6 +73,15 @@ class _FormPart {
   final List<int> data;
 }
 
+/// Entry in the temporary upload store.
+class _TempStoreEntry {
+  _TempStoreEntry(this.body, this.headers, this.storedAt);
+
+  final List<int> body;
+  final Map<String, String> headers;
+  final int storedAt;
+}
+
 /// Serves the Satori HTTP API and WebSocket gateway for [adapter].
 class SatoriServer {
   SatoriServer({
@@ -142,6 +151,42 @@ class SatoriServer {
   HttpServer? _server;
   StreamSubscription<Event>? _subscription;
 
+  /// Temporary upload store for `internal:/_tmp/<id>` URLs.
+  ///
+  /// Maps an ID to the stored response data (body bytes + headers). Entries
+  /// expire after 10 minutes (600000 ms) per upstream semantics. Cleaned up
+  /// on each access and by a periodic timer.
+  final Map<String, _TempStoreEntry> _tempStore = <String, _TempStoreEntry>{};
+
+  /// Periodic timer for cleaning up expired temp store entries.
+  Timer? _tempStoreCleanupTimer;
+
+  /// Starts the periodic temp store cleanup (every minute).
+  void _startTempStoreCleanup() {
+    _tempStoreCleanupTimer?.cancel();
+    _tempStoreCleanupTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      _cleanupTempStore(DateTime.now().millisecondsSinceEpoch);
+    });
+  }
+
+  /// Removes expired entries from [_tempStore].
+  void _cleanupTempStore(int now) {
+    const ttl = 600000; // 10 minutes in ms
+    _tempStore.removeWhere((_, entry) => now - entry.storedAt > ttl);
+  }
+
+  /// Stores [body] and [headers] in [_tempStore] under [id].
+  void _storeTempResponse(String id, List<int> body, Map<String, String> headers) {
+    _cleanupTempStore(DateTime.now().millisecondsSinceEpoch);
+    _tempStore[id] = _TempStoreEntry(body, headers, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  /// Retrieves and removes a temp store entry by [id].
+  _TempStoreEntry? _takeTempResponse(String id) {
+    _cleanupTempStore(DateTime.now().millisecondsSinceEpoch);
+    return _tempStore.remove(id);
+  }
+
   /// Binds to [address] and [port], then starts serving.
   Future<HttpServer> bind({Object? address, int port = 5140}) async {
     final server = await HttpServer.bind(
@@ -156,6 +201,7 @@ class SatoriServer {
   Future<void> serve(HttpServer server) async {
     _server = server;
     _subscription ??= adapter.events.listen(_publish, onError: _report);
+    _startTempStoreCleanup();
     server.listen(_handleRequest);
   }
 
@@ -163,6 +209,8 @@ class SatoriServer {
   Future<void> close() async {
     await _subscription?.cancel();
     _subscription = null;
+    _tempStoreCleanupTimer?.cancel();
+    _tempStoreCleanupTimer = null;
     // Close each socket individually, collecting any errors to report after
     // all sockets have been attempted. This ensures the server socket is
     // always closed while not silently swallowing failures.
@@ -353,6 +401,18 @@ class SatoriServer {
         final urls = await bot.createUpload(<dynamic>[
           for (final part in parts) part.data,
         ]);
+        // Store each blob in _tempStore keyed by the ID from the returned URL.
+        for (var i = 0; i < parts.length; i++) {
+          final url = urls[i];
+          final id = _extractTempId(url);
+          if (id != null) {
+            // Store the blob data with appropriate headers.
+            final headers = <String, String>{
+              'content-type': parts[i].data.isNotEmpty ? 'application/octet-stream' : 'application/octet-stream',
+            };
+            _storeTempResponse(id, parts[i].data, headers);
+          }
+        }
         result = <String, dynamic>{
           for (var i = 0; i < parts.length; i++) parts[i].name: urls[i],
         };
@@ -500,13 +560,158 @@ class SatoriServer {
   }
 
   Future<void> _handleInternal(HttpRequest request, String normPath) async {
-    // Internal routes are not yet implemented in nitori.
-    // Upstream handles /_tmp/:id (temp upload store) and /_api/:name (bot internal API).
-    // This would require an InternalRouter and bot.internal infrastructure.
     final response = request.response;
-    response.statusCode = HttpStatus.notFound;
-    response.write('internal routes not implemented');
-    await response.close();
+    try {
+      // Path format: /v1/internal/<platform>/<selfId>/<rest>
+      // The normPath is already normalized (without the server's path prefix).
+      // We need to extract the part after '/v1/internal/'.
+      const internalPrefix = '/v1/internal/';
+      if (!normPath.startsWith(internalPrefix)) {
+        response.statusCode = HttpStatus.notFound;
+        response.write('not found');
+        await response.close();
+        return;
+      }
+
+      final internalPath = normPath.substring(internalPrefix.length);
+      // Parse: /<platform>/<selfId>/<restPath>
+      final match = RegExp(r'^([^/]+)/([^/]+)(/.*)?$').firstMatch(internalPath);
+      if (match == null) {
+        response.statusCode = HttpStatus.notFound;
+        response.write('invalid internal path');
+        await response.close();
+        return;
+      }
+
+      final platform = match.group(1)!;
+      final selfId = match.group(2)!;
+      final restPath = match.group(3) ?? '/';
+
+      final bot = _selectBotByPlatformSelfId(platform, selfId);
+      if (bot == null) {
+        response.statusCode = HttpStatus.notFound;
+        response.write('bot not found');
+        await response.close();
+        return;
+      }
+
+      // Read body and headers for the internal request.
+      final body = request.method != 'GET' ? await _readBytes(request) : null;
+      final headers = <String, String>{};
+      request.headers.forEach((k, v) {
+        headers[k.toLowerCase()] = v.last;
+      });
+      final query = <String, String>{};
+      request.uri.queryParametersAll.forEach((k, v) {
+        // Keep last value for duplicate keys.
+        query[k.toLowerCase()] = v.last;
+      });
+
+      // --- Global routes (Satori-level) ---
+
+      // 1. /_tmp/:id GET only
+      if (restPath.startsWith('/_tmp/')) {
+        final id = restPath.substring('/_tmp/'.length);
+        if (request.method == 'GET') {
+          final entry = _takeTempResponse(id);
+          if (entry == null) {
+            response.statusCode = HttpStatus.notFound;
+            response.write('not found');
+            await response.close();
+            return;
+          }
+          response.statusCode = HttpStatus.ok;
+          entry.headers.forEach((k, v) => response.headers.set(k, v));
+          response.add(entry.body);
+          await response.close();
+          return;
+        } else {
+          response.statusCode = HttpStatus.methodNotAllowed;
+          response.headers.set('allow', 'GET');
+          response.write('method not allowed');
+          await response.close();
+          return;
+        }
+      }
+
+      // 2. /_api/:name POST only
+      if (restPath.startsWith('/_api/')) {
+        final name = restPath.substring('/_api/'.length);
+        if (request.method == 'POST') {
+          if (body == null) {
+            response.statusCode = HttpStatus.badRequest;
+            response.write('missing body');
+            await response.close();
+            return;
+          }
+          final contentType = request.headers.contentType?.toString();
+          dynamic decoded;
+          try {
+            decoded = JsonForm.decode(contentType, body);
+          } on FormatException catch (e) {
+            response.statusCode = HttpStatus.badRequest;
+            response.write('invalid body: $e');
+            await response.close();
+            return;
+          }
+          // Walk bot.internal.<name> (dot notation)
+          final result = await _callBotInternal(bot, name, decoded);
+          if (result == null) {
+            response.statusCode = HttpStatus.notFound;
+            response.write('internal method not found: $name');
+            await response.close();
+            return;
+          }
+          // Check for pagination header
+          final paginationHeader = request.headers.value('satori-pagination');
+          if (paginationHeader != null) {
+            // Call the pagination symbol if present
+            // For now, we just return the result as-is
+          }
+          final encoded = JsonForm.encode(result);
+          response.statusCode = HttpStatus.ok;
+          final ct = ContentType.parse(encoded.contentType);
+          response.headers.contentType = ct;
+          response.add(encoded.bytes);
+          await response.close();
+          return;
+        } else {
+          response.statusCode = HttpStatus.methodNotAllowed;
+          response.headers.set('allow', 'POST');
+          response.write('method not allowed');
+          await response.close();
+          return;
+        }
+      }
+
+      // --- Bot-level router ---
+      // Try the bot's internal router.
+      final internalRequest = InternalRequest(
+        method: request.method,
+        path: restPath,
+        query: query,
+        headers: headers,
+        body: body,
+      );
+      final internalResponse = await bot.handleInternalRoute(internalRequest);
+      if (internalResponse != null) {
+        response.statusCode = internalResponse.status;
+        internalResponse.headers.forEach((k, v) => response.headers.set(k, v));
+        response.add(internalResponse.body);
+        await response.close();
+        return;
+      }
+
+      // Fallback: 404
+      response.statusCode = HttpStatus.notFound;
+      response.write('not found');
+      await response.close();
+    } catch (e, st) {
+      _report(e, st);
+      response.statusCode = HttpStatus.internalServerError;
+      response.write('Internal Server Error');
+      await response.close();
+    }
   }
 
   void _checkAuth(HttpRequest request) {
@@ -526,6 +731,49 @@ class SatoriServer {
       if (bot.platform == platform && bot.userId == userId) return bot;
     }
     throw _HttpError(HttpStatus.forbidden, 'login not found');
+  }
+
+  /// Selects a bot by platform and selfId from the internal route path.
+  ///
+  /// Used by internal routes where the path is `/v1/internal/<platform>/<selfId>/...`.
+  SatoriBot? _selectBotByPlatformSelfId(String platform, String selfId) {
+    for (final bot in adapter.bots) {
+      if (bot.platform == platform && bot.userId == selfId) return bot;
+    }
+    return null;
+  }
+
+  /// Extracts the temp ID from an `internal:/_tmp/<id>` or `/_tmp/<id>` URL.
+  String? _extractTempId(String url) {
+    // Handle both 'internal:/_tmp/id' and '/_tmp/id' formats.
+    const prefix1 = 'internal:/_tmp/';
+    const prefix2 = '/_tmp/';
+    if (url.startsWith(prefix1)) {
+      return url.substring(prefix1.length);
+    }
+    if (url.startsWith(prefix2)) {
+      return url.substring(prefix2.length);
+    }
+    return null;
+  }
+
+  /// Calls a method on `bot.internal` by dotted name (e.g. 'foo.bar').
+  ///
+  /// Returns the result, or null if the method doesn't exist.
+  Future<dynamic> _callBotInternal(SatoriBot bot, String name, dynamic args) async {
+    // Build an InternalRequest for the /_api/<name> path and use the bot's
+    // handleInternalRoute method (which delegates to the bot's InternalRouter).
+    final request = InternalRequest(
+      method: 'POST',
+      path: '/_api/$name',
+      body: JsonForm.encode(args).bytes,
+    );
+    final response = await bot.handleInternalRoute(request);
+    if (response == null || response.status >= 400) {
+      return null;
+    }
+    final contentType = response.headers['content-type'] ?? 'application/json';
+    return JsonForm.decode(contentType, response.body);
   }
 
   Future<Object?> _invoke(

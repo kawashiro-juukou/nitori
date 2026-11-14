@@ -245,7 +245,8 @@ void main() {
     final body = await utf8.decoder.bind(response).join();
 
     expect(response.statusCode, HttpStatus.ok);
-    expect(jsonDecode(body), <String, dynamic>{'file': 'memory://upload/1'});
+    final decoded = jsonDecode(body) as Map<String, dynamic>;
+    expect(decoded['file'], startsWith('internal:/_tmp/'));
   });
 
   test('a boundary inside the file content does not split the part', () async {
@@ -272,7 +273,8 @@ void main() {
 
     expect(response.statusCode, HttpStatus.ok);
     // One part, one upload key – not split at the embedded occurrence.
-    expect(jsonDecode(body), <String, dynamic>{'file': 'memory://upload/1'});
+    final decoded = jsonDecode(body) as Map<String, dynamic>;
+    expect(decoded['file'], startsWith('internal:/_tmp/'));
   });
 
   test('missing content-type header on multipart returns 400', () async {
@@ -564,19 +566,94 @@ void main() {
     expect(locationMatch!.group(1), '/v1/meta/webhook.create');
   });
 
-  test('GET /v1/internal/* returns 404 (not implemented)', () async {
+  test('GET /v1/internal/memory/bot-1/_tmp/unknown returns 404', () async {
     final req = await client.get(
       '127.0.0.1',
       port,
-      '/v1/internal/_tmp/test.txt',
+      '/v1/internal/memory/bot-1/_tmp/unknown',
     );
     req.headers.set('authorization', 'Bearer secret');
     final response = await req.close();
     expect(response.statusCode, HttpStatus.notFound);
-    expect(
-      await utf8.decoder.bind(response).join(),
-      'internal routes not implemented',
+    expect(await utf8.decoder.bind(response).join(), 'not found');
+  });
+
+  test('GET /v1/internal/memory/bot-1/_tmp/<id> returns uploaded content', () async {
+    // First upload a file
+    const boundary = '----nitori-test';
+    final uploadReq = await client.post(
+      '127.0.0.1',
+      port,
+      '/v1/upload.create',
     );
+    uploadReq.headers
+      ..set('authorization', 'Bearer secret')
+      ..set('satori-platform', 'memory')
+      ..set('satori-user-id', 'bot-1')
+      ..set('content-type', 'multipart/form-data; boundary=$boundary');
+    uploadReq.add(
+      utf8.encode(
+        '--$boundary\r\n'
+        'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
+        'Content-Type: text/plain\r\n'
+        '\r\n'
+        'hello world\r\n'
+        '--$boundary--\r\n',
+      ),
+    );
+    final uploadResp = await uploadReq.close();
+    final uploadBody = await utf8.decoder.bind(uploadResp).join();
+    expect(uploadResp.statusCode, HttpStatus.ok);
+    final decoded = jsonDecode(uploadBody) as Map<String, dynamic>;
+    final url = decoded['file'] as String;
+    expect(url, startsWith('internal:/_tmp/'));
+    final id = url.substring('internal:/_tmp/'.length);
+
+    // Now GET the temp URL
+    final getReq = await client.get(
+      '127.0.0.1',
+      port,
+      '/v1/internal/memory/bot-1/_tmp/$id',
+    );
+    getReq.headers.set('authorization', 'Bearer secret');
+    final getResp = await getReq.close();
+    expect(getResp.statusCode, HttpStatus.ok);
+    final content = await utf8.decoder.bind(getResp).join();
+    expect(content, 'hello world');
+
+    // Second GET should return 404 (TTL is one-time with _takeTempResponse)
+    final getReq2 = await client.get(
+      '127.0.0.1',
+      port,
+      '/v1/internal/memory/bot-1/_tmp/$id',
+    );
+    getReq2.headers.set('authorization', 'Bearer secret');
+    final getResp2 = await getReq2.close();
+    expect(getResp2.statusCode, HttpStatus.notFound);
+  });
+
+  test('POST /v1/internal/memory/bot-1/_tmp/<id> returns 405', () async {
+    final req = await client.post(
+      '127.0.0.1',
+      port,
+      '/v1/internal/memory/bot-1/_tmp/someid',
+    );
+    req.headers.set('authorization', 'Bearer secret');
+    final response = await req.close();
+    expect(response.statusCode, HttpStatus.methodNotAllowed);
+    expect(response.headers.value('allow'), 'GET');
+  });
+
+  test('GET /v1/internal/unknown/bot/_tmp/id returns 404 (bot not found)', () async {
+    final req = await client.get(
+      '127.0.0.1',
+      port,
+      '/v1/internal/unknown/bot/_tmp/id',
+    );
+    req.headers.set('authorization', 'Bearer secret');
+    final response = await req.close();
+    expect(response.statusCode, HttpStatus.notFound);
+    expect(await utf8.decoder.bind(response).join(), 'bot not found');
   });
 }
 

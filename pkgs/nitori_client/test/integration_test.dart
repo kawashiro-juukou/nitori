@@ -282,7 +282,7 @@ void main() {
 
       expect(response.statusCode, HttpStatus.ok);
       final json = jsonDecode(body) as Map<String, dynamic>;
-      expect(json['file'], startsWith('memory://upload/'));
+      expect(json['file'], startsWith('internal:/_tmp/'));
     });
   });
 

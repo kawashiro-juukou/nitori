@@ -5,6 +5,8 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
 import 'package:nitori_core/nitori_core.dart';
 
@@ -66,8 +68,10 @@ class InMemoryBot extends SatoriBot {
          sn: sn,
          adapter: 'memory',
          features: features ?? const <String>[],
-       ) {
+       ),
+       _internalRouter = InternalRouter<InMemoryBot>() {
     users[user.id] = user;
+    _defineInternalRoutes();
   }
 
   @override
@@ -78,6 +82,24 @@ class InMemoryBot extends SatoriBot {
 
   @override
   String get userId => login.user?.id ?? '';
+
+  @override
+  Set<String> get supportedMethods => methodKeys.toSet();
+
+  /// Internal router for bot-level endpoints under `/v1/internal/<platform>/<selfId>/...`.
+  final InternalRouter<InMemoryBot> _internalRouter;
+
+  /// Overrides [SatoriBot.internal] to expose the internal router as a dynamic
+  /// proxy. Method calls on the returned object are routed to the corresponding
+  /// internal route handler.
+  @override
+  dynamic get internal => _InternalProxy(_internalRouter, this);
+
+  void _defineInternalRoutes() {
+    // Bot-level internal routes can be defined here. The global routes
+    // (/_tmp, /_api) are handled by the server before falling through to
+    // the bot's router.
+  }
 
   // In-memory stores for each entity type.
   final Map<String, Channel> channels = <String, Channel>{};
@@ -96,7 +118,6 @@ class InMemoryBot extends SatoriBot {
 
   int _messageSequence = 0;
   int _roleSequence = 0;
-  int _uploadSequence = 0;
 
   @override
   Future<Channel> getChannel(String id) async =>
@@ -324,10 +345,14 @@ class InMemoryBot extends SatoriBot {
   }
 
   @override
-  Future<List<String>> createUpload(List<dynamic> blobs) async => <String>[
-    for (var i = 0; i < blobs.length; i++)
-      'memory://upload/${++_uploadSequence}',
-  ];
+  Future<List<String>> createUpload(List<dynamic> blobs) async {
+    final urls = <String>[];
+    for (var i = 0; i < blobs.length; i++) {
+      final id = _randomId();
+      urls.add('internal:/_tmp/$id');
+    }
+    return urls;
+  }
 
   @override
   Future<Guild> getGuild(String id) async =>
@@ -525,4 +550,61 @@ class InMemoryBot extends SatoriBot {
 
   @override
   Future<void> updateCommands(List<Command> commands) async {}
+
+  @override
+  Future<InternalResponse?> handleInternalRoute(InternalRequest request) async {
+    return _internalRouter.handle(this, request);
+  }
+
+  String _randomId() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final random = Random.secure();
+    return String.fromCharCodes(
+      List.generate(16, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
+    );
+  }
+}
+
+/// Dynamic proxy that forwards method calls to [InternalRouter] routes.
+///
+/// Allows calling `bot.internal.someMethod(args)` which resolves to a
+/// `POST /v1/internal/<platform>/<selfId>/_api/someMethod` route.
+class _InternalProxy {
+  _InternalProxy(this._router, this._bot);
+
+  final InternalRouter<InMemoryBot> _router;
+  final InMemoryBot _bot;
+
+  @pragma('vm:prefer-inline')
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    final methodName = invocation.memberName.toString();
+    final positionalArgs = invocation.positionalArguments;
+    final namedArgs = invocation.namedArguments;
+
+    // Build the request for the internal route.
+    final path = '/_api/$methodName';
+    final request = InternalRequest(
+      method: 'POST',
+      path: path,
+      body: JsonForm.encode({
+        'args': positionalArgs,
+        'kwargs': namedArgs.map((k, v) => MapEntry(k.toString(), v)),
+      }).bytes,
+    );
+
+    return _router.handle(_bot, request).then((response) {
+      if (response == null) {
+        throw UnimplementedError('internal route not found: $methodName');
+      }
+      if (response.status >= 400) {
+        throw StateError('internal route error ${response.status}: '
+            '${utf8.decode(response.body)}');
+      }
+      return JsonForm.decode(
+        response.headers['content-type'],
+        response.body,
+      );
+    });
+  }
 }
