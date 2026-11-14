@@ -1,3 +1,8 @@
+## 0.1.18
+
+ - **FEAT**: add `Session` context wrapper with full accessors, content/quote parsing, element conversion, and `toJSON()` upstream compatibility.
+ - **FIX**: `encodeResource('quote')`/`decodeResource('quote')` now round-trip `id` and `content` attributes correctly.
+
 ## 0.1.17
 
  - **FEAT**(server): merge P0 routes (meta, webhook, proxy, admin, internal). ([f622fe80](https://github.com/kawashiro-juukou/nitori/commit/f622fe80fc3ef2fbbe0d4044a016ef29daea9252))
