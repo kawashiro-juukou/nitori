@@ -1,3 +1,7 @@
+## 0.1.19
+
+ - **FEAT**: add `JsonForm` hybrid JSON + multipart/form-data codec and `InternalRouter` path-pattern router.
+
 ## 0.1.18
 
  - **FEAT**: add `Session` context wrapper with full accessors, content/quote parsing, element conversion, and `toJSON()` upstream compatibility.
