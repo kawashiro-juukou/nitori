@@ -1,3 +1,7 @@
+## 0.1.18
+
+ - **FEAT**: add public `request()`/`requestFullPath()` for arbitrary protocol paths with custom headers, iterator methods, `updateCommands`, and external READY/META callbacks.
+
 ## 0.1.17
 
  - **FEAT**(server): merge P0 routes (meta, webhook, proxy, admin, internal). ([f622fe80](https://github.com/kawashiro-juukou/nitori/commit/f622fe80fc3ef2fbbe0d4044a016ef29daea9252))

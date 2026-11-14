@@ -1,3 +1,7 @@
+## 0.1.20
+
+ - **FEAT**: add `RemoteSatoriAdapter` protocol bridge — connects to a remote Satori server over HTTP + WebSocket and maps its logins/events into local `SatoriAdapter`/`SatoriBot` objects, including `internal` proxying via `JsonForm`.
+
 ## 0.1.19
 
  - **FEAT**: features auto-derivation (`SatoriBot.supportedMethods`/`features`), `session()`/`dispatch()` upstream semantics, full internal routing (`/_tmp`, `/_api`, bot-level router), `createUpload` returns `internal:/_tmp/<id>` URLs.
