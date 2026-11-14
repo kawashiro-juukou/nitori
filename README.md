@@ -29,3 +29,12 @@ This project is still **Working in progress**, use it at your own risk.
 | [nitori_core](pkgs/nitori_core/) | Core Module for Nitori. | [![pub package](https://img.shields.io/pub/v/nitori_core.svg)](https://pub.dev/packages/nitori_core) |
 | [nitori_message](pkgs/nitori_message/) | Message Builder for Nitori. | [![pub package](https://img.shields.io/pub/v/nitori_message.svg)](https://pub.dev/packages/nitori_message) |
 | [nitori_server](pkgs/nitori_server/) | Dart Server Implementation for Satori Protocol. | [![pub package](https://img.shields.io/pub/v/nitori_server.svg)](https://pub.dev/packages/nitori_server) |
+
+## Protocol Bridge
+
+`nitori_server` includes a protocol bridge: a local `SatoriServer` fronted by a
+`RemoteSatoriAdapter` that mirrors a remote Satori server (running upstream
+Node adapters like `@satorijs/adapter-telegram`) for local Satori clients.
+See [pkgs/nitori_server/PROTOCOL_BRIDGE.md](pkgs/nitori_server/PROTOCOL_BRIDGE.md)
+and the runnable example in
+[pkgs/nitori_server/example/remote_bridge_example.dart](pkgs/nitori_server/example/remote_bridge_example.dart).
