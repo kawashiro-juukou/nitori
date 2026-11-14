@@ -11,6 +11,8 @@ export 'src/friend.dart';
 export 'src/guild.dart';
 export 'src/guild_member.dart';
 export 'src/guild_role.dart';
+export 'src/internal_router.dart';
+export 'src/json_form.dart';
 export 'src/login.dart';
 export 'src/message.dart';
 export 'src/methods.dart';
