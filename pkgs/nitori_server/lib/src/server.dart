@@ -95,6 +95,7 @@ class SatoriServer {
     this.httpRateLimit,
     this.wsConnectRateLimit,
     this.wsEventRateLimit,
+    this.onEventPublished,
   }) : _webhooks = List<SatoriWebhook>.from(
          webhooks ?? const <SatoriWebhook>[],
        ),
@@ -131,6 +132,13 @@ class SatoriServer {
 
   /// Rate limit configuration for WebSocket event frames (upstream).
   final RateLimiterConfig? wsEventRateLimit;
+
+  /// Called after an event is published and assigned a local sequence number.
+  ///
+  /// Receives the event (after alias rewriting) and the assigned local [sn].
+  /// Useful for adapters that need to map between local and remote sequence
+  /// spaces (e.g., [RemoteSatoriAdapter]).
+  final void Function(Event event, int localSn)? onEventPublished;
 
   final http.Client _httpClient;
 
@@ -176,9 +184,17 @@ class SatoriServer {
   }
 
   /// Stores [body] and [headers] in [_tempStore] under [id].
-  void _storeTempResponse(String id, List<int> body, Map<String, String> headers) {
+  void _storeTempResponse(
+    String id,
+    List<int> body,
+    Map<String, String> headers,
+  ) {
     _cleanupTempStore(DateTime.now().millisecondsSinceEpoch);
-    _tempStore[id] = _TempStoreEntry(body, headers, DateTime.now().millisecondsSinceEpoch);
+    _tempStore[id] = _TempStoreEntry(
+      body,
+      headers,
+      DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   /// Retrieves and removes a temp store entry by [id].
@@ -408,7 +424,9 @@ class SatoriServer {
           if (id != null) {
             // Store the blob data with appropriate headers.
             final headers = <String, String>{
-              'content-type': parts[i].data.isNotEmpty ? 'application/octet-stream' : 'application/octet-stream',
+              'content-type': parts[i].data.isNotEmpty
+                  ? 'application/octet-stream'
+                  : 'application/octet-stream',
             };
             _storeTempResponse(id, parts[i].data, headers);
           }
@@ -760,7 +778,11 @@ class SatoriServer {
   /// Calls a method on `bot.internal` by dotted name (e.g. 'foo.bar').
   ///
   /// Returns the result, or null if the method doesn't exist.
-  Future<dynamic> _callBotInternal(SatoriBot bot, String name, dynamic args) async {
+  Future<dynamic> _callBotInternal(
+    SatoriBot bot,
+    String name,
+    dynamic args,
+  ) async {
     // Build an InternalRequest for the /_api/<name> path and use the bot's
     // handleInternalRoute method (which delegates to the bot's InternalRouter).
     final request = InternalRequest(
@@ -1296,6 +1318,12 @@ class SatoriServer {
       while (_buffer.length > maxBufferSize) {
         _buffer.removeFirst();
       }
+    }
+
+    // Notify adapter of the published event with its assigned local sequence number.
+    // This allows adapters (e.g., RemoteSatoriAdapter) to map local sn <-> remote sn.
+    if (onEventPublished != null) {
+      onEventPublished!(buffered, buffered.sn!);
     }
 
     final String encoded;

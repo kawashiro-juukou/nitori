@@ -183,7 +183,9 @@ void main() {
       heartbeatInterval: const Duration(seconds: 5),
     );
     await localAdapter.start();
-    print('Local adapter started, client status: ${localAdapter.client.status}');
+    print(
+      'Local adapter started, client status: ${localAdapter.client.status}',
+    );
     await waitFor(() => localAdapter.client.status == Status.online);
     print('Local adapter online, bots: ${localAdapter.bots.length}');
     print('Local client bots: ${localAdapter.client.bots.length}');
@@ -196,7 +198,9 @@ void main() {
 
     // Add listener to see raw gateway events
     localAdapter.client.events.listen((e) {
-      print('Gateway event: type=${e.type}, login=${e.login?.platform}, sn=${e.sn}, op=${e.raw['op']}');
+      print(
+        'Gateway event: type=${e.type}, login=${e.login?.platform}, sn=${e.sn}, op=${e.raw['op']}',
+      );
     });
 
     // Also listen on the gateway directly
@@ -206,7 +210,9 @@ void main() {
 
     // Also listen on the remote server's events to see what's happening
     remoteAdapter.events.listen((e) {
-      print('Remote adapter event: type=${e.type}, sn=${e.sn}, login=${e.login?.platform}');
+      print(
+        'Remote adapter event: type=${e.type}, sn=${e.sn}, login=${e.login?.platform}',
+      );
     });
 
     // --- LOCAL SERVER ---
@@ -214,6 +220,7 @@ void main() {
       adapter: localAdapter,
       token: 'local-token',
       resumeTimeout: const Duration(minutes: 1),
+      onEventPublished: localAdapter.onEventPublished,
     );
     final localHttpServer = await localServer.bind(
       address: InternetAddress.loopbackIPv4,
@@ -228,7 +235,9 @@ void main() {
       token: 'local-token',
     );
     localClient.events.listen((e) {
-      print('Local client event: type=${e.type}, login=${e.login?.platform}, sn=${e.sn}');
+      print(
+        'Local client event: type=${e.type}, login=${e.login?.platform}, sn=${e.sn}',
+      );
     });
     await localClient.start();
     print('Local client started, status: ${localClient.status}');
@@ -255,144 +264,218 @@ void main() {
 
       // Check features are propagated from remote logins
       final bot1 = localClient.bots.firstWhere((b) => b.platform == 'telegram');
-      expect(bot1.login?.features, containsAll(['channel.get', 'message.create', 'guild.list', 'user.get']));
+      expect(
+        bot1.login?.features,
+        containsAll([
+          'channel.get',
+          'message.create',
+          'guild.list',
+          'user.get',
+        ]),
+      );
     });
 
     test('proxyUrls from remote READY/META are exposed locally', () async {
       expect(localAdapter.proxyUrls, contains('http://remote-proxy.example'));
 
       // Verify local server READY includes proxyUrls
-      final ws = await WebSocket.connect(
-        'ws://127.0.0.1:$localPort/v1/events',
-      );
+      final ws = await WebSocket.connect('ws://127.0.0.1:$localPort/v1/events');
       addTearDown(ws.close);
       final frames = <Map<String, dynamic>>[];
       ws.listen((data) {
         frames.add(jsonDecode(data as String) as Map<String, dynamic>);
       });
       await waitFor(() => frames.isNotEmpty); // META
-      ws.add(jsonEncode(<String, dynamic>{
-        'op': Opcode.identify.value,
-        'body': <String, dynamic>{'token': 'local-token'},
-      }));
+      ws.add(
+        jsonEncode(<String, dynamic>{
+          'op': Opcode.identify.value,
+          'body': <String, dynamic>{'token': 'local-token'},
+        }),
+      );
       await waitFor(() => frames.any((f) => f['op'] == Opcode.ready.value));
       final ready = frames.firstWhere((f) => f['op'] == Opcode.ready.value);
-      expect((ready['body'] as Map)['proxy_urls'], contains('http://remote-proxy.example'));
+      expect(
+        (ready['body'] as Map)['proxy_urls'],
+        contains('http://remote-proxy.example'),
+      );
     });
 
-    test('remote EVENT -> local adapter -> local server -> local gateway client', () async {
-      final received = <GatewayEvent>[];
-      final sub = localClient.events.listen(received.add);
+    test(
+      'remote EVENT -> local adapter -> local server -> local gateway client',
+      () async {
+        final received = <GatewayEvent>[];
+        final sub = localClient.events.listen(received.add);
 
-      // Emit event from remote bot1
-      remoteAdapter.emitFromBot1(
-        Event(
-          type: 'message-created',
-          login: remoteBot1.login,
-          selfId: 'remote-1',
-          message: Message(id: 'msg-1', content: 'hello from remote'),
-        ),
-      );
-
-      await waitFor(() => received.isNotEmpty);
-      expect(received.length, 1);
-      final evt = received.single;
-      expect(evt.type, 'message-created'); // canonical alias applied
-      expect(evt.data['login']['platform'], 'telegram');
-      expect(evt.data['message']['content'], 'hello from remote');
-
-      // Verify sn is monotonic (assigned by local server)
-      expect(evt.sn, greaterThan(0));
-
-      await sub.cancel();
-    });
-
-    test('remote login events sync local bot list but are not forwarded to events stream', () async {
-      // Add a new remote bot
-      final remoteBot3 = _createRemoteBot(
-        userId: 'remote-3',
-        name: 'Remote Bot Three',
-        platform: 'slack',
-        sn: 3,
-      );
-      remoteAdapter.emitFromBot1(
-        Event(
-          type: 'login-added',
-          login: remoteBot3.login,
-          selfId: 'remote-3',
-        ),
-      );
-
-      await waitFor(() => localAdapter.bots.length == 3);
-      expect(localAdapter.bots.map((b) => b.platform).toSet(), {'telegram', 'discord', 'slack'});
-
-      // login events should NOT appear in local gateway client stream
-      final received = <GatewayEvent>[];
-      final sub = localClient.events.listen(received.add);
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-      await sub.cancel();
-
-      // No login events should be in the stream
-      expect(received.where((e) => e.type?.startsWith('login-') ?? false), isEmpty);
-    });
-
-    test('HTTP API: local client calls channel.get -> remote bot -> returns data', () async {
-      final response = await _post(
-        httpClient,
-        localPort,
-        'channel.get',
-        <String, dynamic>{'channel_id': 'c1'},
-        token: 'local-token',
-        platform: 'telegram',
-        userId: 'remote-1',
-      );
-      expect(response.statusCode, HttpStatus.ok);
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      expect(body['id'], 'c1');
-      expect(body['name'], 'general');
-    });
-
-    test('HTTP API: local client calls message.create -> remote bot -> returns created message', () async {
-      final create = await _post(
-        httpClient,
-        localPort,
-        'message.create',
-        <String, dynamic>{
-          'channel_id': 'c1',
-          'content': 'test message',
-        },
-        token: 'local-token',
-        platform: 'telegram',
-        userId: 'remote-1',
-      );
-      expect(create.statusCode, HttpStatus.ok);
-      final messages = jsonDecode(create.body) as List<dynamic>;
-      expect(messages, hasLength(1));
-      final msgId = messages.single['id'] as String;
-      expect(msgId, startsWith('m'));
-    });
-
-    test('internal/_api: local bot.internal.someMethod() -> remote bot -> returns', () async {
-      // This requires the remote bot to have an internal route defined.
-      // We'll test the proxy mechanism by calling the internal route directly.
-      // First, define a test route on the remote bot.
-      remoteBot1.defineInternalRoute('/_api/testMethod', (req, bot) async {
-        return InternalResponse(
-          status: 200,
-          headers: {'content-type': 'application/json'},
-          body: utf8.encode(jsonEncode({'result': 'ok', 'args': req.body})),
+        // Emit event from remote bot1
+        remoteAdapter.emitFromBot1(
+          Event(
+            type: 'message-created',
+            login: remoteBot1.login,
+            selfId: 'remote-1',
+            message: Message(id: 'msg-1', content: 'hello from remote'),
+          ),
         );
-      });
 
-      // Call via local adapter's bot
-      final localBot = localAdapter.bots.firstWhere((b) => b.platform == 'telegram');
-      final remoteBot = localBot as RemoteSatoriBot;
+        await waitFor(() => received.isNotEmpty);
+        expect(received.length, 1);
+        final evt = received.single;
+        expect(evt.type, 'message-created'); // canonical alias applied
+        expect(evt.data['login']['platform'], 'telegram');
+        expect(evt.data['message']['content'], 'hello from remote');
 
-      // Use the internal proxy
-      final result = await remoteBot.internal.testMethod({'foo': 'bar'});
-      expect(result, isA<Map>());
-      expect(result['result'], 'ok');
+        // Verify sn is monotonic (assigned by local server)
+        expect(evt.sn, greaterThan(0));
+
+        await sub.cancel();
+      },
+    );
+
+    test('sn space mapping: local sn <-> remote sn correlation', () async {
+      // Emit multiple events and verify the sn mapping is built correctly
+      final received = <GatewayEvent>[];
+      final sub = localClient.events.listen(received.add);
+
+      // Emit 3 events from remote
+      for (var i = 1; i <= 3; i++) {
+        remoteAdapter.emitFromBot1(
+          Event(
+            type: 'message-created',
+            login: remoteBot1.login,
+            selfId: 'remote-1',
+            message: Message(id: 'msg-$i', content: 'message $i'),
+          ),
+        );
+      }
+
+      await waitFor(() => received.length >= 3);
+      expect(received.length, 3);
+
+      // Verify local sns are monotonic and non-null
+      final localSns = received.map((e) => e.sn!).toList();
+      expect(localSns[1], localSns[0] + 1);
+      expect(localSns[2], localSns[1] + 1);
+
+      // Verify the adapter's sn mapping correlates local and remote sns by order
+      // The i-th emitted event should have localSns[i] <-> remoteSns[i] mapping
+      final remoteSns = received.map((e) => e.raw['sn'] as int).toList();
+      for (var i = 0; i < 3; i++) {
+        expect(
+          localAdapter.translateLocalToRemoteSn(localSns[i]),
+          remoteSns[i],
+        );
+        expect(
+          localAdapter.translateRemoteToLocalSn(remoteSns[i]),
+          localSns[i],
+        );
+      }
+
+      await sub.cancel();
     });
+
+    test(
+      'remote login events sync local bot list but are not forwarded to events stream',
+      () async {
+        // Add a new remote bot
+        final remoteBot3 = _createRemoteBot(
+          userId: 'remote-3',
+          name: 'Remote Bot Three',
+          platform: 'slack',
+          sn: 3,
+        );
+        remoteAdapter.emitFromBot1(
+          Event(
+            type: 'login-added',
+            login: remoteBot3.login,
+            selfId: 'remote-3',
+          ),
+        );
+
+        await waitFor(() => localAdapter.bots.length == 3);
+        expect(localAdapter.bots.map((b) => b.platform).toSet(), {
+          'telegram',
+          'discord',
+          'slack',
+        });
+
+        // login events should NOT appear in local gateway client stream
+        final received = <GatewayEvent>[];
+        final sub = localClient.events.listen(received.add);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await sub.cancel();
+
+        // No login events should be in the stream
+        expect(
+          received.where((e) => e.type?.startsWith('login-') ?? false),
+          isEmpty,
+        );
+      },
+    );
+
+    test(
+      'HTTP API: local client calls channel.get -> remote bot -> returns data',
+      () async {
+        final response = await _post(
+          httpClient,
+          localPort,
+          'channel.get',
+          <String, dynamic>{'channel_id': 'c1'},
+          token: 'local-token',
+          platform: 'telegram',
+          userId: 'remote-1',
+        );
+        expect(response.statusCode, HttpStatus.ok);
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        expect(body['id'], 'c1');
+        expect(body['name'], 'general');
+      },
+    );
+
+    test(
+      'HTTP API: local client calls message.create -> remote bot -> returns created message',
+      () async {
+        final create = await _post(
+          httpClient,
+          localPort,
+          'message.create',
+          <String, dynamic>{'channel_id': 'c1', 'content': 'test message'},
+          token: 'local-token',
+          platform: 'telegram',
+          userId: 'remote-1',
+        );
+        expect(create.statusCode, HttpStatus.ok);
+        final messages = jsonDecode(create.body) as List<dynamic>;
+        expect(messages, hasLength(1));
+        final msgId = messages.single['id'] as String;
+        expect(msgId, startsWith('m'));
+      },
+    );
+
+    test(
+      'internal/_api: local bot.internal.someMethod() -> remote bot -> returns',
+      () async {
+        // This requires the remote bot to have an internal route defined.
+        // We'll test the proxy mechanism by calling the internal route directly.
+        // First, define a test route on the remote bot.
+        remoteBot1.defineInternalRoute('/_api/testMethod', (req, bot) async {
+          return InternalResponse(
+            status: 200,
+            headers: {'content-type': 'application/json'},
+            body: utf8.encode(jsonEncode({'result': 'ok', 'args': req.body})),
+          );
+        });
+
+        // Call via local adapter's bot
+        final localBot = localAdapter.bots.firstWhere(
+          (b) => b.platform == 'telegram',
+        );
+        final remoteBot = localBot as RemoteSatoriBot;
+
+        // Use the internal proxy
+        final result = await remoteBot.internal.testMethod({'foo': 'bar'});
+        expect(result, isA<Map>());
+        expect(result['result'], 'ok');
+      },
+    );
 
     test('META broadcast on proxyUrls change', () async {
       // Remote adapter emits META by changing proxyUrls
@@ -402,115 +485,126 @@ void main() {
       expect(localAdapter.proxyUrls, contains('http://remote-proxy.example'));
 
       // Verify local server META contains proxyUrls
-      final ws = await WebSocket.connect(
-        'ws://127.0.0.1:$localPort/v1/events',
-      );
+      final ws = await WebSocket.connect('ws://127.0.0.1:$localPort/v1/events');
       addTearDown(ws.close);
       final frames = <Map<String, dynamic>>[];
       ws.listen((data) {
         frames.add(jsonDecode(data as String) as Map<String, dynamic>);
       });
       await waitFor(() => frames.isNotEmpty); // META
-      ws.add(jsonEncode(<String, dynamic>{
-        'op': Opcode.identify.value,
-        'body': <String, dynamic>{'token': 'local-token'},
-      }));
+      ws.add(
+        jsonEncode(<String, dynamic>{
+          'op': Opcode.identify.value,
+          'body': <String, dynamic>{'token': 'local-token'},
+        }),
+      );
       await waitFor(() => frames.any((f) => f['op'] == Opcode.meta.value));
       final meta = frames.firstWhere((f) => f['op'] == Opcode.meta.value);
-      expect((meta['body'] as Map)['proxy_urls'], contains('http://remote-proxy.example'));
+      expect(
+        (meta['body'] as Map)['proxy_urls'],
+        contains('http://remote-proxy.example'),
+      );
     });
   });
 
   group('Reconnection', () {
-    test('disconnect/reconnect: kill remote server -> wait reconnect -> events continue', () async {
-      // Use a fresh remote server for this test to avoid interfering with others.
-      final rBot = _createRemoteBot(
-        userId: 'reconnect',
-        name: 'Reconnect Bot',
-        platform: 'reconnect',
-        sn: 99,
-      );
-      final rAdapter = InMemoryAdapter(bot: rBot, proxyUrls: const []);
-      final rServer = SatoriServer(adapter: rAdapter, token: 'reconnect');
-      final rHttpServer = await rServer.bind(
-        address: InternetAddress.loopbackIPv4,
-        port: 0,
-      );
-      final remotePort = rHttpServer.port; // Store port before closing
-      addTearDown(rServer.close);
-      addTearDown(rAdapter.close);
+    test(
+      'disconnect/reconnect: kill remote server -> wait reconnect -> events continue',
+      () async {
+        // Use a fresh remote server for this test to avoid interfering with others.
+        final rBot = _createRemoteBot(
+          userId: 'reconnect',
+          name: 'Reconnect Bot',
+          platform: 'reconnect',
+          sn: 99,
+        );
+        final rAdapter = InMemoryAdapter(bot: rBot, proxyUrls: const []);
+        final rServer = SatoriServer(adapter: rAdapter, token: 'reconnect');
+        final rHttpServer = await rServer.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: 0,
+        );
+        final remotePort = rHttpServer.port; // Store port before closing
+        addTearDown(rServer.close);
+        addTearDown(rAdapter.close);
 
-      // Create local adapter pointing to this remote
-      final adapter = RemoteSatoriAdapter(
-        baseUrl: 'http://127.0.0.1:$remotePort',
-        token: 'reconnect',
-        retryTimes: 2,
-        retryInterval: const Duration(milliseconds: 100),
-        retryLazy: const Duration(milliseconds: 200),
-        heartbeatInterval: const Duration(seconds: 2),
-      );
-      await adapter.start();
-      await waitFor(() => adapter.client.status == Status.online);
-      await waitFor(() => adapter.bots.length == 1);
-      expect(adapter.bots.length, 1);
+        // Create local adapter pointing to this remote
+        final adapter = RemoteSatoriAdapter(
+          baseUrl: 'http://127.0.0.1:$remotePort',
+          token: 'reconnect',
+          retryTimes: 2,
+          retryInterval: const Duration(milliseconds: 100),
+          retryLazy: const Duration(milliseconds: 200),
+          heartbeatInterval: const Duration(seconds: 2),
+        );
+        await adapter.start();
+        await waitFor(() => adapter.client.status == Status.online);
+        await waitFor(() => adapter.bots.length == 1);
+        expect(adapter.bots.length, 1);
 
-      // Kill remote server
-      await rServer.close();
+        // Kill remote server
+        await rServer.close();
 
-      // Wait for reconnect (should go to reconnecting, then back online)
-      await waitFor(() => adapter.client.status == Status.reconnect || adapter.client.status == Status.disconnect);
+        // Wait for reconnect (should go to reconnecting, then back online)
+        await waitFor(
+          () =>
+              adapter.client.status == Status.reconnect ||
+              adapter.client.status == Status.disconnect,
+        );
 
-      // Restart remote server ON THE SAME PORT
-      // We need to recreate the HttpServer on the same port.
-      final rServer2 = SatoriServer(adapter: rAdapter, token: 'reconnect');
-      await rServer2.bind(
-        address: InternetAddress.loopbackIPv4,
-        port: remotePort, // Same port!
-      );
-      addTearDown(rServer2.close);
+        // Restart remote server ON THE SAME PORT
+        // We need to recreate the HttpServer on the same port.
+        final rServer2 = SatoriServer(adapter: rAdapter, token: 'reconnect');
+        await rServer2.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: remotePort, // Same port!
+        );
+        addTearDown(rServer2.close);
 
-      // Wait for adapter to reconnect AND bots to populate
-      await waitFor(() => adapter.client.status == Status.online);
-      await waitFor(() => adapter.bots.length == 1);
-      expect(adapter.bots.length, 1);
+        // Wait for adapter to reconnect AND bots to populate
+        await waitFor(() => adapter.client.status == Status.online);
+        await waitFor(() => adapter.bots.length == 1);
+        expect(adapter.bots.length, 1);
 
-      // Create LOCAL SERVER with this adapter
-      final localServer = SatoriServer(
-        adapter: adapter,
-        token: 'local-token',
-        resumeTimeout: const Duration(minutes: 1),
-      );
-      final localHttpServer = await localServer.bind(
-        address: InternetAddress.loopbackIPv4,
-        port: 0,
-      );
-      final localPort = localHttpServer.port;
-      addTearDown(localServer.close);
+        // Create LOCAL SERVER with this adapter
+        final localServer = SatoriServer(
+          adapter: adapter,
+          token: 'local-token',
+          resumeTimeout: const Duration(minutes: 1),
+          onEventPublished: adapter.onEventPublished,
+        );
+        final localHttpServer = await localServer.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: 0,
+        );
+        final localPort = localHttpServer.port;
+        addTearDown(localServer.close);
 
-      // Emit event after reconnect - connect a client to the LOCAL server
-      final received = <GatewayEvent>[];
-      final client = NitoriClient(
-        baseUrl: 'http://127.0.0.1:$localPort',
-        token: 'local-token',
-      );
-      addTearDown(client.close);
-      await client.start();
-      await waitFor(() => client.status == Status.online);
-      client.events.listen(received.add);
+        // Emit event after reconnect - connect a client to the LOCAL server
+        final received = <GatewayEvent>[];
+        final client = NitoriClient(
+          baseUrl: 'http://127.0.0.1:$localPort',
+          token: 'local-token',
+        );
+        addTearDown(client.close);
+        await client.start();
+        await waitFor(() => client.status == Status.online);
+        client.events.listen(received.add);
 
-      rAdapter.emit(
-        Event(
-          type: 'message-created',
-          login: rBot.login,
-          selfId: 'reconnect',
-          message: Message(id: 'after-reconnect', content: 'test'),
-        ),
-      );
-      await waitFor(() => received.isNotEmpty);
-      expect(received.single.data['message']['content'], 'test');
+        rAdapter.emit(
+          Event(
+            type: 'message-created',
+            login: rBot.login,
+            selfId: 'reconnect',
+            message: Message(id: 'after-reconnect', content: 'test'),
+          ),
+        );
+        await waitFor(() => received.isNotEmpty);
+        expect(received.single.data['message']['content'], 'test');
 
-      await client.close();
-      await rServer2.close();
-    });
+        await client.close();
+        await rServer2.close();
+      },
+    );
   });
 }

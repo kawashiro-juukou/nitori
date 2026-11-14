@@ -31,7 +31,8 @@ class RemoteSatoriBot implements SatoriBot {
   Login _login;
 
   /// Internal router for bot-level routes under `/v1/internal/<platform>/<selfId>/...`.
-  final InternalRouter<RemoteSatoriBot> _internalRouter = InternalRouter<RemoteSatoriBot>();
+  final InternalRouter<RemoteSatoriBot> _internalRouter =
+      InternalRouter<RemoteSatoriBot>();
 
   /// Dynamic proxy object for `bot.internal.*` calls.
   late final _RemoteInternalProxy _internalProxy = _RemoteInternalProxy(this);
@@ -85,7 +86,11 @@ class RemoteSatoriBot implements SatoriBot {
   /// Returns the path portion only (without baseUrl), e.g.
   /// `/v1/internal/telegram/12345/_api/someMethod`.
   /// Use with [NitoriClient.requestFullPath].
-  String getInternalUrl(String path, {Map<String, String>? query, bool slash = false}) {
+  String getInternalUrl(
+    String path, {
+    Map<String, String>? query,
+    bool slash = false,
+  }) {
     return '/v1/internal${slash ? '/' : ':'}$platform/$userId$path${query != null && query.isNotEmpty ? '?${Uri(queryParameters: query).query}' : ''}';
   }
 
@@ -93,7 +98,10 @@ class RemoteSatoriBot implements SatoriBot {
   ///
   /// Called by subclasses to register custom internal endpoints under
   /// `/v1/internal/<platform>/<selfId>/...`.
-  void defineInternalRoute(String path, InternalRouteCallback<RemoteSatoriBot> callback) {
+  void defineInternalRoute(
+    String path,
+    InternalRouteCallback<RemoteSatoriBot> callback,
+  ) {
     _internalRouter.define(path, callback);
   }
 
@@ -168,7 +176,8 @@ class RemoteSatoriBot implements SatoriBot {
       _remoteBot.getChannelList(guildId, next: next);
 
   @override
-  Stream<Channel> getChannelIter(String guildId) => _remoteBot.getChannelIter(guildId);
+  Stream<Channel> getChannelIter(String guildId) =>
+      _remoteBot.getChannelIter(guildId);
 
   @override
   Future<Channel> createChannel(String guildId, Map<String, dynamic> data) =>
@@ -197,8 +206,7 @@ class RemoteSatoriBot implements SatoriBot {
     String content, {
     dynamic referrer,
     bool? linkPreview,
-  }) =>
-      _remoteBot.createMessage(channelId, content, referrer: referrer);
+  }) => _remoteBot.createMessage(channelId, content, referrer: referrer);
 
   @override
   Future<List<String>> sendMessage(
@@ -206,8 +214,12 @@ class RemoteSatoriBot implements SatoriBot {
     String content, {
     dynamic referrer,
     bool? linkPreview,
-  }) =>
-      _remoteBot.sendMessage(channelId, content, referrer: referrer, linkPreview: linkPreview);
+  }) => _remoteBot.sendMessage(
+    channelId,
+    content,
+    referrer: referrer,
+    linkPreview: linkPreview,
+  );
 
   @override
   Future<List<String>> sendPrivateMessage(
@@ -216,8 +228,13 @@ class RemoteSatoriBot implements SatoriBot {
     String? guildId,
     dynamic referrer,
     bool? linkPreview,
-  }) =>
-      _remoteBot.sendPrivateMessage(userId, content, guildId: guildId, referrer: referrer, linkPreview: linkPreview);
+  }) => _remoteBot.sendPrivateMessage(
+    userId,
+    content,
+    guildId: guildId,
+    referrer: referrer,
+    linkPreview: linkPreview,
+  );
 
   @override
   Future<Message> getMessage(String channelId, String messageId) =>
@@ -230,21 +247,24 @@ class RemoteSatoriBot implements SatoriBot {
     Direction? direction,
     int? limit,
     Order? order,
-  }) =>
-      _remoteBot.getMessageList(
-        channelId,
-        next: next,
-        direction: direction,
-        limit: limit,
-        order: order,
-      );
+  }) => _remoteBot.getMessageList(
+    channelId,
+    next: next,
+    direction: direction,
+    limit: limit,
+    order: order,
+  );
 
   @override
-  Stream<Message> getMessageIter(String channelId) => _remoteBot.getMessageIter(channelId);
+  Stream<Message> getMessageIter(String channelId) =>
+      _remoteBot.getMessageIter(channelId);
 
   @override
-  Future<void> editMessage(String channelId, String messageId, String content) =>
-      _remoteBot.editMessage(channelId, messageId, content);
+  Future<void> editMessage(
+    String channelId,
+    String messageId,
+    String content,
+  ) => _remoteBot.editMessage(channelId, messageId, content);
 
   @override
   Future<void> deleteMessage(String channelId, String messageId) =>
@@ -253,8 +273,11 @@ class RemoteSatoriBot implements SatoriBot {
   // Reaction methods (part of MessageInterface in upstream)
 
   @override
-  Future<void> createReaction(String channelId, String messageId, String emojiId) =>
-      _remoteBot.createReaction(channelId, messageId, emojiId);
+  Future<void> createReaction(
+    String channelId,
+    String messageId,
+    String emojiId,
+  ) => _remoteBot.createReaction(channelId, messageId, emojiId);
 
   @override
   Future<void> deleteReaction(
@@ -270,8 +293,7 @@ class RemoteSatoriBot implements SatoriBot {
     String channelId,
     String messageId, {
     String? emojiId,
-  }) =>
-      _remoteBot.clearReaction(channelId, messageId, emojiId: emojiId);
+  }) => _remoteBot.clearReaction(channelId, messageId, emojiId: emojiId);
 
   @override
   Future<Pagination<User>> getReactionList(
@@ -279,21 +301,20 @@ class RemoteSatoriBot implements SatoriBot {
     String messageId,
     String emojiId, {
     String? next,
-  }) =>
-      _remoteBot.getReactionList(channelId, messageId, emojiId, next: next);
+  }) => _remoteBot.getReactionList(channelId, messageId, emojiId, next: next);
 
   @override
   Stream<User> getReactionIter(
     String channelId,
     String messageId,
     String emojiId,
-  ) =>
-      _remoteBot.getReactionIter(channelId, messageId, emojiId);
+  ) => _remoteBot.getReactionIter(channelId, messageId, emojiId);
 
   // -- Upload method (1) --
 
   @override
-  Future<List<String>> createUpload(List<dynamic> blobs) => _remoteBot.createUpload(blobs);
+  Future<List<String>> createUpload(List<dynamic> blobs) =>
+      _remoteBot.createUpload(blobs);
 
   // -- GuildInterface (2 + 1 request) --
 
@@ -301,14 +322,18 @@ class RemoteSatoriBot implements SatoriBot {
   Future<Guild> getGuild(String id) => _remoteBot.getGuild(id);
 
   @override
-  Future<Pagination<Guild>> getGuildList({String? next}) => _remoteBot.getGuildList(next: next);
+  Future<Pagination<Guild>> getGuildList({String? next}) =>
+      _remoteBot.getGuildList(next: next);
 
   @override
   Stream<Guild> getGuildIter() => _remoteBot.getGuildIter();
 
   @override
-  Future<void> handleGuildRequest(String messageId, bool approve, {String? comment}) =>
-      _remoteBot.handleGuildRequest(messageId, approve, comment: comment);
+  Future<void> handleGuildRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) => _remoteBot.handleGuildRequest(messageId, approve, comment: comment);
 
   // -- GuildMemberInterface (6 + 1 request) --
 
@@ -317,8 +342,10 @@ class RemoteSatoriBot implements SatoriBot {
       _remoteBot.getGuildMember(guildId, userId);
 
   @override
-  Future<Pagination<GuildMember>> getGuildMemberList(String guildId, {String? next}) =>
-      _remoteBot.getGuildMemberList(guildId, next: next);
+  Future<Pagination<GuildMember>> getGuildMemberList(
+    String guildId, {
+    String? next,
+  }) => _remoteBot.getGuildMemberList(guildId, next: next);
 
   @override
   Stream<GuildMember> getGuildMemberIter(String guildId) =>
@@ -330,32 +357,40 @@ class RemoteSatoriBot implements SatoriBot {
     String userId, {
     int? duration,
     String? reason,
-  }) =>
-      _remoteBot.muteGuildMember(guildId, userId, duration: duration, reason: reason);
+  }) => _remoteBot.muteGuildMember(
+    guildId,
+    userId,
+    duration: duration,
+    reason: reason,
+  );
 
   @override
   Future<void> kickGuildMember(
     String guildId,
     String userId, {
     bool? permanent,
-  }) =>
-      _remoteBot.kickGuildMember(guildId, userId, permanent: permanent);
+  }) => _remoteBot.kickGuildMember(guildId, userId, permanent: permanent);
 
   @override
-  Future<void> setGuildMemberRole(String guildId, String userId, String roleId) =>
-      _remoteBot.setGuildMemberRole(guildId, userId, roleId);
+  Future<void> setGuildMemberRole(
+    String guildId,
+    String userId,
+    String roleId,
+  ) => _remoteBot.setGuildMemberRole(guildId, userId, roleId);
 
   @override
-  Future<void> unsetGuildMemberRole(String guildId, String userId, String roleId) =>
-      _remoteBot.unsetGuildMemberRole(guildId, userId, roleId);
+  Future<void> unsetGuildMemberRole(
+    String guildId,
+    String userId,
+    String roleId,
+  ) => _remoteBot.unsetGuildMemberRole(guildId, userId, roleId);
 
   @override
   Future<Pagination<GuildRole>> getGuildMemberRoleList(
     String guildId,
     String userId, {
     String? next,
-  }) =>
-      _remoteBot.getGuildMemberRoleList(guildId, userId, next: next);
+  }) => _remoteBot.getGuildMemberRoleList(guildId, userId, next: next);
 
   @override
   Future<void> handleGuildMemberRequest(
@@ -368,11 +403,14 @@ class RemoteSatoriBot implements SatoriBot {
   // -- GuildRoleInterface (4) --
 
   @override
-  Future<Pagination<GuildRole>> getGuildRoleList(String guildId, {String? next}) =>
-      _remoteBot.getGuildRoleList(guildId, next: next);
+  Future<Pagination<GuildRole>> getGuildRoleList(
+    String guildId, {
+    String? next,
+  }) => _remoteBot.getGuildRoleList(guildId, next: next);
 
   @override
-  Stream<GuildRole> getGuildRoleIter(String guildId) => _remoteBot.getGuildRoleIter(guildId);
+  Stream<GuildRole> getGuildRoleIter(String guildId) =>
+      _remoteBot.getGuildRoleIter(guildId);
 
   @override
   Future<GuildRole> createGuildRole(
@@ -383,16 +421,15 @@ class RemoteSatoriBot implements SatoriBot {
     BigInt? permissions,
     bool? hoist,
     bool? mentionable,
-  }) =>
-      _remoteBot.createGuildRole(
-        guildId,
-        name: name,
-        color: color,
-        position: position,
-        permissions: permissions,
-        hoist: hoist,
-        mentionable: mentionable,
-      );
+  }) => _remoteBot.createGuildRole(
+    guildId,
+    name: name,
+    color: color,
+    position: position,
+    permissions: permissions,
+    hoist: hoist,
+    mentionable: mentionable,
+  );
 
   @override
   Future<void> updateGuildRole(
@@ -404,17 +441,16 @@ class RemoteSatoriBot implements SatoriBot {
     BigInt? permissions,
     bool? hoist,
     bool? mentionable,
-  }) =>
-      _remoteBot.updateGuildRole(
-        guildId,
-        roleId,
-        name: name,
-        color: color,
-        position: position,
-        permissions: permissions,
-        hoist: hoist,
-        mentionable: mentionable,
-      );
+  }) => _remoteBot.updateGuildRole(
+    guildId,
+    roleId,
+    name: name,
+    color: color,
+    position: position,
+    permissions: permissions,
+    hoist: hoist,
+    mentionable: mentionable,
+  );
 
   @override
   Future<void> deleteGuildRole(String guildId, String roleId) =>
@@ -428,7 +464,8 @@ class RemoteSatoriBot implements SatoriBot {
   // -- FriendInterface (3 + 1 iterator) --
 
   @override
-  Future<Pagination<Friend>> getFriendList({String? next}) => _remoteBot.getFriendList(next: next);
+  Future<Pagination<Friend>> getFriendList({String? next}) =>
+      _remoteBot.getFriendList(next: next);
 
   @override
   Stream<Friend> getFriendIter() => _remoteBot.getFriendIter();
@@ -437,18 +474,25 @@ class RemoteSatoriBot implements SatoriBot {
   Future<void> deleteFriend(String userId) => _remoteBot.deleteFriend(userId);
 
   @override
-  Future<void> handleFriendRequest(String messageId, bool approve, {String? comment}) =>
-      _remoteBot.handleFriendRequest(messageId, approve, comment: comment);
+  Future<void> handleFriendRequest(
+    String messageId,
+    bool approve, {
+    String? comment,
+  }) => _remoteBot.handleFriendRequest(messageId, approve, comment: comment);
 
   // -- CommandInterface (1) --
 
   @override
-  Future<void> updateCommands(List<Command> commands) => _remoteBot.updateCommands(commands);
+  Future<void> updateCommands(List<Command> commands) =>
+      _remoteBot.updateCommands(commands);
 
   // -- Internal route handler --
 
   /// Handles the bot-level internal proxy route: `/*path` -> POST remote `/v1/internal/_api/*`.
-  Future<InternalResponse> _handleInternalRoute(InternalRequest request, RemoteSatoriBot bot) async {
+  Future<InternalResponse> _handleInternalRoute(
+    InternalRequest request,
+    RemoteSatoriBot bot,
+  ) async {
     final name = request.params['path']!; // e.g. '_api/someMethod'
     // Build the correct internal URL: /v1/internal/<platform>/<selfId>/_api/<name>
     // Use slash separator as expected by the remote server's path parsing.
@@ -488,9 +532,15 @@ class _RemoteInternalProxy {
     final String methodName = invocation.memberName.toString();
     final String cleanName;
     if (methodName.startsWith('Symbol("') && methodName.endsWith('")')) {
-      cleanName = methodName.substring('Symbol("'.length, methodName.length - 2);
+      cleanName = methodName.substring(
+        'Symbol("'.length,
+        methodName.length - 2,
+      );
     } else if (methodName.startsWith("Symbol('") && methodName.endsWith("')")) {
-      cleanName = methodName.substring("Symbol('".length, methodName.length - 2);
+      cleanName = methodName.substring(
+        "Symbol('".length,
+        methodName.length - 2,
+      );
     } else {
       cleanName = methodName;
     }
@@ -505,21 +555,20 @@ class _RemoteInternalProxy {
       'kwargs': namedArgs.map((k, v) => MapEntry(k.toString(), v)),
     });
 
-    return _bot._remoteBot.client.requestFullPathBytes(
-      _bot._remoteBot,
-      path,
-      jsonBody.bytes,
-      extraHeaders: {
-        'satori-platform': _bot._remoteBot.platform,
-        'satori-user-id': _bot._remoteBot.userId,
-      },
-      contentType: jsonBody.contentType,
-    ).then((response) {
-      return JsonForm.decode(
-        response.contentType,
-        response.bytes,
-      );
-    });
+    return _bot._remoteBot.client
+        .requestFullPathBytes(
+          _bot._remoteBot,
+          path,
+          jsonBody.bytes,
+          extraHeaders: {
+            'satori-platform': _bot._remoteBot.platform,
+            'satori-user-id': _bot._remoteBot.userId,
+          },
+          contentType: jsonBody.contentType,
+        )
+        .then((response) {
+          return JsonForm.decode(response.contentType, response.bytes);
+        });
   }
 }
 
@@ -560,6 +609,14 @@ class _RemoteSessionHost implements SessionHost {
 ///
 /// The remote server's `proxyUrls` from READY/META are exposed via
 /// [proxyUrls] and included in local READY/META frames.
+///
+/// Sequence number mapping:
+/// The local server assigns its own monotonically increasing sequence numbers
+/// to events. This adapter maintains a bidirectional mapping between local
+/// sequence numbers (assigned by the local server) and remote sequence numbers
+/// (assigned by the remote server). This enables correct resume behavior on
+/// both sides: local clients resume using local sn, while the remote connection
+/// resumes using remote sn.
 class RemoteSatoriAdapter implements SatoriAdapter {
   /// The underlying NitoriClient that maintains the gateway connection.
   final NitoriClient _client;
@@ -572,6 +629,17 @@ class RemoteSatoriAdapter implements SatoriAdapter {
 
   /// Proxy URLs from the remote server's READY/META.
   final List<String> _proxyUrls = [];
+
+  /// Maps local sequence number (assigned by local server) -> remote sequence number.
+  final Map<int, int> _localToRemoteSn = {};
+
+  /// Maps remote sequence number -> local sequence number.
+  final Map<int, int> _remoteToLocalSn = {};
+
+  /// Queue of pending remote sequence numbers for events that have been emitted
+  /// but not yet published by the local server. Used to correlate events in
+  /// [onEventPublished] callback since the event is deep-copied.
+  final List<int> _pendingRemoteSns = [];
 
   /// Creates a new remote adapter.
   ///
@@ -590,13 +658,13 @@ class RemoteSatoriAdapter implements SatoriAdapter {
     Duration retryLazy = const Duration(minutes: 1),
     Duration heartbeatInterval = const Duration(seconds: 10),
   }) : _client = NitoriClient(
-           baseUrl: baseUrl,
-           token: token,
-           retryTimes: retryTimes,
-           retryInterval: retryInterval,
-           retryLazy: retryLazy,
-           heartbeatInterval: heartbeatInterval,
-         ) {
+         baseUrl: baseUrl,
+         token: token,
+         retryTimes: retryTimes,
+         retryInterval: retryInterval,
+         retryLazy: retryLazy,
+         heartbeatInterval: heartbeatInterval,
+       ) {
     _client.events.listen(_onGatewayEvent);
     _client.onStatusChanged = _onStatusChanged;
     // Sync proxyUrls from META (these don't go through the events stream)
@@ -624,6 +692,36 @@ class RemoteSatoriAdapter implements SatoriAdapter {
   /// The underlying NitoriClient (for test access).
   NitoriClient get client => _client;
 
+  /// Callback for [SatoriServer.onEventPublished] to record local<->remote sn mapping.
+  ///
+  /// Call this after creating both the adapter and the server:
+  /// ```dart
+  /// final adapter = RemoteSatoriAdapter(...);
+  /// final server = SatoriServer(adapter: adapter, onEventPublished: adapter.onEventPublished);
+  /// ```
+  void _onEventPublished(Event event, int localSn) {
+    if (_pendingRemoteSns.isEmpty) return;
+    final remoteSn = _pendingRemoteSns.removeAt(0);
+    _localToRemoteSn[localSn] = remoteSn;
+    _remoteToLocalSn[remoteSn] = localSn;
+  }
+
+  /// Returns the callback to be passed to [SatoriServer.onEventPublished].
+  void Function(Event, int) get onEventPublished => _onEventPublished;
+
+  /// Translates a local sequence number to the corresponding remote sequence number.
+  ///
+  /// Returns the remote sn if a mapping exists, otherwise returns the local sn
+  /// (which may be used as a fallback).
+  int translateLocalToRemoteSn(int localSn) {
+    return _localToRemoteSn[localSn] ?? localSn;
+  }
+
+  /// Translates a remote sequence number to the corresponding local sequence number.
+  int translateRemoteToLocalSn(int remoteSn) {
+    return _remoteToLocalSn[remoteSn] ?? remoteSn;
+  }
+
   /// Connects to the remote gateway and keeps it alive until [stop].
   Future<void> start() => _client.start();
 
@@ -648,7 +746,9 @@ class RemoteSatoriAdapter implements SatoriAdapter {
 
     // Handle login events: sync bot list but don't forward to events stream.
     if (type!.startsWith('login-')) {
-      final action = type.substring('login-'.length); // 'added'|'updated'|'removed'
+      final action = type.substring(
+        'login-'.length,
+      ); // 'added'|'updated'|'removed'
       _syncBot(login, action);
       // Do NOT forward login-* to _events (server._publish filters them from replay)
       return;
@@ -660,6 +760,10 @@ class RemoteSatoriAdapter implements SatoriAdapter {
     event.sn = sn;
     event.login = login;
 
+    // Queue the remote sn for correlation in _onEventPublished.
+    // The event will be deep-copied by the server, so we track by order.
+    _pendingRemoteSns.add(sn ?? 0);
+
     _events.add(event);
   }
 
@@ -668,7 +772,9 @@ class RemoteSatoriAdapter implements SatoriAdapter {
     switch (action) {
       case 'added':
         // Find the remote bot matching this login.
-        final remoteBot = _client.bots.firstWhere((b) => b.login?.sn == login.sn);
+        final remoteBot = _client.bots.firstWhere(
+          (b) => b.login?.sn == login.sn,
+        );
         final bot = RemoteSatoriBot(this, remoteBot);
         _botsBySn[login.sn!] = bot;
         break;
