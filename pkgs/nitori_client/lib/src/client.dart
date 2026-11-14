@@ -43,9 +43,20 @@ class NitoriClient {
          retryLazy: retryLazy,
          heartbeatInterval: heartbeatInterval,
        ) {
-    _gateway.onReady = _handleReady;
-    _gateway.onMeta = (urls) => proxyUrls = urls;
-    _gateway.onStatusChanged = (status) => onStatusChanged?.call(status);
+    // Set up gateway callbacks in constructor body so external callbacks can be chained
+    _gateway.onReady = (logins, urls) {
+      print('NitoriClient: gateway onReady called with ${logins.length} logins');
+      _handleReady(logins, urls);
+      _onReadyExternal?.call(logins, urls);
+    };
+    _gateway.onMeta = (urls) {
+      print('NitoriClient: gateway onMeta called with $urls');
+      proxyUrls = urls;
+      _onMetaExternal?.call(urls);
+    };
+    _gateway.onStatusChanged = (status) {
+      onStatusChanged?.call(status);
+    };
     _gateway.events.listen(_handleLoginEvent);
   }
 
@@ -57,6 +68,9 @@ class NitoriClient {
 
   /// Connection lifecycle of the WebSocket gateway.
   final Gateway _gateway;
+
+  /// The underlying gateway for test access.
+  Gateway get gateway => _gateway;
 
   /// Shared HTTP client; inject one to control timeouts / TLS in tests.
   final http.Client _http;
@@ -74,6 +88,24 @@ class NitoriClient {
 
   /// Fired whenever the connection status changes.
   void Function(Status status)? onStatusChanged;
+
+  /// Internal: called by Gateway when READY is received.
+  void Function(List<Login> logins, List<String> proxyUrls)? _onReadyExternal;
+
+  /// Internal: called by Gateway when META is received.
+  void Function(List<String> proxyUrls)? _onMetaExternal;
+
+  /// Sets an external callback for READY (chained after internal _handleReady).
+  void set onReadyExternal(void Function(List<Login> logins, List<String> proxyUrls)? callback) {
+    print('NitoriClient: setting onReadyExternal');
+    _onReadyExternal = callback;
+  }
+
+  /// Sets an external callback for META (chained after internal proxyUrls update).
+  void set onMetaExternal(void Function(List<String> proxyUrls)? callback) {
+    print('NitoriClient: setting onMetaExternal');
+    _onMetaExternal = callback;
+  }
 
   /// Connects to the gateway and keeps it alive until [stop].
   Future<void> start() => _gateway.start();
@@ -190,6 +222,127 @@ class NitoriClient {
     'content-type': 'application/json',
   };
 
+  /// Public version of [_request] that allows arbitrary key and extra headers.
+  ///
+  /// Does NOT require [methods][key] to exist (for internal routes).
+  /// Reuses [_request]'s encoding logic but skips the methods lookup.
+  Future<JsonFormBody> request(
+    NitoriBot bot,
+    String key,
+    List<Object?> args, {
+    Map<String, String>? extraHeaders,
+  }) async {
+    // Build payload the same way as _request, but without method validation.
+    final uri = Uri.parse('$baseUrl/v1/$key');
+    final isForm = key == 'upload.create'; // Only known form method.
+
+    if (isForm) {
+      final request = http.MultipartRequest('POST', uri)
+        ..headers.addAll(_headers(bot));
+      if (extraHeaders != null) request.headers.addAll(extraHeaders);
+      for (var i = 0; i < args.length; i++) {
+        final field = i == 0 ? 'file' : 'file${i + 1}';
+        final blob = args[i];
+        if (blob is List<int>) {
+          request.files.add(http.MultipartFile.fromBytes(field, blob));
+        } else if (blob is String) {
+          request.files.add(http.MultipartFile.fromString(field, blob));
+        } else {
+          throw ArgumentError('unsupported upload blob: ${blob.runtimeType}');
+        }
+      }
+      final streamed = await _http.send(request);
+      final response = await http.Response.fromStream(streamed);
+      return _decodeToJsonFormBody(response);
+    }
+
+    final payload = <String, dynamic>{};
+    for (var i = 0; i < args.length; i++) {
+      final arg = args[i];
+      if (arg == null) continue;
+      // For internal routes, we pass the args as-is (already JSON-serializable).
+      payload[i.toString()] = arg;
+    }
+    // Use the first arg as the payload if it's a Map, otherwise wrap in array.
+    final body = args.isNotEmpty && args.first is Map
+        ? args.first as Map<String, dynamic>
+        : <String, dynamic>{for (var i = 0; i < args.length; i++) i.toString(): args[i]};
+    final headers = _headers(bot);
+    if (extraHeaders != null) headers.addAll(extraHeaders);
+    final response = await _http.post(
+      uri,
+      headers: headers,
+      body: jsonEncode(body),
+    );
+    return _decodeToJsonFormBody(response);
+  }
+
+  /// Makes a request with a full path (for internal routes).
+  ///
+  /// Unlike [request], this takes a full path starting with `/v1/` and doesn't
+  /// prepend the base URL's v1 prefix.
+  Future<JsonFormBody> requestFullPath(
+    NitoriBot bot,
+    String fullPath,
+    List<Object?> args, {
+    Map<String, String>? extraHeaders,
+  }) async {
+    final uri = Uri.parse('$baseUrl$fullPath');
+    final payload = <String, dynamic>{};
+    for (var i = 0; i < args.length; i++) {
+      final arg = args[i];
+      if (arg == null) continue;
+      payload[i.toString()] = arg;
+    }
+    final body = args.isNotEmpty && args.first is Map
+        ? args.first as Map<String, dynamic>
+        : <String, dynamic>{for (var i = 0; i < args.length; i++) i.toString(): args[i]};
+    final headers = _headers(bot);
+    if (extraHeaders != null) headers.addAll(extraHeaders);
+    final response = await _http.post(
+      uri,
+      headers: headers,
+      body: jsonEncode(body),
+    );
+    return _decodeToJsonFormBody(response);
+  }
+
+  /// Makes a request with a full path, sending raw bytes body.
+  ///
+  /// For internal routes that use multipart/form-data or already-encoded JsonForm.
+  Future<JsonFormBody> requestFullPathBytes(
+    NitoriBot bot,
+    String fullPath,
+    List<int> bodyBytes, {
+    Map<String, String>? extraHeaders,
+    String? contentType,
+  }) async {
+    final uri = Uri.parse('$baseUrl$fullPath');
+    final headers = _headers(bot);
+    if (extraHeaders != null) headers.addAll(extraHeaders);
+    if (contentType != null) headers['content-type'] = contentType;
+    final response = await _http.post(
+      uri,
+      headers: headers,
+      body: bodyBytes,
+    );
+    return _decodeToJsonFormBody(response);
+  }
+
+  /// Decodes response to JsonFormBody (handles both JSON and multipart).
+  JsonFormBody _decodeToJsonFormBody(http.Response response) {
+    final text = utf8.decode(response.bodyBytes);
+    if (response.statusCode != 200) {
+      throw SatoriApiException(response.statusCode, text);
+    }
+    final contentType = response.headers['content-type'] ?? 'application/json';
+    if (text.isEmpty) {
+      return JsonFormBody(<int>[], contentType);
+    }
+    // For internal routes, we return raw bytes + content type.
+    return JsonFormBody(response.bodyBytes, contentType);
+  }
+
   dynamic _decode(http.Response response) {
     final text = utf8.decode(response.bodyBytes);
     if (response.statusCode != 200) {
@@ -272,6 +425,18 @@ class NitoriBot {
     ]);
   }
 
+  Stream<Channel> getChannelIter(String guildId) async* {
+    var next = '';
+    while (true) {
+      final page = await getChannelList(guildId, next: next.isEmpty ? null : next);
+      for (final channel in page.data) {
+        yield channel;
+      }
+      if (page.next == null || page.next!.isEmpty) break;
+      next = page.next!;
+    }
+  }
+
   // -- message --
 
   Future<List<Message>> createMessage(
@@ -346,6 +511,20 @@ class NitoriBot {
     return _bidiList(data, Message.fromJson);
   }
 
+  Stream<Message> getMessageIter(String channelId) async* {
+    var next = '';
+    Direction? dir = Direction.before;
+    while (true) {
+      final page = await getMessageList(channelId, next: next.isEmpty ? null : next, direction: dir);
+      for (final message in page.data) {
+        yield message;
+      }
+      if (page.next == null || page.next!.isEmpty) break;
+      next = page.next!;
+      dir = Direction.around; // subsequent pages use around
+    }
+  }
+
   // -- reaction --
 
   Future<void> createReaction(
@@ -401,6 +580,22 @@ class NitoriBot {
     return _pagination(data, User.fromJson);
   }
 
+  Stream<User> getReactionIter(
+    String channelId,
+    String messageId,
+    String emojiId,
+  ) async* {
+    var next = '';
+    while (true) {
+      final page = await getReactionList(channelId, messageId, emojiId, next: next.isEmpty ? null : next);
+      for (final user in page.data) {
+        yield user;
+      }
+      if (page.next == null || page.next!.isEmpty) break;
+      next = page.next!;
+    }
+  }
+
   // -- upload --
 
   Future<List<String>> createUpload(List<dynamic> blobs) async {
@@ -424,6 +619,18 @@ class NitoriBot {
     return _pagination(data, Guild.fromJson);
   }
 
+  Stream<Guild> getGuildIter() async* {
+    var next = '';
+    while (true) {
+      final page = await getGuildList(next: next.isEmpty ? null : next);
+      for (final guild in page.data) {
+        yield guild;
+      }
+      if (page.next == null || page.next!.isEmpty) break;
+      next = page.next!;
+    }
+  }
+
   Future<GuildMember> getGuildMember(String guildId, String userId) async {
     final data = await client._request(this, 'guild.member.get', <Object?>[
       guildId,
@@ -441,6 +648,18 @@ class NitoriBot {
       next,
     ]);
     return _pagination(data, GuildMember.fromJson);
+  }
+
+  Stream<GuildMember> getGuildMemberIter(String guildId) async* {
+    var next = '';
+    while (true) {
+      final page = await getGuildMemberList(guildId, next: next.isEmpty ? null : next);
+      for (final member in page.data) {
+        yield member;
+      }
+      if (page.next == null || page.next!.isEmpty) break;
+      next = page.next!;
+    }
   }
 
   Future<void> kickGuildMember(
@@ -517,10 +736,34 @@ class NitoriBot {
     return _pagination(data, GuildRole.fromJson);
   }
 
+  Stream<GuildRole> getGuildRoleIter(String guildId) async* {
+    var next = '';
+    while (true) {
+      final page = await getGuildRoleList(guildId, next: next.isEmpty ? null : next);
+      for (final role in page.data) {
+        yield role;
+      }
+      if (page.next == null || page.next!.isEmpty) break;
+      next = page.next!;
+    }
+  }
+
   Future<GuildRole> createGuildRole(
-    String guildId,
-    Map<String, dynamic> data,
-  ) async {
+    String guildId, {
+    String? name,
+    int? color,
+    int? position,
+    BigInt? permissions,
+    bool? hoist,
+    bool? mentionable,
+  }) async {
+    final data = <String, dynamic>{};
+    if (name != null) data['name'] = name;
+    if (color != null) data['color'] = color;
+    if (position != null) data['position'] = position;
+    if (permissions != null) data['permissions'] = permissions.toString();
+    if (hoist != null) data['hoist'] = hoist;
+    if (mentionable != null) data['mentionable'] = mentionable;
     final result = await client._request(this, 'guild.role.create', <Object?>[
       guildId,
       data,
@@ -530,9 +773,21 @@ class NitoriBot {
 
   Future<void> updateGuildRole(
     String guildId,
-    String roleId,
-    Map<String, dynamic> data,
-  ) async {
+    String roleId, {
+    String? name,
+    int? color,
+    int? position,
+    BigInt? permissions,
+    bool? hoist,
+    bool? mentionable,
+  }) async {
+    final data = <String, dynamic>{};
+    if (name != null) data['name'] = name;
+    if (color != null) data['color'] = color;
+    if (position != null) data['position'] = position;
+    if (permissions != null) data['permissions'] = permissions.toString();
+    if (hoist != null) data['hoist'] = hoist;
+    if (mentionable != null) data['mentionable'] = mentionable;
     await client._request(this, 'guild.role.update', <Object?>[
       guildId,
       roleId,
@@ -591,6 +846,18 @@ class NitoriBot {
     return _pagination(data, Friend.fromJson);
   }
 
+  Stream<Friend> getFriendIter() async* {
+    var next = '';
+    while (true) {
+      final page = await getFriendList(next: next.isEmpty ? null : next);
+      for (final friend in page.data) {
+        yield friend;
+      }
+      if (page.next == null || page.next!.isEmpty) break;
+      next = page.next!;
+    }
+  }
+
   Future<void> deleteFriend(String userId) async {
     await client._request(this, 'friend.delete', <Object?>[userId]);
   }
@@ -629,6 +896,10 @@ class NitoriBot {
       approve,
       comment,
     ]);
+  }
+
+  Future<void> updateCommands(List<Command> commands) async {
+    await client._request(this, 'command.update', <Object?>[commands.map((c) => c.toJson()).toList()]);
   }
 
   Pagination<T> _pagination<T>(

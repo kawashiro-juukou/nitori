@@ -1192,6 +1192,7 @@ class SatoriServer {
   void _attach(WebSocket socket, {String? remoteAddress}) {
     final client = _GatewayClient(socket, remoteAddress);
     _clients.add(client);
+    print('Server _attach: new connection from $remoteAddress, total clients: ${_clients.length}');
     // Pings reap sockets whose peer vanished without closing.
     socket.pingInterval = const Duration(seconds: 30);
     _trySend(socket, Opcode.meta, <String, dynamic>{
@@ -1214,6 +1215,7 @@ class SatoriServer {
       unawaited(client.socket.close(4000, 'invalid message'));
       return;
     }
+    print('Server _handleFrame: op=${payload['op']}');
 
     // WS event rate limiting check (for any upstream frame from authorized client)
     if (client.authorized && _wsEventRateLimiter != null) {
@@ -1263,6 +1265,7 @@ class SatoriServer {
           proxyUrls: adapter.proxyUrls,
         );
         _trySend(client.socket, Opcode.ready, meta.toJson());
+        print('Server: sent READY with ${adapter.bots.length} logins');
         final sn = identify['sn'];
         if (sn is int && sn > 0) _replay(client, sn);
         break;

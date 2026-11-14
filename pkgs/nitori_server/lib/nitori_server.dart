@@ -8,4 +8,5 @@ export 'src/adapter.dart' show SatoriAdapter, SatoriBot;
 export 'src/in_memory_adapter.dart' show InMemoryAdapter, InMemoryBot;
 export 'src/rate_limiter.dart'
     show RateLimitScope, RateLimiterConfig, RateLimiter;
+export 'src/remote_adapter.dart' show RemoteSatoriAdapter, RemoteSatoriBot;
 export 'src/server.dart' show SatoriServer;

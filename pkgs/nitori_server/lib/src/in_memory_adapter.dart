@@ -101,6 +101,14 @@ class InMemoryBot extends SatoriBot {
     // the bot's router.
   }
 
+  /// Defines a bot-level internal route.
+  ///
+  /// Called by tests to register custom internal endpoints under
+  /// `/v1/internal/<platform>/<selfId>/...`.
+  void defineInternalRoute(String path, InternalRouteCallback<InMemoryBot> callback) {
+    _internalRouter.define(path, callback);
+  }
+
   // In-memory stores for each entity type.
   final Map<String, Channel> channels = <String, Channel>{};
   final Map<String, Guild> guilds = <String, Guild>{};

@@ -209,6 +209,8 @@ class Gateway {
     final body = parsed['body'];
     if (body is! Map<String, dynamic>) return;
 
+    print('Gateway._handleFrame: op=${parsed['op']}, body.keys=${body.keys}');
+
     switch (parsed['op'] as int?) {
       // Opcode.event (0)
       case 0:
@@ -224,6 +226,7 @@ class Gateway {
               in body['logins'] as List<dynamic>? ?? const <dynamic>[])
             Login.fromJson(json as Map<String, dynamic>),
         ];
+        print('Gateway: READY with ${logins.length} logins');
         onReady?.call(logins, proxyUrls);
       // Opcode.meta (5)
       case 5:
