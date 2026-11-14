@@ -1,3 +1,7 @@
+## 0.1.19
+
+ - **FEAT**: features auto-derivation (`SatoriBot.supportedMethods`/`features`), `session()`/`dispatch()` upstream semantics, full internal routing (`/_tmp`, `/_api`, bot-level router), `createUpload` returns `internal:/_tmp/<id>` URLs.
+
 ## 0.1.18
 
  - **FEAT**: P0 server routes (meta, webhook, proxy, admin, internal).
