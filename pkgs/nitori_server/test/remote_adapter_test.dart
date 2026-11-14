@@ -92,7 +92,7 @@ class _Response {
   final String body;
 }
 
-Future<_Response> post(
+Future<_Response> _post(
   HttpClient httpClient,
   int port,
   String method,
@@ -337,7 +337,7 @@ void main() {
     });
 
     test('HTTP API: local client calls channel.get -> remote bot -> returns data', () async {
-      final response = await post(
+      final response = await _post(
         httpClient,
         localPort,
         'channel.get',
@@ -353,7 +353,7 @@ void main() {
     });
 
     test('HTTP API: local client calls message.create -> remote bot -> returns created message', () async {
-      final create = await post(
+      final create = await _post(
         httpClient,
         localPort,
         'message.create',

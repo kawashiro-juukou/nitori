@@ -597,19 +597,15 @@ class RemoteSatoriAdapter implements SatoriAdapter {
            retryLazy: retryLazy,
            heartbeatInterval: heartbeatInterval,
          ) {
-    print('RemoteSatoriAdapter created, connecting to $baseUrl');
     _client.events.listen(_onGatewayEvent);
     _client.onStatusChanged = _onStatusChanged;
     // Sync proxyUrls from META (these don't go through the events stream)
     _client.onMetaExternal = (urls) {
-      print('RemoteSatoriAdapter: onMeta with proxyUrls=$urls');
       _proxyUrls.clear();
       _proxyUrls.addAll(urls);
-      print('RemoteSatoriAdapter: updated proxyUrls to $_proxyUrls');
     };
     // Sync bots from client when READY is received (chained after internal _handleReady)
     _client.onReadyExternal = (logins, urls) {
-      print('RemoteSatoriAdapter: onReady with ${logins.length} logins');
       for (final login in logins) {
         _syncBot(login, 'added');
       }
@@ -636,7 +632,6 @@ class RemoteSatoriAdapter implements SatoriAdapter {
 
   /// Called when the gateway connection status changes.
   void _onStatusChanged(Status status) {
-    print('RemoteSatoriAdapter: status changed to $status');
     if (status == Status.online) {
       // READY already delivered via _onGatewayEvent
     }
@@ -644,7 +639,6 @@ class RemoteSatoriAdapter implements SatoriAdapter {
 
   /// Handles a gateway event from the remote server.
   void _onGatewayEvent(GatewayEvent ge) {
-    print('RemoteSatoriAdapter: gateway event type=${ge.type}, sn=${ge.sn}, login=${ge.login?.platform}');
     final raw = ge.raw;
     final type = ge.type;
     final sn = ge.sn;
@@ -667,20 +661,16 @@ class RemoteSatoriAdapter implements SatoriAdapter {
     event.login = login;
 
     _events.add(event);
-    print('RemoteSatoriAdapter: emitted event type=${event.type}, sn=${event.sn}');
   }
 
   /// Syncs a bot based on a login event.
   void _syncBot(Login login, String action) {
-    print('RemoteSatoriAdapter: _syncBot action=$action login.sn=${login.sn}');
     switch (action) {
       case 'added':
         // Find the remote bot matching this login.
-        print('RemoteSatoriAdapter: client.bots = ${_client.bots.map((b) => b.platform).toList()}');
         final remoteBot = _client.bots.firstWhere((b) => b.login?.sn == login.sn);
         final bot = RemoteSatoriBot(this, remoteBot);
         _botsBySn[login.sn!] = bot;
-        print('RemoteSatoriAdapter: added bot, total bots: ${_botsBySn.length}');
         break;
       case 'updated':
         _botsBySn[login.sn!]?.updateLogin(login);

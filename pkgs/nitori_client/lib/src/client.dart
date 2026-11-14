@@ -45,12 +45,10 @@ class NitoriClient {
        ) {
     // Set up gateway callbacks in constructor body so external callbacks can be chained
     _gateway.onReady = (logins, urls) {
-      print('NitoriClient: gateway onReady called with ${logins.length} logins');
       _handleReady(logins, urls);
       _onReadyExternal?.call(logins, urls);
     };
     _gateway.onMeta = (urls) {
-      print('NitoriClient: gateway onMeta called with $urls');
       proxyUrls = urls;
       _onMetaExternal?.call(urls);
     };
@@ -96,14 +94,12 @@ class NitoriClient {
   void Function(List<String> proxyUrls)? _onMetaExternal;
 
   /// Sets an external callback for READY (chained after internal _handleReady).
-  void set onReadyExternal(void Function(List<Login> logins, List<String> proxyUrls)? callback) {
-    print('NitoriClient: setting onReadyExternal');
+  set onReadyExternal(void Function(List<Login> logins, List<String> proxyUrls)? callback) {
     _onReadyExternal = callback;
   }
 
   /// Sets an external callback for META (chained after internal proxyUrls update).
-  void set onMetaExternal(void Function(List<String> proxyUrls)? callback) {
-    print('NitoriClient: setting onMetaExternal');
+  set onMetaExternal(void Function(List<String> proxyUrls)? callback) {
     _onMetaExternal = callback;
   }
 
