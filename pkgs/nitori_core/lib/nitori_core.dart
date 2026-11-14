@@ -15,4 +15,5 @@ export 'src/login.dart';
 export 'src/message.dart';
 export 'src/methods.dart';
 export 'src/resource.dart';
+export 'src/session.dart';
 export 'src/user.dart';
