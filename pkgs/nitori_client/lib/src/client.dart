@@ -305,38 +305,84 @@ class NitoriClient {
 
   /// Makes a request with a full path, sending raw bytes body.
   ///
-  /// For internal routes that use multipart/form-data or already-encoded JsonForm.
+  /// For internal routes that use multipart/form-data or already-encoded
+  /// JsonForm. [method] defaults to POST; GET forwards carry no body.
   Future<JsonFormBody> requestFullPathBytes(
     NitoriBot bot,
     String fullPath,
     List<int> bodyBytes, {
     Map<String, String>? extraHeaders,
     String? contentType,
+    String method = 'POST',
   }) async {
     final uri = Uri.parse('$baseUrl$fullPath');
     final headers = _headers(bot);
     if (extraHeaders != null) headers.addAll(extraHeaders);
     if (contentType != null) headers['content-type'] = contentType;
-    final response = await _http.post(
-      uri,
-      headers: headers,
-      body: bodyBytes,
+    final response = await _http.send(
+      http.Request(method, uri)
+        ..headers.addAll(headers)
+        ..bodyBytes = method == 'GET' || method == 'HEAD'
+            ? const <int>[]
+            : bodyBytes,
     );
-    return _decodeToJsonFormBody(response);
+    return _decodeToJsonFormBody(await http.Response.fromStream(response));
   }
 
   /// Decodes response to JsonFormBody (handles both JSON and multipart).
   JsonFormBody _decodeToJsonFormBody(http.Response response) {
-    final text = utf8.decode(response.bodyBytes);
+    final body = _toJsonFormBody(response);
     if (response.statusCode != 200) {
-      throw SatoriApiException(response.statusCode, text);
+      throw SatoriApiException(
+        response.statusCode,
+        utf8.decode(response.bodyBytes),
+      );
     }
+    return body;
+  }
+
+  /// Forwards an internal route request to the remote server, returning the
+  /// response verbatim (status, headers and bytes) instead of throwing on a
+  /// non-200 status. Used by the protocol bridge to mirror remote `/_tmp` and
+  /// `/_api` responses onto the local server.
+  Future<JsonFormBody> forwardFullPathBytes(
+    NitoriBot bot,
+    String fullPath,
+    List<int> bodyBytes, {
+    Map<String, String>? extraHeaders,
+    String? contentType,
+    String method = 'POST',
+  }) async {
+    final uri = Uri.parse('$baseUrl$fullPath');
+    final headers = _headers(bot);
+    if (extraHeaders != null) headers.addAll(extraHeaders);
+    if (contentType != null) headers['content-type'] = contentType;
+    final response = await _http.send(
+      http.Request(method, uri)
+        ..headers.addAll(headers)
+        ..bodyBytes = method == 'GET' || method == 'HEAD'
+            ? const <int>[]
+            : bodyBytes,
+    );
+    return _toJsonFormBody(await http.Response.fromStream(response));
+  }
+
+  JsonFormBody _toJsonFormBody(http.Response response) {
     final contentType = response.headers['content-type'] ?? 'application/json';
-    if (text.isEmpty) {
-      return JsonFormBody(<int>[], contentType);
-    }
-    // For internal routes, we return raw bytes + content type.
-    return JsonFormBody(response.bodyBytes, contentType);
+    // Skip hop-by-hop / auto-managed headers: http has already decompressed
+    // the body, so content-encoding and content-length must not be forwarded.
+    const skipped = {'content-encoding', 'content-length', 'transfer-encoding'};
+    final headers = <String, String>{
+      for (final entry in response.headers.entries)
+        if (!skipped.contains(entry.key.toLowerCase()))
+          entry.key.toLowerCase(): entry.value,
+    };
+    return JsonFormBody(
+      response.bodyBytes,
+      contentType,
+      statusCode: response.statusCode,
+      headers: headers,
+    );
   }
 
   dynamic _decode(http.Response response) {

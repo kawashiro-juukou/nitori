@@ -477,6 +477,99 @@ void main() {
       },
     );
 
+    test(
+      'cross-bridge /_api/:name POST forwards to remote internal method',
+      () async {
+        // Define a remote-only internal method.
+        remoteBot1.defineInternalRoute('/_api/bridgeEcho', (req, bot) async {
+          return InternalResponse(
+            status: 200,
+            headers: {'content-type': 'application/json'},
+            body: utf8.encode(jsonEncode({'echo': req.body})),
+          );
+        });
+
+        // POST it to the LOCAL server's internal route. The local bot is a
+        // RemoteSatoriBot, so the server forwards to the remote server.
+        final request = await httpClient.post(
+          '127.0.0.1',
+          localPort,
+          '/v1/internal/telegram/remote-1/_api/bridgeEcho',
+        );
+        request.headers.contentType = ContentType.json;
+        request.headers.set('satori-platform', 'telegram');
+        request.headers.set('satori-user-id', 'remote-1');
+        request.write(jsonEncode({'hello': 'world'}));
+        final response = await request.close();
+        final body = await utf8.decoder.bind(response).join();
+
+        expect(response.statusCode, HttpStatus.ok);
+        final decoded = jsonDecode(body) as Map<String, dynamic>;
+        // The remote bot receives the re-encoded JsonForm body as raw bytes.
+        final echoed =
+            jsonDecode(utf8.decode(List<int>.from(decoded['echo'] as List)))
+                as Map<String, dynamic>;
+        expect(echoed, {'hello': 'world'});
+      },
+    );
+
+    test('cross-bridge /_api/:name POST propagates remote 404', () async {
+      final request = await httpClient.post(
+        '127.0.0.1',
+        localPort,
+        '/v1/internal/telegram/remote-1/_api/noSuchMethod',
+      );
+      request.headers.contentType = ContentType.json;
+      request.write(jsonEncode(<String, dynamic>{}));
+      final response = await request.close();
+      await response.drain<void>();
+      expect(response.statusCode, HttpStatus.notFound);
+    });
+
+    test('cross-bridge /_tmp/:id GET forwards to remote temp store', () async {
+      // Upload a file to the REMOTE server; the remote server keeps it in its
+      // temp store and returns `internal:/_tmp/<id>`.
+      const boundary = '----nitori-bridge';
+      final upload = await httpClient.post(
+        '127.0.0.1',
+        remotePort,
+        '/v1/upload.create',
+      );
+      upload.headers
+        ..set('authorization', 'Bearer remote-token')
+        ..set('satori-platform', 'telegram')
+        ..set('satori-user-id', 'remote-1')
+        ..set('content-type', 'multipart/form-data; boundary=$boundary');
+      upload.add(
+        utf8.encode(
+          '--$boundary\r\n'
+          'Content-Disposition: form-data; name="file"; filename="a.txt"\r\n'
+          'Content-Type: text/plain\r\n'
+          '\r\n'
+          'bridged content\r\n'
+          '--$boundary--\r\n',
+        ),
+      );
+      final uploadResponse = await upload.close();
+      final uploadBody = await utf8.decoder.bind(uploadResponse).join();
+      final url =
+          (jsonDecode(uploadBody) as Map<String, dynamic>)['file'] as String;
+      final id = url.substring(url.lastIndexOf('/') + 1);
+
+      // GET it through the LOCAL server: local store misses, so it forwards to
+      // the remote temp store.
+      final request = await httpClient.get(
+        '127.0.0.1',
+        localPort,
+        '/v1/internal/telegram/remote-1/_tmp/$id',
+      );
+      final response = await request.close();
+      final body = await utf8.decoder.bind(response).join();
+
+      expect(response.statusCode, HttpStatus.ok);
+      expect(body, 'bridged content');
+    });
+
     test('META broadcast on proxyUrls change', () async {
       // Remote adapter emits META by changing proxyUrls
       // In practice, META comes from remote server. Here we simulate by

@@ -82,7 +82,12 @@ class JsonFormParts implements JsonFormSink, JsonFormSource {
 
 /// Serialized body produced by [JsonForm.encode].
 class JsonFormBody {
-  const JsonFormBody(this.bytes, this.contentType);
+  const JsonFormBody(
+    this.bytes,
+    this.contentType, {
+    this.statusCode = 200,
+    this.headers = const <String, String>{},
+  });
 
   /// Raw body bytes.
   final List<int> bytes;
@@ -90,6 +95,12 @@ class JsonFormBody {
   /// `application/json`, or `multipart/form-data; boundary=...` when the
   /// payload carried file parts.
   final String contentType;
+
+  /// HTTP status the response carried; 200 for locally encoded bodies.
+  final int statusCode;
+
+  /// Response headers, with lower-cased names.
+  final Map<String, String> headers;
 }
 
 /// Hybrid JSON + `multipart/form-data` codec, mirroring upstream `JsonForm`.

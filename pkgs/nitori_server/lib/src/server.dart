@@ -12,6 +12,7 @@ import 'package:mime/mime.dart';
 import 'package:nitori_core/nitori_core.dart';
 
 import 'adapter.dart';
+import 'remote_adapter.dart';
 import 'rate_limiter.dart';
 
 /// A webhook configuration for event delivery.
@@ -633,6 +634,16 @@ class SatoriServer {
         if (request.method == 'GET') {
           final entry = _takeTempResponse(id);
           if (entry == null) {
+            // A bridged upload lives in the remote temp store: forward GET.
+            if (bot is RemoteSatoriBot) {
+              final forwarded = await bot.forwardInternal(
+                method: 'GET',
+                path: restPath,
+                query: query,
+              );
+              await _writeForwarded(request, forwarded);
+              return;
+            }
             response.statusCode = HttpStatus.notFound;
             response.write('not found');
             await response.close();
@@ -663,6 +674,24 @@ class SatoriServer {
             return;
           }
           final contentType = request.headers.contentType?.toString();
+          // A bridged bot has no local methods: its internal API lives on
+          // the remote server. Forward the original encoded body verbatim so
+          // multipart payloads and the pagination header survive the hop.
+          if (bot is RemoteSatoriBot) {
+            final pagination = request.headers.value('satori-pagination');
+            final forwarded = await bot.forwardInternal(
+              method: 'POST',
+              path: restPath,
+              query: query,
+              body: body,
+              contentType: contentType,
+              extraHeaders: {
+                if (pagination != null) 'satori-pagination': pagination,
+              },
+            );
+            await _writeForwarded(request, forwarded);
+            return;
+          }
           dynamic decoded;
           try {
             decoded = JsonForm.decode(contentType, body);
@@ -672,7 +701,6 @@ class SatoriServer {
             await response.close();
             return;
           }
-          // Walk bot.internal.<name> (dot notation)
           final result = await _callBotInternal(bot, name, decoded);
           if (result == null) {
             response.statusCode = HttpStatus.notFound;
@@ -680,16 +708,9 @@ class SatoriServer {
             await response.close();
             return;
           }
-          // Check for pagination header
-          final paginationHeader = request.headers.value('satori-pagination');
-          if (paginationHeader != null) {
-            // Call the pagination symbol if present
-            // For now, we just return the result as-is
-          }
           final encoded = JsonForm.encode(result);
           response.statusCode = HttpStatus.ok;
-          final ct = ContentType.parse(encoded.contentType);
-          response.headers.contentType = ct;
+          response.headers.contentType = ContentType.parse(encoded.contentType);
           response.add(encoded.bytes);
           await response.close();
           return;
@@ -1440,5 +1461,19 @@ class SatoriServer {
     } catch (_) {
       return;
     }
+  }
+
+  /// Mirrors a forwarded [JsonFormBody] onto the local HTTP response,
+  /// preserving status, headers and body verbatim.
+  Future<void> _writeForwarded(
+    HttpRequest request,
+    JsonFormBody forwarded,
+  ) async {
+    final response = request.response;
+    response.statusCode = forwarded.statusCode;
+    forwarded.headers.forEach((k, v) => response.headers.set(k, v));
+    response.headers.contentType = ContentType.parse(forwarded.contentType);
+    response.add(forwarded.bytes);
+    await response.close();
   }
 }

@@ -85,7 +85,7 @@ class RemoteSatoriBot implements SatoriBot {
   ///
   /// Returns the path portion only (without baseUrl), e.g.
   /// `/v1/internal/telegram/12345/_api/someMethod`.
-  /// Use with [NitoriClient.requestFullPath].
+  /// Use with [NitoriClient.forwardFullPathBytes].
   String getInternalUrl(
     String path, {
     Map<String, String>? query,
@@ -488,6 +488,40 @@ class RemoteSatoriBot implements SatoriBot {
 
   // -- Internal route handler --
 
+  /// Forwards an internal route request to the remote server.
+  ///
+  /// Used by [SatoriServer._handleInternal] when a global route (`/_tmp/:id`,
+  /// `/_api/:name`) misses locally and the real handler lives on the remote
+  /// side. Returns the remote response verbatim — status, headers and bytes —
+  /// so the local server can mirror it (including 404/405 and pagination
+  /// headers). Auth token and identity headers ride along via [NitoriClient].
+  Future<JsonFormBody> forwardInternal({
+    required String method,
+    required String path,
+    Map<String, String> query = const <String, String>{},
+    List<int> body = const <int>[],
+    String? contentType,
+    Map<String, String> extraHeaders = const <String, String>{},
+  }) {
+    final internalUrl = getInternalUrl(
+      path,
+      query: query.isEmpty ? null : query,
+      slash: true,
+    );
+    return _remoteBot.client.forwardFullPathBytes(
+      _remoteBot,
+      internalUrl,
+      body,
+      method: method,
+      contentType: contentType,
+      extraHeaders: {
+        'satori-platform': _remoteBot.platform,
+        'satori-user-id': _remoteBot.userId,
+        ...extraHeaders,
+      },
+    );
+  }
+
   /// Handles the bot-level internal proxy route: `/*path` -> POST remote `/v1/internal/_api/*`.
   Future<InternalResponse> _handleInternalRoute(
     InternalRequest request,
@@ -497,18 +531,18 @@ class RemoteSatoriBot implements SatoriBot {
     // Build the correct internal URL: /v1/internal/<platform>/<selfId>/_api/<name>
     // Use slash separator as expected by the remote server's path parsing.
     final internalUrl = getInternalUrl('/$name', slash: true);
-    final response = await _remoteBot.client.requestFullPath(
+    final response = await _remoteBot.client.forwardFullPathBytes(
       _remoteBot,
       internalUrl,
-      <Object?>[request.body ?? <String, dynamic>{}],
+      request.body is List<int> ? request.body as List<int> : const <int>[],
       extraHeaders: {
         'satori-platform': _remoteBot.platform,
         'satori-user-id': _remoteBot.userId,
       },
     );
     return InternalResponse(
-      status: 200,
-      headers: {'content-type': response.contentType},
+      status: response.statusCode,
+      headers: response.headers,
       body: response.bytes,
     );
   }
