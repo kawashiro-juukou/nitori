@@ -3,6 +3,39 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2026-11-15
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`nitori_core` - `v0.1.20`](#nitori_core---v0120)
+ - [`nitori_client` - `v0.1.19`](#nitori_client---v0119)
+ - [`nitori_server` - `v0.1.21`](#nitori_server---v0121)
+
+---
+
+#### `nitori_core` - `v0.1.20`
+
+ - **FEAT**(server): forward global internal routes across the protocol bridge. ([a21dfff1](https://github.com/kawashiro-juukou/nitori/commit/a21dfff134981cbe5a7ebe0991cf6f5036913032))
+
+#### `nitori_client` - `v0.1.19`
+
+ - **FEAT**(server): forward global internal routes across the protocol bridge. ([a21dfff1](https://github.com/kawashiro-juukou/nitori/commit/a21dfff134981cbe5a7ebe0991cf6f5036913032))
+
+#### `nitori_server` - `v0.1.21`
+
+ - **FEAT**(server): forward global internal routes across the protocol bridge. ([a21dfff1](https://github.com/kawashiro-juukou/nitori/commit/a21dfff134981cbe5a7ebe0991cf6f5036913032))
+ - **FEAT**(server): map local<->remote sequence numbers in RemoteSatoriAdapter. ([b04fea86](https://github.com/kawashiro-juukou/nitori/commit/b04fea8651a4cc66191420b774429d3751c166de))
+ - **DOCS**(server): document protocol bridge and add example. ([e2b5757e](https://github.com/kawashiro-juukou/nitori/commit/e2b5757e552f06e4f5734a9cb568bab3a9cfdeaf))
+
+
 ## 2026-11-13
 
 ### Changes

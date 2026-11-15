@@ -1,3 +1,9 @@
+## 0.1.21
+
+ - **FEAT**(server): forward global internal routes across the protocol bridge. ([a21dfff1](https://github.com/kawashiro-juukou/nitori/commit/a21dfff134981cbe5a7ebe0991cf6f5036913032))
+ - **FEAT**(server): map local<->remote sequence numbers in RemoteSatoriAdapter. ([b04fea86](https://github.com/kawashiro-juukou/nitori/commit/b04fea8651a4cc66191420b774429d3751c166de))
+ - **DOCS**(server): document protocol bridge and add example. ([e2b5757e](https://github.com/kawashiro-juukou/nitori/commit/e2b5757e552f06e4f5734a9cb568bab3a9cfdeaf))
+
 ## 0.1.20
 
  - **FEAT**: add `RemoteSatoriAdapter` protocol bridge — connects to a remote Satori server over HTTP + WebSocket and maps its logins/events into local `SatoriAdapter`/`SatoriBot` objects, including `internal` proxying via `JsonForm`.

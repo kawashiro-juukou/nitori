@@ -1,3 +1,7 @@
+## 0.1.19
+
+ - **FEAT**(server): forward global internal routes across the protocol bridge. ([a21dfff1](https://github.com/kawashiro-juukou/nitori/commit/a21dfff134981cbe5a7ebe0991cf6f5036913032))
+
 ## 0.1.18
 
  - **FEAT**: add public `request()`/`requestFullPath()` for arbitrary protocol paths with custom headers, iterator methods, `updateCommands`, and external READY/META callbacks.
