@@ -1,3 +1,9 @@
+## 0.1.21
+
+ - **FEAT**: export `symbolName` helper for `Invocation.memberName` extraction.
+ - **FIX**: remove unused imports from `server_adapter.dart`.
+ - **TEST**: `eventAliases` test now correctly verifies canonical expansion.
+
 ## 0.1.20
 
  - **FEAT**(server): forward global internal routes across the protocol bridge. ([a21dfff1](https://github.com/kawashiro-juukou/nitori/commit/a21dfff134981cbe5a7ebe0991cf6f5036913032))

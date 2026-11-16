@@ -1,3 +1,11 @@
+## 0.1.22
+
+ - **FIX**(bridge): identity headers (`satori-platform`/`satori-user-id`) no longer overrideable via `extraHeaders` in `RemoteSatoriBot.forwardInternal`.
+ - **FEAT**(bridge): `RemoteSatoriAdapter` now accepts `platform`/`userId` for correct IDENTIFY in multi-platform bridging.
+ - **PERF**(bridge): `_pendingRemoteSns` uses `Queue<int>` for O(1) dequeue.
+ - **FIX**(core): `InMemoryBot.internal` proxy now correctly extracts method names from `Symbol`.
+ - **CLEANUP**: deduplicate `SatoriBot`/`SatoriAdapter` definitions — server now re-exports from `nitori_core`.
+
 ## 0.1.21
 
  - **FEAT**(server): forward global internal routes across the protocol bridge. ([a21dfff1](https://github.com/kawashiro-juukou/nitori/commit/a21dfff134981cbe5a7ebe0991cf6f5036913032))

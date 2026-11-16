@@ -58,6 +58,8 @@ class Gateway {
   Gateway({
     required this.baseUrl,
     this.token,
+    this.platform,
+    this.userId,
     this.retryTimes = 6,
     this.retryInterval = const Duration(seconds: 5),
     this.retryLazy = const Duration(minutes: 1),
@@ -70,6 +72,12 @@ class Gateway {
 
   /// Access token, sent as `IDENTIFY.body.token`.
   final String? token;
+
+  /// Platform identity, sent as `IDENTIFY.body.satori-platform`.
+  final String? platform;
+
+  /// User identity, sent as `IDENTIFY.body.satori-user-id`.
+  final String? userId;
 
   /// Initial-connection retry budget; after this many failures the gateway
   /// goes offline instead of retrying.
@@ -209,7 +217,6 @@ class Gateway {
     final body = parsed['body'];
     if (body is! Map<String, dynamic>) return;
 
-
     switch (parsed['op'] as int?) {
       // Opcode.event (0)
       case 0:
@@ -243,6 +250,8 @@ class Gateway {
     'body': <String, dynamic>{
       if (token != null) 'token': token,
       if (sequence != null) 'sn': sequence,
+      if (platform != null) 'satori-platform': platform,
+      if (userId != null) 'satori-user-id': userId,
     },
   });
 

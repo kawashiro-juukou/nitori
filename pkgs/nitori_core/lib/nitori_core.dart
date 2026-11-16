@@ -18,4 +18,5 @@ export 'src/message.dart';
 export 'src/methods.dart';
 export 'src/resource.dart';
 export 'src/session.dart';
+export 'src/server_adapter.dart';
 export 'src/user.dart';

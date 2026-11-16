@@ -11,7 +11,6 @@ import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
 import 'package:nitori_core/nitori_core.dart';
 
-import 'adapter.dart';
 import 'remote_adapter.dart';
 import 'rate_limiter.dart';
 

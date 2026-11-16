@@ -74,6 +74,23 @@ class InternalResponse {
   final List<int> body;
 }
 
+/// Extracts the bare member name from a [Symbol].
+///
+/// `bot.internal.foo(...)` style dynamic proxies resolve method names through
+/// `Invocation.memberName`, whose `toString()` form is `Symbol("foo")` on the
+/// Dart VM. That format is an implementation detail, so the wrapper is only
+/// stripped when present; otherwise the value is used verbatim.
+String symbolName(Symbol symbol) {
+  final text = symbol.toString();
+  if (text.startsWith('Symbol("') && text.endsWith('")')) {
+    return text.substring('Symbol("'.length, text.length - 2);
+  }
+  if (text.startsWith("Symbol('") && text.endsWith("')")) {
+    return text.substring("Symbol('".length, text.length - 2);
+  }
+  return text;
+}
+
 /// A registered route: pattern plus its precompiled pattern and callback.
 class InternalRoute<B> {
   InternalRoute(this.pattern, this.regexp, this.keys, this.callback);

@@ -29,6 +29,8 @@ class NitoriClient {
   NitoriClient({
     required this.baseUrl,
     this.token,
+    this.platform,
+    this.userId,
     http.Client? httpClient,
     int retryTimes = 6,
     Duration retryInterval = const Duration(seconds: 5),
@@ -38,6 +40,8 @@ class NitoriClient {
        _gateway = Gateway(
          baseUrl: baseUrl,
          token: token,
+         platform: platform,
+         userId: userId,
          retryTimes: retryTimes,
          retryInterval: retryInterval,
          retryLazy: retryLazy,
@@ -64,6 +68,12 @@ class NitoriClient {
   /// Access token sent as `Authorization: Bearer` and `IDENTIFY.body.token`.
   final String? token;
 
+  /// Platform identity sent as `IDENTIFY.body.satori-platform`.
+  final String? platform;
+
+  /// User identity sent as `IDENTIFY.body.satori-user-id`.
+  final String? userId;
+
   /// Connection lifecycle of the WebSocket gateway.
   final Gateway _gateway;
 
@@ -82,6 +92,21 @@ class NitoriClient {
   /// Live event stream of the gateway.
   Stream<GatewayEvent> get events => _gateway.events;
 
+  /// The sequence number (sn) of the last received EVENT frame.
+  /// Returns null if no event has been received yet.
+  int? get lastReceivedSn => _gateway.sequence;
+
+  /// Sets the resume sequence number for the next IDENTIFY.
+  ///
+  /// When the gateway reconnects, it will include this `sn` in the IDENTIFY
+  /// payload so the server replays events after this sequence number.
+  /// This enables application-layer idempotency: the client can store the
+  /// last processed `sn` and call [resumeFrom] on restart to avoid
+  /// re-processing already-handled events.
+  Future<void> resumeFrom(int sn) async {
+    _gateway.sequence = sn;
+  }
+
   Status get status => _gateway.status;
 
   /// Fired whenever the connection status changes.
@@ -94,7 +119,9 @@ class NitoriClient {
   void Function(List<String> proxyUrls)? _onMetaExternal;
 
   /// Sets an external callback for READY (chained after internal _handleReady).
-  set onReadyExternal(void Function(List<Login> logins, List<String> proxyUrls)? callback) {
+  set onReadyExternal(
+    void Function(List<Login> logins, List<String> proxyUrls)? callback,
+  ) {
     _onReadyExternal = callback;
   }
 
@@ -162,6 +189,34 @@ class NitoriClient {
     bots.removeWhere((bot) => bot.login?.sn == login.sn);
   }
 
+  // -- multi-login management --
+
+  /// Returns the bot matching [platform] and [userId], or null if not found.
+  NitoriBot? getBot(String platform, String userId) {
+    for (final bot in bots) {
+      if (bot.platform == platform && bot.userId == userId) return bot;
+    }
+    return null;
+  }
+
+  /// Adds a bot for the given [login].
+  ///
+  /// If a bot with the same sn already exists, does nothing.
+  void addBot(Login login) {
+    if (_botBySn(login.sn) != null) return;
+    bots.add(NitoriBot(this, login: login));
+  }
+
+  /// Removes the bot with the given [sn].
+  void removeBot(int sn) {
+    bots.removeWhere((bot) => bot.login?.sn == sn);
+  }
+
+  /// Returns all bots for the given [platform].
+  Iterable<NitoriBot> botsByPlatform(String platform) {
+    return bots.where((bot) => bot.platform == platform);
+  }
+
   /// Sends one API request and returns the decoded JSON response.
   ///
   /// Field names come from the [methods] registry; each Dart argument is keyed
@@ -218,6 +273,19 @@ class NitoriClient {
     'content-type': 'application/json',
   };
 
+  /// Builds the JSON body for an internal-route request.
+  ///
+  /// The first argument is used verbatim when it is a map; otherwise the
+  /// arguments are keyed by their positional index.
+  Map<String, dynamic> _internalBody(List<Object?> args) {
+    if (args.isNotEmpty && args.first is Map) {
+      return args.first as Map<String, dynamic>;
+    }
+    return <String, dynamic>{
+      for (var i = 0; i < args.length; i++) i.toString(): args[i],
+    };
+  }
+
   /// Public version of [_request] that allows arbitrary key and extra headers.
   ///
   /// Does NOT require [methods][key] to exist (for internal routes).
@@ -252,17 +320,8 @@ class NitoriClient {
       return _decodeToJsonFormBody(response);
     }
 
-    final payload = <String, dynamic>{};
-    for (var i = 0; i < args.length; i++) {
-      final arg = args[i];
-      if (arg == null) continue;
-      // For internal routes, we pass the args as-is (already JSON-serializable).
-      payload[i.toString()] = arg;
-    }
     // Use the first arg as the payload if it's a Map, otherwise wrap in array.
-    final body = args.isNotEmpty && args.first is Map
-        ? args.first as Map<String, dynamic>
-        : <String, dynamic>{for (var i = 0; i < args.length; i++) i.toString(): args[i]};
+    final body = _internalBody(args);
     final headers = _headers(bot);
     if (extraHeaders != null) headers.addAll(extraHeaders);
     final response = await _http.post(
@@ -284,15 +343,7 @@ class NitoriClient {
     Map<String, String>? extraHeaders,
   }) async {
     final uri = Uri.parse('$baseUrl$fullPath');
-    final payload = <String, dynamic>{};
-    for (var i = 0; i < args.length; i++) {
-      final arg = args[i];
-      if (arg == null) continue;
-      payload[i.toString()] = arg;
-    }
-    final body = args.isNotEmpty && args.first is Map
-        ? args.first as Map<String, dynamic>
-        : <String, dynamic>{for (var i = 0; i < args.length; i++) i.toString(): args[i]};
+    final body = _internalBody(args);
     final headers = _headers(bot);
     if (extraHeaders != null) headers.addAll(extraHeaders);
     final response = await _http.post(
@@ -470,7 +521,10 @@ class NitoriBot {
   Stream<Channel> getChannelIter(String guildId) async* {
     var next = '';
     while (true) {
-      final page = await getChannelList(guildId, next: next.isEmpty ? null : next);
+      final page = await getChannelList(
+        guildId,
+        next: next.isEmpty ? null : next,
+      );
       for (final channel in page.data) {
         yield channel;
       }
@@ -557,7 +611,11 @@ class NitoriBot {
     var next = '';
     Direction? dir = Direction.before;
     while (true) {
-      final page = await getMessageList(channelId, next: next.isEmpty ? null : next, direction: dir);
+      final page = await getMessageList(
+        channelId,
+        next: next.isEmpty ? null : next,
+        direction: dir,
+      );
       for (final message in page.data) {
         yield message;
       }
@@ -629,7 +687,12 @@ class NitoriBot {
   ) async* {
     var next = '';
     while (true) {
-      final page = await getReactionList(channelId, messageId, emojiId, next: next.isEmpty ? null : next);
+      final page = await getReactionList(
+        channelId,
+        messageId,
+        emojiId,
+        next: next.isEmpty ? null : next,
+      );
       for (final user in page.data) {
         yield user;
       }
@@ -695,7 +758,10 @@ class NitoriBot {
   Stream<GuildMember> getGuildMemberIter(String guildId) async* {
     var next = '';
     while (true) {
-      final page = await getGuildMemberList(guildId, next: next.isEmpty ? null : next);
+      final page = await getGuildMemberList(
+        guildId,
+        next: next.isEmpty ? null : next,
+      );
       for (final member in page.data) {
         yield member;
       }
@@ -781,7 +847,10 @@ class NitoriBot {
   Stream<GuildRole> getGuildRoleIter(String guildId) async* {
     var next = '';
     while (true) {
-      final page = await getGuildRoleList(guildId, next: next.isEmpty ? null : next);
+      final page = await getGuildRoleList(
+        guildId,
+        next: next.isEmpty ? null : next,
+      );
       for (final role in page.data) {
         yield role;
       }
@@ -941,7 +1010,9 @@ class NitoriBot {
   }
 
   Future<void> updateCommands(List<Command> commands) async {
-    await client._request(this, 'command.update', <Object?>[commands.map((c) => c.toJson()).toList()]);
+    await client._request(this, 'command.update', <Object?>[
+      commands.map((c) => c.toJson()).toList(),
+    ]);
   }
 
   Pagination<T> _pagination<T>(

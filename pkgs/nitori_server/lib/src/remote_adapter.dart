@@ -8,11 +8,11 @@
 library;
 
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:nitori_client/nitori_client.dart';
 import 'package:nitori_core/nitori_core.dart';
 
-import 'adapter.dart';
 import 'server.dart';
 
 /// A [SatoriBot] backed by a remote [NitoriBot].
@@ -515,9 +515,9 @@ class RemoteSatoriBot implements SatoriBot {
       method: method,
       contentType: contentType,
       extraHeaders: {
+        ...extraHeaders,
         'satori-platform': _remoteBot.platform,
         'satori-user-id': _remoteBot.userId,
-        ...extraHeaders,
       },
     );
   }
@@ -561,23 +561,8 @@ class _RemoteInternalProxy {
   @pragma('vm:prefer-inline')
   @override
   dynamic noSuchMethod(Invocation invocation) {
-    // invocation.memberName is a Symbol; extract the name.
-    // Symbol("testMethod").toString() returns "Symbol(\"testMethod\")".
-    final String methodName = invocation.memberName.toString();
-    final String cleanName;
-    if (methodName.startsWith('Symbol("') && methodName.endsWith('")')) {
-      cleanName = methodName.substring(
-        'Symbol("'.length,
-        methodName.length - 2,
-      );
-    } else if (methodName.startsWith("Symbol('") && methodName.endsWith("')")) {
-      cleanName = methodName.substring(
-        "Symbol('".length,
-        methodName.length - 2,
-      );
-    } else {
-      cleanName = methodName;
-    }
+    // invocation.memberName is a Symbol; extract the bare method name.
+    final String cleanName = symbolName(invocation.memberName);
     final positionalArgs = invocation.positionalArguments;
     final namedArgs = invocation.namedArguments;
 
@@ -673,13 +658,15 @@ class RemoteSatoriAdapter implements SatoriAdapter {
   /// Queue of pending remote sequence numbers for events that have been emitted
   /// but not yet published by the local server. Used to correlate events in
   /// [onEventPublished] callback since the event is deep-copied.
-  final List<int> _pendingRemoteSns = [];
+  final Queue<int> _pendingRemoteSns = Queue<int>();
 
   /// Creates a new remote adapter.
   ///
   /// Parameters mirror [NitoriClient] constructor:
   /// - [baseUrl]: HTTP(S) base URL of the remote Satori server.
   /// - [token]: Access token for IDENTIFY.
+  /// - [platform]: Platform identity, sent as `IDENTIFY.body.satori-platform`.
+  /// - [userId]: User identity, sent as `IDENTIFY.body.satori-user-id`.
   /// - [retryTimes]: Initial connection retry budget.
   /// - [retryInterval]: Retry interval while budget not exhausted.
   /// - [retryLazy]: Retry interval after established connection drops and budget exhausted.
@@ -687,6 +674,8 @@ class RemoteSatoriAdapter implements SatoriAdapter {
   RemoteSatoriAdapter({
     required String baseUrl,
     String? token,
+    String? platform,
+    String? userId,
     int retryTimes = 6,
     Duration retryInterval = const Duration(seconds: 5),
     Duration retryLazy = const Duration(minutes: 1),
@@ -694,6 +683,8 @@ class RemoteSatoriAdapter implements SatoriAdapter {
   }) : _client = NitoriClient(
          baseUrl: baseUrl,
          token: token,
+         platform: platform,
+         userId: userId,
          retryTimes: retryTimes,
          retryInterval: retryInterval,
          retryLazy: retryLazy,
@@ -735,7 +726,7 @@ class RemoteSatoriAdapter implements SatoriAdapter {
   /// ```
   void _onEventPublished(Event event, int localSn) {
     if (_pendingRemoteSns.isEmpty) return;
-    final remoteSn = _pendingRemoteSns.removeAt(0);
+    final remoteSn = _pendingRemoteSns.removeFirst();
     _localToRemoteSn[localSn] = remoteSn;
     _remoteToLocalSn[remoteSn] = localSn;
   }

@@ -1,3 +1,11 @@
+## 0.1.20
+
+ - **FEAT**: `NitoriClient`/`Gateway` accept `platform`/`userId` for `IDENTIFY.body.satori-platform` / `satori-user-id`.
+ - **FEAT**: `lastReceivedSn` getter and `resumeFrom(int)` for application-layer resume idempotency.
+ - **FEAT**: multi-login management — `getBot()`, `addBot()`, `removeBot()`, `botsByPlatform()`.
+ - **CLEANUP**: removed dead `payload` code in `request()`, deduplicated body building via `_internalBody()`.
+ - **TEST**: added `identity_test.dart`, `multi_login_test.dart`, `resume_test.dart`.
+
 ## 0.1.19
 
  - **FEAT**(server): forward global internal routes across the protocol bridge. ([a21dfff1](https://github.com/kawashiro-juukou/nitori/commit/a21dfff134981cbe5a7ebe0991cf6f5036913032))

@@ -10,8 +10,6 @@ import 'dart:math';
 
 import 'package:nitori_core/nitori_core.dart';
 
-import 'adapter.dart';
-
 /// Serves one [InMemoryBot] and exposes [emit] to push gateway events.
 ///
 /// Intended for unit tests and local development. Not suitable for production
@@ -105,7 +103,10 @@ class InMemoryBot extends SatoriBot {
   ///
   /// Called by tests to register custom internal endpoints under
   /// `/v1/internal/<platform>/<selfId>/...`.
-  void defineInternalRoute(String path, InternalRouteCallback<InMemoryBot> callback) {
+  void defineInternalRoute(
+    String path,
+    InternalRouteCallback<InMemoryBot> callback,
+  ) {
     _internalRouter.define(path, callback);
   }
 
@@ -586,7 +587,7 @@ class _InternalProxy {
   @pragma('vm:prefer-inline')
   @override
   dynamic noSuchMethod(Invocation invocation) {
-    final methodName = invocation.memberName.toString();
+    final methodName = symbolName(invocation.memberName);
     final positionalArgs = invocation.positionalArguments;
     final namedArgs = invocation.namedArguments;
 
@@ -597,7 +598,7 @@ class _InternalProxy {
       path: path,
       body: JsonForm.encode({
         'args': positionalArgs,
-        'kwargs': namedArgs.map((k, v) => MapEntry(k.toString(), v)),
+        'kwargs': namedArgs.map((k, v) => MapEntry(symbolName(k), v)),
       }).bytes,
     );
 
@@ -606,13 +607,12 @@ class _InternalProxy {
         throw UnimplementedError('internal route not found: $methodName');
       }
       if (response.status >= 400) {
-        throw StateError('internal route error ${response.status}: '
-            '${utf8.decode(response.body)}');
+        throw StateError(
+          'internal route error ${response.status}: '
+          '${utf8.decode(response.body)}',
+        );
       }
-      return JsonForm.decode(
-        response.headers['content-type'],
-        response.body,
-      );
+      return JsonForm.decode(response.headers['content-type'], response.body);
     });
   }
 }
