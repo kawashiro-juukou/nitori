@@ -96,6 +96,7 @@ class SatoriServer {
     this.wsConnectRateLimit,
     this.wsEventRateLimit,
     this.onEventPublished,
+    this.onClientResume,
   }) : _webhooks = List<SatoriWebhook>.from(
          webhooks ?? const <SatoriWebhook>[],
        ),
@@ -139,6 +140,13 @@ class SatoriServer {
   /// Useful for adapters that need to map between local and remote sequence
   /// spaces (e.g., [RemoteSatoriAdapter]).
   final void Function(Event event, int localSn)? onEventPublished;
+
+  /// Called when a gateway client sends IDENTIFY with a resume sequence number.
+  ///
+  /// Receives the local sequence number the client wants to resume from.
+  /// Useful for bridged adapters (e.g., [RemoteSatoriAdapter]) to translate
+  /// the local sn to a remote sn and trigger the upstream connection to resume.
+  final void Function(int localSn)? onClientResume;
 
   final http.Client _httpClient;
 
@@ -700,7 +708,20 @@ class SatoriServer {
             await response.close();
             return;
           }
-          final result = await _callBotInternal(bot, name, decoded);
+          // Collect response headers to mirror satori-pagination back to client.
+          final responseHeaders = <String, String>{};
+          final paginationHeader = request.headers.value('satori-pagination');
+          final requestHeaders = <String, String>{};
+          if (paginationHeader != null) {
+            requestHeaders['satori-pagination'] = paginationHeader;
+          }
+          final result = await _callBotInternal(
+            bot,
+            name,
+            decoded,
+            headers: requestHeaders,
+            responseHeaders: responseHeaders,
+          );
           if (result == null) {
             response.statusCode = HttpStatus.notFound;
             response.write('internal method not found: $name');
@@ -710,6 +731,8 @@ class SatoriServer {
           final encoded = JsonForm.encode(result);
           response.statusCode = HttpStatus.ok;
           response.headers.contentType = ContentType.parse(encoded.contentType);
+          // Mirror response headers (e.g., satori-pagination) to the client.
+          responseHeaders.forEach((k, v) => response.headers.set(k, v));
           response.add(encoded.bytes);
           await response.close();
           return;
@@ -798,21 +821,28 @@ class SatoriServer {
   /// Calls a method on `bot.internal` by dotted name (e.g. 'foo.bar').
   ///
   /// Returns the result, or null if the method doesn't exist.
+  /// If [responseHeaders] is provided, it will be populated with the response headers.
   Future<dynamic> _callBotInternal(
     SatoriBot bot,
     String name,
-    dynamic args,
-  ) async {
+    dynamic args, {
+    Map<String, String>? headers,
+    Map<String, String>? responseHeaders,
+  }) async {
     // Build an InternalRequest for the /_api/<name> path and use the bot's
     // handleInternalRoute method (which delegates to the bot's InternalRouter).
     final request = InternalRequest(
       method: 'POST',
       path: '/_api/$name',
+      headers: headers ?? const <String, String>{},
       body: JsonForm.encode(args).bytes,
     );
     final response = await bot.handleInternalRoute(request);
     if (response == null || response.status >= 400) {
       return null;
+    }
+    if (responseHeaders != null) {
+      responseHeaders.addAll(response.headers);
     }
     final contentType = response.headers['content-type'] ?? 'application/json';
     return JsonForm.decode(contentType, response.body);
@@ -1306,7 +1336,13 @@ class SatoriServer {
         );
         _trySend(client.socket, Opcode.ready, meta.toJson());
         final sn = identify['sn'];
-        if (sn is int && sn > 0) _replay(client, sn);
+        if (sn is int && sn > 0) {
+          _replay(client, sn);
+          // Notify adapter of client resume so bridged connections can translate.
+          if (onClientResume != null) {
+            onClientResume!(sn);
+          }
+        }
         break;
       // Opcode.ping
       case 1:

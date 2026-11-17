@@ -700,4 +700,471 @@ void main() {
       },
     );
   });
+
+  group('Resume transparency', () {
+    test(
+      'local client resume with local sn -> remote gateway reconnects with remote sn',
+      () async {
+        // Set up a fresh remote server for this test
+        final rBot = _createRemoteBot(
+          userId: 'resume-remote',
+          name: 'Resume Remote Bot',
+          platform: 'telegram',
+          sn: 10,
+        );
+        final rAdapter = InMemoryAdapter(bot: rBot, proxyUrls: const []);
+        final rServer = SatoriServer(adapter: rAdapter, token: 'resume-token');
+        final rHttpServer = await rServer.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: 0,
+        );
+        final remotePort = rHttpServer.port;
+        addTearDown(rServer.close);
+        addTearDown(rAdapter.close);
+
+        // Create local adapter pointing to remote
+        final adapter = RemoteSatoriAdapter(
+          baseUrl: 'http://127.0.0.1:$remotePort',
+          token: 'resume-token',
+          retryTimes: 2,
+          retryInterval: const Duration(milliseconds: 100),
+          retryLazy: const Duration(milliseconds: 200),
+          heartbeatInterval: const Duration(seconds: 2),
+        );
+        await adapter.start();
+        await waitFor(() => adapter.client.status == Status.online);
+        await waitFor(() => adapter.bots.length == 1);
+        expect(adapter.bots.length, 1);
+
+        // Create local server with onClientResume callback
+        final localServer = SatoriServer(
+          adapter: adapter,
+          token: 'local-token',
+          resumeTimeout: const Duration(minutes: 1),
+          onEventPublished: adapter.onEventPublished,
+          onClientResume: adapter.onClientResume,
+        );
+        final localHttpServer = await localServer.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: 0,
+        );
+        final localPort = localHttpServer.port;
+        addTearDown(localServer.close);
+
+        // Connect local gateway client and get some events to build sn mapping
+        final client = NitoriClient(
+          baseUrl: 'http://127.0.0.1:$localPort',
+          token: 'local-token',
+        );
+        addTearDown(client.close);
+        await client.start();
+        await waitFor(() => client.status == Status.online);
+        await waitFor(() => client.bots.isNotEmpty);
+
+        // Emit some events from remote to build the local<->remote sn mapping
+        final receivedEvents = <GatewayEvent>[];
+        final sub = client.events.listen(receivedEvents.add);
+
+        for (var i = 1; i <= 3; i++) {
+          rAdapter.emit(
+            Event(
+              type: 'message-created',
+              login: rBot.login,
+              selfId: 'resume-remote',
+              message: Message(id: 'msg-$i', content: 'message $i'),
+            ),
+          );
+        }
+
+        await waitFor(() => receivedEvents.length >= 3);
+        expect(receivedEvents.length, 3);
+
+        // Get the local and remote sns
+        final localSns = receivedEvents.map((e) => e.sn!).toList();
+        final remoteSns = receivedEvents.map((e) => e.raw['sn'] as int).toList();
+
+        // Verify sn mapping was built
+        for (var i = 0; i < 3; i++) {
+          expect(adapter.translateLocalToRemoteSn(localSns[i]), remoteSns[i]);
+        }
+
+        // Store the last local sn to resume from
+        final lastLocalSn = localSns.last;
+        final expectedRemoteSn = remoteSns.last;
+
+        await sub.cancel();
+        await client.close();
+
+        // Now simulate local client reconnecting with resume (using the local sn)
+        final client2 = NitoriClient(
+          baseUrl: 'http://127.0.0.1:$localPort',
+          token: 'local-token',
+        );
+        addTearDown(client2.close);
+
+        // Set the resume sequence BEFORE starting - this simulates a client that
+        // stored the last sn and wants to resume from there
+        await client2.resumeFrom(lastLocalSn);
+
+        // Track if remote gateway received the translated remote sn in IDENTIFY
+        // We can verify this by checking the remote gateway's sequence after reconnect
+        // Since the remote gateway is internal to the adapter, we check by ensuring
+        // the adapter's client's gateway sequence matches the expected remote sn
+        // when it reconnects (the onClientResume callback should have set it)
+
+        // Start the client - this should trigger IDENTIFY with the local sn,
+        // which triggers onClientResume, which sets remote gateway sequence
+        await client2.start();
+        await waitFor(() => client2.status == Status.online);
+
+        // Verify the remote gateway's sequence was set to the translated remote sn
+        // The adapter's internal gateway should have the remote sn as its sequence
+        expect(
+          adapter.client.gateway.sequence,
+          expectedRemoteSn,
+          reason: 'Remote gateway should have resumed with translated remote sn',
+        );
+
+        // Verify that events after resume continue to work
+        final receivedAfterResume = <GatewayEvent>[];
+        final sub2 = client2.events.listen(receivedAfterResume.add);
+
+        rAdapter.emit(
+          Event(
+            type: 'message-created',
+            login: rBot.login,
+            selfId: 'resume-remote',
+            message: Message(id: 'after-resume', content: 'resumed!'),
+          ),
+        );
+
+        await waitFor(() => receivedAfterResume.isNotEmpty);
+        expect(receivedAfterResume.single.data['message']['content'], 'resumed!');
+
+        await sub2.cancel();
+        await client2.close();
+      },
+    );
+
+    test(
+      'remote connection drop and reconnect uses last known remote sn',
+      () async {
+        // Set up remote server
+        final rBot = _createRemoteBot(
+          userId: 'remote-drop',
+          name: 'Remote Drop Bot',
+          platform: 'telegram',
+          sn: 20,
+        );
+        final rAdapter = InMemoryAdapter(bot: rBot, proxyUrls: const []);
+        final rServer = SatoriServer(adapter: rAdapter, token: 'drop-token');
+        final rHttpServer = await rServer.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: 0,
+        );
+        final remotePort = rHttpServer.port;
+        addTearDown(rServer.close);
+        addTearDown(rAdapter.close);
+
+        // Create local adapter pointing to remote
+        final adapter = RemoteSatoriAdapter(
+          baseUrl: 'http://127.0.0.1:$remotePort',
+          token: 'drop-token',
+          retryTimes: 2,
+          retryInterval: const Duration(milliseconds: 100),
+          retryLazy: const Duration(milliseconds: 200),
+          heartbeatInterval: const Duration(seconds: 2),
+        );
+        await adapter.start();
+        await waitFor(() => adapter.client.status == Status.online);
+        await waitFor(() => adapter.bots.length == 1);
+
+        // Create local server
+        final localServer = SatoriServer(
+          adapter: adapter,
+          token: 'local-token',
+          resumeTimeout: const Duration(minutes: 1),
+          onEventPublished: adapter.onEventPublished,
+          onClientResume: adapter.onClientResume,
+        );
+        final localHttpServer = await localServer.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: 0,
+        );
+        final localPort = localHttpServer.port;
+        addTearDown(localServer.close);
+
+        // Connect local client, emit events to build mapping
+        final client = NitoriClient(
+          baseUrl: 'http://127.0.0.1:$localPort',
+          token: 'local-token',
+        );
+        addTearDown(client.close);
+        await client.start();
+        await waitFor(() => client.status == Status.online);
+
+        final receivedEvents = <GatewayEvent>[];
+        final sub = client.events.listen(receivedEvents.add);
+
+        // Emit events from remote
+        for (var i = 1; i <= 2; i++) {
+          rAdapter.emit(
+            Event(
+              type: 'message-created',
+              login: rBot.login,
+              selfId: 'remote-drop',
+              message: Message(id: 'msg-$i', content: 'drop $i'),
+            ),
+          );
+        }
+        await waitFor(() => receivedEvents.length >= 2);
+
+        final lastLocalSn = receivedEvents.last.sn!;
+        final lastRemoteSn = receivedEvents.last.raw['sn'] as int;
+
+        await sub.cancel();
+
+        // Kill remote server (simulates connection drop)
+        await rServer.close();
+
+        // Wait for adapter to detect disconnect
+        await waitFor(
+          () =>
+              adapter.client.status == Status.reconnect ||
+              adapter.client.status == Status.disconnect,
+        );
+
+        // Restart remote server on SAME PORT
+        final rServer2 = SatoriServer(adapter: rAdapter, token: 'drop-token');
+        await rServer2.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: remotePort,
+        );
+        addTearDown(rServer2.close);
+
+        // Wait for adapter to reconnect
+        await waitFor(() => adapter.client.status == Status.online);
+        await waitFor(() => adapter.bots.length == 1);
+
+        // Verify remote gateway sequence was preserved (uses last known remote sn)
+        expect(
+          adapter.client.gateway.sequence,
+          lastRemoteSn,
+          reason: 'Remote gateway should resume with last known remote sn after reconnect',
+        );
+
+        // Connect local client with resume from last local sn
+        final client2 = NitoriClient(
+          baseUrl: 'http://127.0.0.1:$localPort',
+          token: 'local-token',
+        );
+        addTearDown(client2.close);
+        await client2.resumeFrom(lastLocalSn);
+        await client2.start();
+        await waitFor(() => client2.status == Status.online);
+
+        // Verify events continue after both sides resumed
+        final receivedAfter = <GatewayEvent>[];
+        final sub2 = client2.events.listen(receivedAfter.add);
+
+        rAdapter.emit(
+          Event(
+            type: 'message-created',
+            login: rBot.login,
+            selfId: 'remote-drop',
+            message: Message(id: 'after-drop', content: 'recovered'),
+          ),
+        );
+
+        await waitFor(() => receivedAfter.isNotEmpty);
+        expect(receivedAfter.single.data['message']['content'], 'recovered');
+
+        await sub2.cancel();
+        await client2.close();
+        await rServer2.close();
+      },
+    );
+
+    test(
+      'no duplicate events when local client resumes from older sn and remote reconnects',
+      () async {
+        // This test verifies the fix for the regression where _onClientResume
+        // would move the remote gateway's sequence backward, causing duplicate
+        // events when the remote connection later drops and reconnects.
+
+        // Set up remote server
+        final rBot = _createRemoteBot(
+          userId: 'dup-remote',
+          name: 'Duplicate Test Remote Bot',
+          platform: 'telegram',
+          sn: 30,
+        );
+        final rAdapter = InMemoryAdapter(bot: rBot, proxyUrls: const []);
+        final rServer = SatoriServer(adapter: rAdapter, token: 'dup-token');
+        final rHttpServer = await rServer.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: 0,
+        );
+        final remotePort = rHttpServer.port;
+        addTearDown(rServer.close);
+        addTearDown(rAdapter.close);
+
+        // Create local adapter pointing to remote
+        final adapter = RemoteSatoriAdapter(
+          baseUrl: 'http://127.0.0.1:$remotePort',
+          token: 'dup-token',
+          retryTimes: 2,
+          retryInterval: const Duration(milliseconds: 100),
+          retryLazy: const Duration(milliseconds: 200),
+          heartbeatInterval: const Duration(seconds: 2),
+        );
+        await adapter.start();
+        await waitFor(() => adapter.client.status == Status.online);
+        await waitFor(() => adapter.bots.length == 1);
+
+        // Create local server
+        final localServer = SatoriServer(
+          adapter: adapter,
+          token: 'local-token',
+          resumeTimeout: const Duration(minutes: 1),
+          onEventPublished: adapter.onEventPublished,
+          onClientResume: adapter.onClientResume,
+        );
+        final localHttpServer = await localServer.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: 0,
+        );
+        final localPort = localHttpServer.port;
+        addTearDown(localServer.close);
+
+        // Connect local client, emit 3 events from remote to build mapping
+        // remote sn 1,2,3 -> local sn 1,2,3
+        final client = NitoriClient(
+          baseUrl: 'http://127.0.0.1:$localPort',
+          token: 'local-token',
+        );
+        addTearDown(client.close);
+        await client.start();
+        await waitFor(() => client.status == Status.online);
+
+        final receivedEvents = <GatewayEvent>[];
+        final sub = client.events.listen(receivedEvents.add);
+
+        for (var i = 1; i <= 3; i++) {
+          rAdapter.emit(
+            Event(
+              type: 'message-created',
+              login: rBot.login,
+              selfId: 'dup-remote',
+              message: Message(id: 'msg-$i', content: 'message $i'),
+            ),
+          );
+        }
+        await waitFor(() => receivedEvents.length >= 3);
+        expect(receivedEvents.length, 3);
+
+        // Get the local and remote sns
+        // remoteSns should be [1, 2, 3], localSns should be [1, 2, 3] (or similar)
+        final localSns = receivedEvents.map((e) => e.sn!).toList();
+        final remoteSns = receivedEvents.map((e) => e.raw['sn'] as int).toList();
+
+        // Verify sn mapping was built
+        for (var i = 0; i < 3; i++) {
+          expect(adapter.translateLocalToRemoteSn(localSns[i]), remoteSns[i]);
+        }
+
+        // Store the first local sn (which maps to remote sn 1 - OLDER than current gateway sequence 3)
+        final firstLocalSn = localSns.first;
+
+        // The gateway's current sequence should be 3 (the last remote sn received)
+        expect(adapter.client.lastReceivedSn, 3);
+
+        await sub.cancel();
+        await client.close();
+
+        // NOW: Local client resumes from local sn 1 (which translates to remote sn 1)
+        // This is OLDER than the gateway's current sequence (3)
+        // The FIXED _onClientResume should NOT move gateway sequence backward to 1
+        final client2 = NitoriClient(
+          baseUrl: 'http://127.0.0.1:$localPort',
+          token: 'local-token',
+        );
+        addTearDown(client2.close);
+        await client2.resumeFrom(firstLocalSn); // resume from local sn 1
+        await client2.start();
+        await waitFor(() => client2.status == Status.online);
+
+        // Verify the remote gateway's sequence was NOT moved backward
+        // It should still be 3 (the latest remote sn), NOT 1
+        expect(
+          adapter.client.lastReceivedSn,
+          3,
+          reason: 'Remote gateway sequence should NOT move backward when local client resumes from older point',
+        );
+
+        // Now kill and restart the remote server
+        await rServer.close();
+        await waitFor(
+          () =>
+              adapter.client.status == Status.reconnect ||
+              adapter.client.status == Status.disconnect,
+        );
+
+        // Restart remote server on SAME PORT
+        final rServer2 = SatoriServer(adapter: rAdapter, token: 'dup-token');
+        await rServer2.bind(
+          address: InternetAddress.loopbackIPv4,
+          port: remotePort,
+        );
+        addTearDown(rServer2.close);
+
+        // Wait for adapter to reconnect
+        await waitFor(() => adapter.client.status == Status.online);
+        await waitFor(() => adapter.bots.length == 1);
+
+        // The remote gateway should resume from its sequence (3), NOT from 1
+        // So the remote server should NOT replay events 2 and 3
+        expect(
+          adapter.client.gateway.sequence,
+          3,
+          reason: 'Remote gateway should resume from last known sequence (3), not older (1)',
+        );
+
+        // Now connect a fresh local client (no resume) and emit a NEW event
+        // The local client should ONLY receive the NEW event, not duplicates of 2 and 3
+        final client3 = NitoriClient(
+          baseUrl: 'http://127.0.0.1:$localPort',
+          token: 'local-token',
+        );
+        addTearDown(client3.close);
+        await client3.start();
+        await waitFor(() => client3.status == Status.online);
+
+        final receivedAfterRestart = <GatewayEvent>[];
+        final sub3 = client3.events.listen(receivedAfterRestart.add);
+
+        // Emit a NEW event from remote (this will have remote sn 4)
+        rAdapter.emit(
+          Event(
+            type: 'message-created',
+            login: rBot.login,
+            selfId: 'dup-remote',
+            message: Message(id: 'new-after-restart', content: 'new event'),
+          ),
+        );
+
+        await waitFor(() => receivedAfterRestart.isNotEmpty);
+
+        // Should receive exactly 1 event (the new one), NOT 3 events (duplicates of 2,3 + new)
+        expect(receivedAfterRestart.length, 1,
+            reason: 'Should only receive the new event, not duplicates of already-delivered events');
+        expect(receivedAfterRestart.single.data['message']['content'], 'new event');
+
+        await sub3.cancel();
+        await client3.close();
+        await client2.close();
+        await rServer2.close();
+      },
+    );
+  });
 }

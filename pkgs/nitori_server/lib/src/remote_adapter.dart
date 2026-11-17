@@ -531,14 +531,23 @@ class RemoteSatoriBot implements SatoriBot {
     // Build the correct internal URL: /v1/internal/<platform>/<selfId>/_api/<name>
     // Use slash separator as expected by the remote server's path parsing.
     final internalUrl = getInternalUrl('/$name', slash: true);
+
+    // Forward incoming headers (e.g., satori-pagination) to the remote server.
+    final extraHeaders = <String, String>{
+      'satori-platform': _remoteBot.platform,
+      'satori-user-id': _remoteBot.userId,
+    };
+    // Pass through satori-pagination if present
+    final pagination = request.headers['satori-pagination'];
+    if (pagination != null) {
+      extraHeaders['satori-pagination'] = pagination;
+    }
+
     final response = await _remoteBot.client.forwardFullPathBytes(
       _remoteBot,
       internalUrl,
       request.body is List<int> ? request.body as List<int> : const <int>[],
-      extraHeaders: {
-        'satori-platform': _remoteBot.platform,
-        'satori-user-id': _remoteBot.userId,
-      },
+      extraHeaders: extraHeaders,
     );
     return InternalResponse(
       status: response.statusCode,
@@ -731,8 +740,37 @@ class RemoteSatoriAdapter implements SatoriAdapter {
     _remoteToLocalSn[remoteSn] = localSn;
   }
 
+  /// Callback for [SatoriServer.onClientResume] to handle local client resume.
+  ///
+  /// When a local gateway client reconnects with a local sequence number,
+  /// this translates it to the remote sequence number and forces the remote
+  /// gateway to reconnect with that remote sn, ensuring event replay
+  /// continuity on both sides of the bridge.
+  ///
+  /// The remote gateway's sequence (last received remote sn) should only
+  /// move FORWARD. If the translated remote sn is older than the current
+  /// gateway sequence, we must NOT move it backward, as that would cause
+  /// the remote server to replay already-delivered events on the next
+  /// reconnect, causing duplicates.
+  void _onClientResume(int localSn) {
+    final remoteSn = translateLocalToRemoteSn(localSn);
+    // Only advance the remote gateway's sequence forward; never move backward.
+    final currentRemoteSn = _client.lastReceivedSn ?? 0;
+    if (remoteSn > currentRemoteSn) {
+      // Force the remote gateway to reconnect with the translated remote sn.
+      // Setting the sequence triggers resume on next connection attempt.
+      _client.resumeFrom(remoteSn);
+    }
+    // If remoteSn <= currentRemoteSn, leave gateway sequence untouched.
+    // The local server's _replay() already handles replaying buffered events
+    // to the local client using the local sn, which is correct.
+  }
+
   /// Returns the callback to be passed to [SatoriServer.onEventPublished].
   void Function(Event, int) get onEventPublished => _onEventPublished;
+
+  /// Returns the callback to be passed to [SatoriServer.onClientResume].
+  void Function(int) get onClientResume => _onClientResume;
 
   /// Translates a local sequence number to the corresponding remote sequence number.
   ///

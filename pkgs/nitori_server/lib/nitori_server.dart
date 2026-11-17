@@ -5,8 +5,9 @@
 library;
 
 export 'src/adapter.dart' show SatoriAdapter, SatoriBot;
+export 'src/bridge_dispatch.dart' show BridgeEventDispatcher;
 export 'src/in_memory_adapter.dart' show InMemoryAdapter, InMemoryBot;
 export 'src/rate_limiter.dart'
     show RateLimitScope, RateLimiterConfig, RateLimiter;
 export 'src/remote_adapter.dart' show RemoteSatoriAdapter, RemoteSatoriBot;
-export 'src/server.dart' show SatoriServer;
+export 'src/server.dart' show SatoriServer, SatoriWebhook;
