@@ -1,3 +1,14 @@
+## 0.1.23
+
+ - **FEAT**(bridge): local<->remote sequence number mapping (`translateLocalToRemoteSn`, `translateRemoteToLocalSn`).
+ - **FEAT**(bridge): local client resume with local sn translates to remote sn and forces remote gateway reconnect (`onClientResume` callback).
+ - **FEAT**(bridge): remote connection drop/reconnect uses last known remote sn.
+ - **FIX**(bridge): prevent duplicate events when local resume translates to older remote sn (sn only moves forward).
+ - **FEAT**(bridge): `satori-pagination` header bidirectional transparency across the bridge. Request header forwarded to remote internal method; response header mirrored back to local client. Fixed `_callBotInternal` to forward request headers and mirror response headers.
+ - **FEAT**(bridge): webhook mirror mode verified — remote events automatically trigger local webhooks via `SatoriServer._publish` → `_dispatchWebhooks`.
+ - **FEAT**(bridge): `BridgeEventDispatcher` standalone class implementing upstream `bot.dispatch` semantics (alias normalisation, `internal/session` first, then alias group). No duplication with `SatoriServer._publish`.
+ - **TEST**: added pagination tests, resume transparency tests (including no-duplicate regression), webhook bridge tests, bridge dispatch tests.
+
 ## 0.1.22
 
  - **FIX**(bridge): identity headers (`satori-platform`/`satori-user-id`) no longer overrideable via `extraHeaders` in `RemoteSatoriBot.forwardInternal`.

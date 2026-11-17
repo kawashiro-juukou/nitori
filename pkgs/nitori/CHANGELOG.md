@@ -1,3 +1,7 @@
+## 0.1.20
+
+ - **FEAT**: update dependency to nitori_server ^0.1.23 (protocol bridge: sn mapping, resume transparency, pagination headers, webhook mirror, dispatch).
+
 ## 0.1.19
 
  - **FEAT**: re-export `RemoteSatoriAdapter` protocol bridge; update dependencies to nitori_core ^0.1.21, nitori_client ^0.1.20, nitori_server ^0.1.22.
