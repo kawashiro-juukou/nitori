@@ -1,3 +1,8 @@
+## 0.1.19
+
+ - **FEAT**: re-export `RemoteSatoriAdapter` protocol bridge; update dependencies to nitori_core ^0.1.21, nitori_client ^0.1.20, nitori_server ^0.1.22.
+ - **FEAT**: identity headers (`satori-platform`/`satori-user-id`) for IDENTIFY, application-layer resume via `lastReceivedSn`/`resumeFrom`, multi-login bot management.
+
 ## 0.1.18
 
  - **FEAT**: re-export `RemoteSatoriAdapter` protocol bridge and update dependency constraints to the latest core/client/server releases.
