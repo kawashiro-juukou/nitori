@@ -203,7 +203,7 @@ class Parser {
   Parser(String input) : tokenizer = Tokenizer(input);
 
   /// Checks if there are more tokens
-  hasNext() => tokenizer.hasNext();
+  bool hasNext() => tokenizer.hasNext();
 
   /// Parses the next token
   Node? parse() {

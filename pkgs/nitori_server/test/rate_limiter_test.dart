@@ -490,7 +490,7 @@ void main() {
       await waitFor(() => connection.frames.isNotEmpty);
       connection.send(3, <String, dynamic>{
         'token': token,
-        if (sn != null) 'sn': sn,
+        'sn': ?sn,
         'platform': 'memory',
         'user_id': userId,
       });
@@ -583,7 +583,7 @@ void main() {
       await waitFor(() => connection.frames.isNotEmpty);
       connection.send(3, <String, dynamic>{
         'token': token,
-        if (sn != null) 'sn': sn,
+        'sn': ?sn,
         'platform': 'memory',
         'user_id': 'bot-1',
       });

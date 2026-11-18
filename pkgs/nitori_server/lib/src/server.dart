@@ -692,9 +692,7 @@ class SatoriServer {
               query: query,
               body: body,
               contentType: contentType,
-              extraHeaders: {
-                if (pagination != null) 'satori-pagination': pagination,
-              },
+              extraHeaders: {'satori-pagination': ?pagination},
             );
             await _writeForwarded(request, forwarded);
             return;

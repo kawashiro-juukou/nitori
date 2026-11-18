@@ -82,10 +82,7 @@ void main() {
   Future<_Connection> identify({String token = 'secret', int? sn}) async {
     final connection = await connect();
     await waitFor(() => connection.frames.isNotEmpty);
-    connection.send(3, <String, dynamic>{
-      'token': token,
-      if (sn != null) 'sn': sn,
-    });
+    connection.send(3, <String, dynamic>{'token': token, 'sn': ?sn});
     await waitFor(() => connection.frames.any((frame) => frame['op'] == 4));
     return connection;
   }

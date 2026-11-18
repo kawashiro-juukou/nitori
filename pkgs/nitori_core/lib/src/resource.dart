@@ -265,9 +265,7 @@ Map<String, dynamic> _typedAttrs(ElementNode element) {
 Message _decodeQuote(ElementNode element) {
   // The quote's own id attribute is part of the resource, like every other
   // resource type; only the nested children and content are spliced below.
-  final data = <String, dynamic>{
-    if (element.attributes['id'] case final id?) 'id': id,
-  };
+  final data = <String, dynamic>{'id': ?element.attributes['id']};
   var remaining = <ElementNode>[...element.children];
   for (final child in _resourceChildren['quote']!) {
     final index = remaining.indexWhere((node) => node.type == child);

@@ -53,8 +53,7 @@ class LineBreak extends Base {
 ///
 /// See also: https://satori.chat/zh-CN/protocol/elements.html#%E6%AE%B5%E8%90%BD
 class Paragraph extends Base {
-  Paragraph({Map<String, Object?>? attributes, List<Node>? children})
-    : super('p', attributes: attributes, children: children);
+  Paragraph({super.attributes, super.children}) : super('p');
 }
 
 // #endregion
@@ -68,20 +67,15 @@ class Message extends Base {
   String? id;
   bool? forward;
 
-  Message({this.id, this.forward, List<Node>? children})
-    : super(
-        'message',
-        attributes: {'id': id, 'forward': forward},
-        children: children,
-      );
+  Message({this.id, this.forward, super.children})
+    : super('message', attributes: {'id': id, 'forward': forward});
 }
 
 /// Represents a `<quote>` element.
 ///
 /// See also: https://satori.chat/zh-CN/protocol/elements.html#%E5%BC%95%E7%94%A8
 class Quote extends Base {
-  Quote({Map<String, Object?>? attributes, List<Node>? children})
-    : super('quote', attributes: attributes, children: children);
+  Quote({super.attributes, super.children}) : super('quote');
 }
 
 /// Represents an `<author>` element.
@@ -92,7 +86,7 @@ class Author extends Base {
   String? nickname;
   String? avatar;
 
-  Author({this.userId, this.nickname, this.avatar, List<Node>? children})
+  Author({this.userId, this.nickname, this.avatar, super.children})
     : super(
         'author',
         attributes: {
@@ -103,7 +97,6 @@ class Author extends Base {
           'name': nickname,
           'avatar': avatar,
         },
-        children: children,
       );
 }
 
@@ -116,8 +109,8 @@ class Author extends Base {
 /// Unlike the official Element tree, children stay nested so parsing
 /// `<b>x<u>y</u></b>` keeps the `<u>` inside the `<b>`.
 abstract class Modifier extends Base {
-  Modifier._(String tag, {String? text, List<Node>? children})
-    : super(tag, children: [if (text != null) Text(text), ...?children]);
+  Modifier._(super.tag, {String? text, List<Node>? children})
+    : super(children: [if (text != null) Text(text), ...?children]);
 
   /// The plain text content of this modifier, including nested text.
   String get text =>
@@ -255,20 +248,13 @@ class Image extends _ResourceElement {
   int? height;
 
   Image({
-    required String src,
+    required super.src,
     this.width,
     this.height,
-    bool? cache,
-    String? timeout,
-    String? title,
-  }) : super(
-         tag: 'img',
-         src: src,
-         cache: cache,
-         timeout: timeout,
-         title: title,
-         attributes: {'width': width, 'height': height},
-       );
+    super.cache,
+    super.timeout,
+    super.title,
+  }) : super(tag: 'img', attributes: {'width': width, 'height': height});
 }
 
 /// Represents an `<audio>` element.
@@ -279,18 +265,14 @@ class Audio extends _ResourceElement {
   String? poster;
 
   Audio({
-    required String src,
-    bool? cache,
-    String? timeout,
-    String? title,
+    required super.src,
+    super.cache,
+    super.timeout,
+    super.title,
     this.duration,
     this.poster,
   }) : super(
          tag: 'audio',
-         src: src,
-         cache: cache,
-         timeout: timeout,
-         title: title,
          attributes: {'duration': duration, 'poster': poster},
        );
 }
@@ -305,20 +287,16 @@ class Video extends _ResourceElement {
   String? poster;
 
   Video({
-    required String src,
+    required super.src,
     this.width,
     this.height,
-    bool? cache,
-    String? timeout,
-    String? title,
+    super.cache,
+    super.timeout,
+    super.title,
     this.duration,
     this.poster,
   }) : super(
          tag: 'video',
-         src: src,
-         cache: cache,
-         timeout: timeout,
-         title: title,
          attributes: {
            'width': width,
            'height': height,
@@ -335,19 +313,12 @@ class File extends _ResourceElement {
   String? poster;
 
   File({
-    required String src,
-    bool? cache,
-    String? timeout,
-    String? title,
+    required super.src,
+    super.cache,
+    super.timeout,
+    super.title,
     this.poster,
-  }) : super(
-         tag: 'file',
-         src: src,
-         cache: cache,
-         timeout: timeout,
-         title: title,
-         attributes: {'poster': poster},
-       );
+  }) : super(tag: 'file', attributes: {'poster': poster});
 }
 
 // #endregion
