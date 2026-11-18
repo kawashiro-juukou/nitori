@@ -200,138 +200,120 @@ void main() {
   });
 
   group('Step 9: webhook across the bridge', () {
-    test(
-      'remote event triggers webhook on local server',
-      () async {
-        // Emit event from remote bot
+    test('remote event triggers webhook on local server', () async {
+      // Emit event from remote bot
+      remoteAdapter.emit(
+        Event(
+          type: 'message-created',
+          login: remoteBot.login,
+          selfId: 'remote-1',
+          message: Message(
+            id: 'msg-webhook-1',
+            content: 'hello from remote via webhook',
+          ),
+        ),
+      );
+
+      // Wait for webhook to receive the POST
+      await waitFor(() => webhookReceiver.receivedPosts.isNotEmpty);
+
+      // Verify the webhook received the event
+      expect(webhookReceiver.receivedPosts.length, 1);
+      final post = webhookReceiver.receivedPosts.single;
+
+      // Verify body contains the event
+      final body = post['body'] as Map<String, dynamic>;
+      expect(body['type'], 'message-created'); // canonical alias applied
+      expect(body['login']['platform'], 'telegram');
+      expect(body['message']['content'], 'hello from remote via webhook');
+      expect(body['sn'], isNotNull);
+      expect(body['sn'], greaterThan(0));
+
+      // Verify Satori-Opcode header is present (Opcode.event.value = 0)
+      final headers = post['headers'] as Map<String, String>;
+      expect(headers['satori-opcode'], '0');
+
+      // Verify Authorization header with webhook token
+      expect(headers['authorization'], 'Bearer webhook-token');
+    });
+
+    test('webhook receives multiple events from remote', () async {
+      // Clear previous posts
+      webhookReceiver.receivedPosts.clear();
+
+      // Emit multiple events from remote bot
+      for (var i = 1; i <= 3; i++) {
         remoteAdapter.emit(
           Event(
             type: 'message-created',
             login: remoteBot.login,
             selfId: 'remote-1',
-            message: Message(
-              id: 'msg-webhook-1',
-              content: 'hello from remote via webhook',
-            ),
+            message: Message(id: 'msg-multi-$i', content: 'message $i'),
           ),
         );
+      }
 
-        // Wait for webhook to receive the POST
-        await waitFor(() => webhookReceiver.receivedPosts.isNotEmpty);
+      // Wait for webhook to receive all events
+      await waitFor(() => webhookReceiver.receivedPosts.length >= 3);
 
-        // Verify the webhook received the event
-        expect(webhookReceiver.receivedPosts.length, 1);
-        final post = webhookReceiver.receivedPosts.single;
+      expect(webhookReceiver.receivedPosts.length, 3);
 
-        // Verify body contains the event
+      // Verify each event has the correct structure
+      for (var i = 0; i < 3; i++) {
+        final post = webhookReceiver.receivedPosts[i];
         final body = post['body'] as Map<String, dynamic>;
-        expect(body['type'], 'message-created'); // canonical alias applied
-        expect(body['login']['platform'], 'telegram');
-        expect(body['message']['content'], 'hello from remote via webhook');
+        expect(body['type'], 'message-created');
+        expect(body['message']['content'], 'message ${i + 1}');
         expect(body['sn'], isNotNull);
-        expect(body['sn'], greaterThan(0));
+        expect(body['sn'], greaterThan(i));
 
-        // Verify Satori-Opcode header is present (Opcode.event.value = 0)
         final headers = post['headers'] as Map<String, String>;
         expect(headers['satori-opcode'], '0');
+      }
+    });
 
-        // Verify Authorization header with webhook token
-        expect(headers['authorization'], 'Bearer webhook-token');
-      },
-    );
+    test('disabled webhook does not receive events', () async {
+      // Add a disabled webhook by creating a new server with it
+      // (since _webhooks is private, we create a fresh server instance)
+      final disabledReceiver = await _startWebhookReceiver();
+      addTearDown(disabledReceiver.close);
 
-    test(
-      'webhook receives multiple events from remote',
-      () async {
-        // Clear previous posts
-        webhookReceiver.receivedPosts.clear();
-
-        // Emit multiple events from remote bot
-        for (var i = 1; i <= 3; i++) {
-          remoteAdapter.emit(
-            Event(
-              type: 'message-created',
-              login: remoteBot.login,
-              selfId: 'remote-1',
-              message: Message(
-                id: 'msg-multi-$i',
-                content: 'message $i',
-              ),
-            ),
-          );
-        }
-
-        // Wait for webhook to receive all events
-        await waitFor(() => webhookReceiver.receivedPosts.length >= 3);
-
-        expect(webhookReceiver.receivedPosts.length, 3);
-
-        // Verify each event has the correct structure
-        for (var i = 0; i < 3; i++) {
-          final post = webhookReceiver.receivedPosts[i];
-          final body = post['body'] as Map<String, dynamic>;
-          expect(body['type'], 'message-created');
-          expect(body['message']['content'], 'message ${i + 1}');
-          expect(body['sn'], isNotNull);
-          expect(body['sn'], greaterThan(i));
-
-          final headers = post['headers'] as Map<String, String>;
-          expect(headers['satori-opcode'], '0');
-        }
-      },
-    );
-
-    test(
-      'disabled webhook does not receive events',
-      () async {
-        // Add a disabled webhook by creating a new server with it
-        // (since _webhooks is private, we create a fresh server instance)
-        final disabledReceiver = await _startWebhookReceiver();
-        addTearDown(disabledReceiver.close);
-
-        // Create a separate server with disabled webhook for this test
-        final disabledServer = SatoriServer(
-          adapter: localAdapter,
-          token: 'local-token',
-          resumeTimeout: const Duration(minutes: 1),
-          onEventPublished: localAdapter.onEventPublished,
-          webhooks: [
-            SatoriWebhook(
-              url: 'http://127.0.0.1:${disabledReceiver.port}/webhook',
-              enabled: false,
-            ),
-          ],
-        );
-        await disabledServer.bind(
-          address: InternetAddress.loopbackIPv4,
-          port: 0,
-        );
-        addTearDown(disabledServer.close);
-
-        // Clear previous posts from both receivers
-        webhookReceiver.receivedPosts.clear();
-        disabledReceiver.receivedPosts.clear();
-
-        // Emit event from remote - it goes through localServer which has the enabled webhook
-        remoteAdapter.emit(
-          Event(
-            type: 'message-created',
-            login: remoteBot.login,
-            selfId: 'remote-1',
-            message: Message(
-              id: 'msg-disabled',
-              content: 'test disabled',
-            ),
+      // Create a separate server with disabled webhook for this test
+      final disabledServer = SatoriServer(
+        adapter: localAdapter,
+        token: 'local-token',
+        resumeTimeout: const Duration(minutes: 1),
+        onEventPublished: localAdapter.onEventPublished,
+        webhooks: [
+          SatoriWebhook(
+            url: 'http://127.0.0.1:${disabledReceiver.port}/webhook',
+            enabled: false,
           ),
-        );
+        ],
+      );
+      await disabledServer.bind(address: InternetAddress.loopbackIPv4, port: 0);
+      addTearDown(disabledServer.close);
 
-        await waitFor(() => webhookReceiver.receivedPosts.isNotEmpty);
+      // Clear previous posts from both receivers
+      webhookReceiver.receivedPosts.clear();
+      disabledReceiver.receivedPosts.clear();
 
-        // Enabled webhook on main server should receive
-        expect(webhookReceiver.receivedPosts.length, 1);
-        // Disabled webhook on separate server should NOT receive
-        expect(disabledReceiver.receivedPosts.length, 0);
-      },
-    );
+      // Emit event from remote - it goes through localServer which has the enabled webhook
+      remoteAdapter.emit(
+        Event(
+          type: 'message-created',
+          login: remoteBot.login,
+          selfId: 'remote-1',
+          message: Message(id: 'msg-disabled', content: 'test disabled'),
+        ),
+      );
+
+      await waitFor(() => webhookReceiver.receivedPosts.isNotEmpty);
+
+      // Enabled webhook on main server should receive
+      expect(webhookReceiver.receivedPosts.length, 1);
+      // Disabled webhook on separate server should NOT receive
+      expect(disabledReceiver.receivedPosts.length, 0);
+    });
   });
 }

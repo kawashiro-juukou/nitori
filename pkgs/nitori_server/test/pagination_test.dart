@@ -204,7 +204,8 @@ void main() {
         // in its response body.
         remoteBot.defineInternalRoute('/_api/echoPagination', (req, bot) async {
           final requestHeaders = req.headers;
-          final paginationHeader = requestHeaders['satori-pagination'] ?? 'missing';
+          final paginationHeader =
+              requestHeaders['satori-pagination'] ?? 'missing';
           return InternalResponse(
             status: 200,
             headers: {'content-type': 'application/json'},
@@ -238,9 +239,13 @@ void main() {
       'request WITHOUT satori-pagination header shows missing on remote side',
       () async {
         // Define a remote internal route that ECHOES the received satori-pagination header
-        remoteBot.defineInternalRoute('/_api/echoPagination2', (req, bot) async {
+        remoteBot.defineInternalRoute('/_api/echoPagination2', (
+          req,
+          bot,
+        ) async {
           final requestHeaders = req.headers;
-          final paginationHeader = requestHeaders['satori-pagination'] ?? 'missing';
+          final paginationHeader =
+              requestHeaders['satori-pagination'] ?? 'missing';
           return InternalResponse(
             status: 200,
             headers: {'content-type': 'application/json'},
@@ -272,7 +277,10 @@ void main() {
       'response header satori-pagination is mirrored back to local client',
       () async {
         // Define a remote internal route that RETURNS a satori-pagination header in the response
-        remoteBot.defineInternalRoute('/_api/returnPagination', (req, bot) async {
+        remoteBot.defineInternalRoute('/_api/returnPagination', (
+          req,
+          bot,
+        ) async {
           return InternalResponse(
             status: 200,
             headers: {
@@ -302,48 +310,42 @@ void main() {
       },
     );
 
-    test(
-      'request and response satori-pagination both work together',
-      () async {
-        // Define a remote internal route that ECHOES request header AND returns response header
-        remoteBot.defineInternalRoute('/_api/fullPagination', (req, bot) async {
-          final requestHeaders = req.headers;
-          final reqPagination = requestHeaders['satori-pagination'] ?? 'missing';
-          return InternalResponse(
-            status: 200,
-            headers: {
-              'content-type': 'application/json',
-              'satori-pagination': 'response_cursor_xyz789',
-            },
-            body: utf8.encode(
-              jsonEncode({
-                'requestPagination': reqPagination,
-                'echoed': true,
-              }),
-            ),
-          );
-        });
-
-        // POST to the LOCAL server's internal route WITH satori-pagination header
-        final response = await _post(
-          httpClient,
-          localPort,
-          '/v1/internal/telegram/remote-1/_api/fullPagination',
-          {'test': 'data'},
-          token: 'local-token',
-          platform: 'telegram',
-          userId: 'remote-1',
-          extraHeaders: {'satori-pagination': 'request_cursor_abc'},
+    test('request and response satori-pagination both work together', () async {
+      // Define a remote internal route that ECHOES request header AND returns response header
+      remoteBot.defineInternalRoute('/_api/fullPagination', (req, bot) async {
+        final requestHeaders = req.headers;
+        final reqPagination = requestHeaders['satori-pagination'] ?? 'missing';
+        return InternalResponse(
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            'satori-pagination': 'response_cursor_xyz789',
+          },
+          body: utf8.encode(
+            jsonEncode({'requestPagination': reqPagination, 'echoed': true}),
+          ),
         );
+      });
 
-        expect(response.statusCode, HttpStatus.ok);
-        // Verify request header was received by remote
-        final body = jsonDecode(response.body) as Map<String, dynamic>;
-        expect(body['requestPagination'], 'request_cursor_abc');
-        expect(body['echoed'], true);
-        // Verify response header is mirrored back
-        expect(response.headers['satori-pagination'], 'response_cursor_xyz789');
-      },
-    );
+      // POST to the LOCAL server's internal route WITH satori-pagination header
+      final response = await _post(
+        httpClient,
+        localPort,
+        '/v1/internal/telegram/remote-1/_api/fullPagination',
+        {'test': 'data'},
+        token: 'local-token',
+        platform: 'telegram',
+        userId: 'remote-1',
+        extraHeaders: {'satori-pagination': 'request_cursor_abc'},
+      );
+
+      expect(response.statusCode, HttpStatus.ok);
+      // Verify request header was received by remote
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      expect(body['requestPagination'], 'request_cursor_abc');
+      expect(body['echoed'], true);
+      // Verify response header is mirrored back
+      expect(response.headers['satori-pagination'], 'response_cursor_xyz789');
+    });
   });
 }

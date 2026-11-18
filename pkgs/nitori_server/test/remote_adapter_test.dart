@@ -781,7 +781,9 @@ void main() {
 
         // Get the local and remote sns
         final localSns = receivedEvents.map((e) => e.sn!).toList();
-        final remoteSns = receivedEvents.map((e) => e.raw['sn'] as int).toList();
+        final remoteSns = receivedEvents
+            .map((e) => e.raw['sn'] as int)
+            .toList();
 
         // Verify sn mapping was built
         for (var i = 0; i < 3; i++) {
@@ -822,7 +824,8 @@ void main() {
         expect(
           adapter.client.gateway.sequence,
           expectedRemoteSn,
-          reason: 'Remote gateway should have resumed with translated remote sn',
+          reason:
+              'Remote gateway should have resumed with translated remote sn',
         );
 
         // Verify that events after resume continue to work
@@ -839,7 +842,10 @@ void main() {
         );
 
         await waitFor(() => receivedAfterResume.isNotEmpty);
-        expect(receivedAfterResume.single.data['message']['content'], 'resumed!');
+        expect(
+          receivedAfterResume.single.data['message']['content'],
+          'resumed!',
+        );
 
         await sub2.cancel();
         await client2.close();
@@ -950,7 +956,8 @@ void main() {
         expect(
           adapter.client.gateway.sequence,
           lastRemoteSn,
-          reason: 'Remote gateway should resume with last known remote sn after reconnect',
+          reason:
+              'Remote gateway should resume with last known remote sn after reconnect',
         );
 
         // Connect local client with resume from last local sn
@@ -1066,7 +1073,9 @@ void main() {
         // Get the local and remote sns
         // remoteSns should be [1, 2, 3], localSns should be [1, 2, 3] (or similar)
         final localSns = receivedEvents.map((e) => e.sn!).toList();
-        final remoteSns = receivedEvents.map((e) => e.raw['sn'] as int).toList();
+        final remoteSns = receivedEvents
+            .map((e) => e.raw['sn'] as int)
+            .toList();
 
         // Verify sn mapping was built
         for (var i = 0; i < 3; i++) {
@@ -1099,7 +1108,8 @@ void main() {
         expect(
           adapter.client.lastReceivedSn,
           3,
-          reason: 'Remote gateway sequence should NOT move backward when local client resumes from older point',
+          reason:
+              'Remote gateway sequence should NOT move backward when local client resumes from older point',
         );
 
         // Now kill and restart the remote server
@@ -1127,7 +1137,8 @@ void main() {
         expect(
           adapter.client.gateway.sequence,
           3,
-          reason: 'Remote gateway should resume from last known sequence (3), not older (1)',
+          reason:
+              'Remote gateway should resume from last known sequence (3), not older (1)',
         );
 
         // Now connect a fresh local client (no resume) and emit a NEW event
@@ -1156,9 +1167,16 @@ void main() {
         await waitFor(() => receivedAfterRestart.isNotEmpty);
 
         // Should receive exactly 1 event (the new one), NOT 3 events (duplicates of 2,3 + new)
-        expect(receivedAfterRestart.length, 1,
-            reason: 'Should only receive the new event, not duplicates of already-delivered events');
-        expect(receivedAfterRestart.single.data['message']['content'], 'new event');
+        expect(
+          receivedAfterRestart.length,
+          1,
+          reason:
+              'Should only receive the new event, not duplicates of already-delivered events',
+        );
+        expect(
+          receivedAfterRestart.single.data['message']['content'],
+          'new event',
+        );
 
         await sub3.cancel();
         await client3.close();
