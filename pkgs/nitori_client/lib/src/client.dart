@@ -93,6 +93,12 @@ class NitoriClient {
   /// Live event stream of the gateway.
   Stream<GatewayEvent> get events => _gateway.events;
 
+  /// Events decoded into the protocol [Event] model, excluding `login-*`
+  /// frames (bots are kept in sync separately).
+  Stream<Event> get eventStream => _gateway.events
+      .where((e) => !(e.type?.startsWith('login-') ?? false))
+      .map((e) => e.event);
+
   /// The sequence number (sn) of the last received EVENT frame.
   /// Returns null if no event has been received yet.
   int? get lastReceivedSn => _gateway.sequence;

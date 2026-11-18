@@ -40,6 +40,9 @@ class GatewayEvent {
   Login? get login => raw['login'] == null
       ? null
       : Login.fromJson(raw['login'] as Map<String, dynamic>);
+
+  /// The event body decoded into the protocol [Event] model.
+  Event get event => Event.fromJson(raw);
 }
 
 /// Thrown when the gateway gives up reconnecting after [Gateway.retryTimes]

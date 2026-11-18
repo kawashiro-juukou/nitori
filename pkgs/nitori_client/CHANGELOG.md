@@ -1,3 +1,9 @@
+## 0.1.22
+
+ - **FEAT**: `GatewayEvent.event` decodes a gateway frame into the protocol `Event` model.
+ - **FEAT**: `NitoriClient.eventStream` streams typed events, excluding `login-*` frames.
+ - **TEST**: `events_test.dart` covers decoding and login-frame filtering.
+
 ## 0.1.21
 
  - **FEAT**: `createMessage`, `sendMessage`, `editMessage` and `sendPrivateMessage` accept a `String`, a `Node` or an `Iterable<Node>` as content; typed nodes are rendered to element markup before sending.
