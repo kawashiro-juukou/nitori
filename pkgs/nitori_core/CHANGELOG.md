@@ -1,3 +1,8 @@
+## 0.1.23
+
+ - **FEAT**: add `EventName.interactionButton` for `interaction/button` events.
+ - **TEST**: `EventName.from` resolves the new name.
+
 ## 0.1.22
 
  - **FEAT**: expose element wire codec — `encodeElementNode`/`decodeElementNode` and the list variants convert between `ElementNode` and the protocol's `{type, attrs, children}` form.

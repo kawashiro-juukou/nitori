@@ -47,6 +47,7 @@ enum EventName {
   messagePinned('message-pinned'),
   messageUnpinned('message-unpinned'),
   interactionCommand('interaction/command'),
+  interactionButton('interaction/button'),
   reactionAdded('reaction-added'),
   reactionDeleted('reaction-deleted'),
   reactionDeletedOne('reaction-deleted/one'),
