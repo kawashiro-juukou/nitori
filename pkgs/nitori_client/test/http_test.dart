@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:nitori_client/nitori_client.dart';
 import 'package:nitori_core/nitori_core.dart';
+import 'package:nitori_message/nitori_message.dart';
 import 'package:test/test.dart';
 
 /// Response of a mock API handler.
@@ -174,6 +175,52 @@ void main() {
     final messages = await bot.createMessage('c1', 'hello');
 
     expect(messages.single.id, 'm1');
+  });
+
+  test('createMessage serialises a List<Node> to joined markup', () async {
+    api.handler = (request, body) async {
+      expect(
+        body,
+        '{"channel_id":"c1","content":"<b>hi</b><at id=\\"u1\\"/>"}',
+      );
+      return (
+        status: HttpStatus.ok,
+        body: <dynamic>[
+          <String, dynamic>{'id': 'm1', 'content': '<b>hi</b>'},
+        ],
+      );
+    };
+
+    final bot = botFor(api);
+    final nodes = <Node>[Bold('hi'), At(id: 'u1')];
+    final messages = await bot.createMessage('c1', nodes);
+
+    expect(messages.single.id, 'm1');
+  });
+
+  test('createMessage serialises a single Node', () async {
+    api.handler = (request, body) async {
+      expect(body, '{"channel_id":"c1","content":"hello"}');
+      return (
+        status: HttpStatus.ok,
+        body: <dynamic>[
+          <String, dynamic>{'id': 'm1', 'content': 'hello'},
+        ],
+      );
+    };
+
+    final bot = botFor(api);
+    final messages = await bot.createMessage('c1', Text('hello'));
+
+    expect(messages.single.id, 'm1');
+  });
+
+  test('createMessage rejects non-content types', () async {
+    final bot = botFor(api);
+    await expectLater(
+      () => bot.createMessage('c1', 42),
+      throwsA(isA<ArgumentError>()),
+    );
   });
 
   test('nested data maps are snake_cased on the wire', () async {

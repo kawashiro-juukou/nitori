@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:nitori_core/nitori_core.dart';
+import 'package:nitori_message/nitori_message.dart' hide Message;
 
 import 'gateway.dart';
 
@@ -537,12 +538,12 @@ class NitoriBot {
 
   Future<List<Message>> createMessage(
     String channelId,
-    String content, {
+    Object content, {
     dynamic referrer,
   }) async {
     final data = await client._request(this, 'message.create', <Object?>[
       channelId,
-      content,
+      _renderContent(content),
       referrer,
     ]);
     return (data as List<dynamic>)
@@ -555,9 +556,8 @@ class NitoriBot {
   /// Delegates to [createMessage] and extracts the IDs.
   Future<List<String>> sendMessage(
     String channelId,
-    String content, {
+    Object content, {
     dynamic referrer,
-    bool? linkPreview,
   }) async {
     final created = await createMessage(channelId, content, referrer: referrer);
     return <String>[for (final message in created) message.id!];
@@ -566,12 +566,12 @@ class NitoriBot {
   Future<void> editMessage(
     String channelId,
     String messageId,
-    String content,
+    Object content,
   ) async {
     await client._request(this, 'message.update', <Object?>[
       channelId,
       messageId,
-      content,
+      _renderContent(content),
     ]);
   }
 
@@ -580,6 +580,24 @@ class NitoriBot {
       channelId,
       messageId,
     ]);
+  }
+
+  /// Serialises typed message content to the wire markup string.
+  ///
+  /// Accepts a [String], a single [Node] or an [Iterable] of [Node]s; each node
+  /// is rendered with its [Node.toString] and joined with no separator. Anything
+  /// else throws [ArgumentError].
+  String _renderContent(Object content) {
+    if (content is String) return content;
+    if (content is Node) return content.toString();
+    if (content is Iterable<Node>) {
+      return content.map((n) => n.toString()).join('');
+    }
+    throw ArgumentError.value(
+      content,
+      'content',
+      'String, Node or Iterable<Node>',
+    );
   }
 
   Future<Message> getMessage(String channelId, String messageId) async {
@@ -938,18 +956,12 @@ class NitoriBot {
   /// Convenience method matching the upstream SDK's `sendPrivateMessage`.
   Future<List<String>> sendPrivateMessage(
     String userId,
-    String content, {
+    Object content, {
     String? guildId,
     dynamic referrer,
-    bool? linkPreview,
   }) async {
     final channel = await createDirectChannel(userId, guildId: guildId);
-    return sendMessage(
-      channel.id,
-      content,
-      referrer: referrer,
-      linkPreview: linkPreview,
-    );
+    return sendMessage(channel.id, content, referrer: referrer);
   }
 
   Future<Pagination<Friend>> getFriendList({String? next}) async {

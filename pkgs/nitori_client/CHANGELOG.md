@@ -1,3 +1,10 @@
+## 0.1.21
+
+ - **FEAT**: `createMessage`, `sendMessage`, `editMessage` and `sendPrivateMessage` accept a `String`, a `Node` or an `Iterable<Node>` as content; typed nodes are rendered to element markup before sending.
+ - **FEAT**: added a dependency on `nitori_message` for the element DSL.
+ - **CLEANUP**: removed the `linkPreview` parameter from `sendMessage` and `sendPrivateMessage`; it was never sent on the wire.
+ - **TEST**: typed-content cases in `http_test.dart`.
+
 ## 0.1.20
 
  - **FEAT**: `NitoriClient`/`Gateway` accept `platform`/`userId` for `IDENTIFY.body.satori-platform` / `satori-user-id`.

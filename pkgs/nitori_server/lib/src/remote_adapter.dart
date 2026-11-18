@@ -214,12 +214,7 @@ class RemoteSatoriBot implements SatoriBot {
     String content, {
     dynamic referrer,
     bool? linkPreview,
-  }) => _remoteBot.sendMessage(
-    channelId,
-    content,
-    referrer: referrer,
-    linkPreview: linkPreview,
-  );
+  }) => _remoteBot.sendMessage(channelId, content, referrer: referrer);
 
   @override
   Future<List<String>> sendPrivateMessage(
@@ -233,7 +228,6 @@ class RemoteSatoriBot implements SatoriBot {
     content,
     guildId: guildId,
     referrer: referrer,
-    linkPreview: linkPreview,
   );
 
   @override
