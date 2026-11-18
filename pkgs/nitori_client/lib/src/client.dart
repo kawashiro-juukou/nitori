@@ -63,6 +63,7 @@ class NitoriClient {
       onStatusChanged?.call(status);
     };
     _gateway.events.listen(_handleLoginEvent);
+    _gateway.events.listen(_handleInteractionEvent);
   }
 
   /// HTTP(S) base URL of the Satori server, e.g. `http://localhost:5140`.
@@ -135,6 +136,9 @@ class NitoriClient {
   /// Fired whenever the connection status changes.
   void Function(Status status)? onStatusChanged;
 
+  /// Called when a button handler throws; uncaught errors fall back to the zone.
+  void Function(Object error, StackTrace stackTrace)? onButtonError;
+
   /// Internal: called by Gateway when READY is received.
   void Function(List<Login> logins, List<String> proxyUrls)? _onReadyExternal;
 
@@ -185,6 +189,33 @@ class NitoriClient {
       case 'login-removed':
         _removeBot(login);
     }
+  }
+
+  /// Handles `interaction/button` events and dispatches them to registered
+  /// button handlers on the owning bot.
+  void _handleInteractionEvent(GatewayEvent event) {
+    if (event.type != EventName.interactionButton.value) return;
+    final Event decoded;
+    try {
+      decoded = event.event;
+    } on Object {
+      return; // malformed frame: the stream must stay alive
+    }
+    final id = decoded.button?.id;
+    if (id == null) return;
+    final handler = _botBySn(decoded.login?.sn)?.callbacks[id];
+    if (handler == null) return;
+    Future<void>.sync(() => handler(decoded)).catchError((
+      Object error,
+      StackTrace stack,
+    ) {
+      final callback = onButtonError;
+      if (callback != null) {
+        callback(error, stack);
+      } else {
+        Zone.current.handleUncaughtError(error, stack);
+      }
+    });
   }
 
   NitoriBot? _botBySn(int? sn) {
@@ -637,6 +668,20 @@ class NitoriBot {
   }) async {
     final created = await createMessage(channelId, content, referrer: referrer);
     return <String>[for (final message in created) message.id!];
+  }
+
+  /// Handlers keyed by `button.id`, invoked on `interaction/button` events.
+  final Map<String, FutureOr<void> Function(Event event)> callbacks =
+      <String, FutureOr<void> Function(Event event)>{};
+
+  /// Registers [handler] for clicks on buttons carrying [id].
+  void onButton(String id, FutureOr<void> Function(Event event) handler) {
+    callbacks[id] = handler;
+  }
+
+  /// Removes the handler registered for [id].
+  void offButton(String id) {
+    callbacks.remove(id);
   }
 
   Future<void> editMessage(

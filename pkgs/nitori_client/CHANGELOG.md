@@ -1,3 +1,9 @@
+## 0.1.24
+
+ - **FEAT**: `NitoriBot.onButton` and `offButton` register handlers by `button.id`; incoming `interaction/button` events are dispatched to the owning bot.
+ - **FEAT**: `NitoriClient.onButtonError` receives errors thrown by button handlers.
+ - **TEST**: `interaction_test.dart` covers dispatch, unregistered ids, removal and non-interaction events.
+
 ## 0.1.23
 
  - **FEAT**: `NitoriClient.proxyUrl` and `proxyUrlOr` route media URLs through the server proxy when they match an advertised `proxyUrls` prefix.
