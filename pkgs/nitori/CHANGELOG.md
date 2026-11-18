@@ -1,3 +1,7 @@
+## 0.1.21
+
+ - **FEAT**: update dependencies to nitori_core ^0.1.23, nitori_message ^0.1.18 and nitori_client ^0.1.24 (wire/typed element conversion, typed message content, event stream, media helpers, button interactions).
+
 ## 0.1.20
 
  - **FEAT**: update dependency to nitori_server ^0.1.23 (protocol bridge: sn mapping, resume transparency, pagination headers, webhook mirror, dispatch).
