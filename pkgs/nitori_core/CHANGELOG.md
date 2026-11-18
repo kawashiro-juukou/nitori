@@ -1,3 +1,9 @@
+## 0.1.22
+
+ - **FEAT**: expose element wire codec — `encodeElementNode`/`decodeElementNode` and the list variants convert between `ElementNode` and the protocol's `{type, attrs, children}` form.
+ - **FEAT**: `Message.elementNodes` extension reads and writes a message's elements as typed nodes.
+ - **TEST**: `element_codec_test.dart` covers round-trips, trailing text, non-string attrs and the extension.
+
 ## 0.1.21
 
  - **FEAT**: export `symbolName` helper for `Invocation.memberName` extraction.

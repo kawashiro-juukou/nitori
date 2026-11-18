@@ -6,6 +6,7 @@ export 'src/channel.dart';
 export 'src/command.dart';
 export 'src/emoji.dart';
 export 'src/escaping.dart';
+export 'src/element_codec.dart';
 export 'src/event.dart';
 export 'src/friend.dart';
 export 'src/guild.dart';
