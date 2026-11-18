@@ -1,23 +1,32 @@
 # This configures the .github/workflows/pull_request_labeler.yml workflow.
+# Format follows actions/labeler v5+ (see https://www.schemastore.org/pull-request-labeler.json).
 
 infra:
-  - .github/**
-  - tool/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+          - tool/**
 
 test:
-  - pkgs/*/test/**
+  - changed-files:
+      - any-glob-to-any-file: pkgs/*/test/**
 
 package:nitori:
-  - pkgs/nitori/**
+  - changed-files:
+      - any-glob-to-any-file: pkgs/nitori/**
 
 package:nitori_core:
-  - pkgs/nitori_core/**
+  - changed-files:
+      - any-glob-to-any-file: pkgs/nitori_core/**
 
 package:nitori_client:
-  - pkgs/nitori_client/**
+  - changed-files:
+      - any-glob-to-any-file: pkgs/nitori_client/**
 
 package:nitori_server:
-  - pkgs/nitori_server/**
+  - changed-files:
+      - any-glob-to-any-file: pkgs/nitori_server/**
 
-package:nitor_messagei:
-  - pkgs/nitori_message/**
+package:nitori_message:
+  - changed-files:
+      - any-glob-to-any-file: pkgs/nitori_message/**
