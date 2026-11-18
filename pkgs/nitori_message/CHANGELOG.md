@@ -1,3 +1,9 @@
+## 0.1.18
+
+ - **FEAT**: `parseWireElements` and `encodeWireElements` convert between the protocol's `{type, attrs, children}` elements and typed nodes.
+ - **FEAT**: `createTag` is now public so callers can build a typed node from a tag name, attributes and children.
+ - **TEST**: `wire_test.dart` covers round-trips, unknown tags, bool attributes and buttons.
+
 ## 0.1.17
 
  - **FEAT**(server): merge P0 routes (meta, webhook, proxy, admin, internal). ([f622fe80](https://github.com/kawashiro-juukou/nitori/commit/f622fe80fc3ef2fbbe0d4044a016ef29daea9252))

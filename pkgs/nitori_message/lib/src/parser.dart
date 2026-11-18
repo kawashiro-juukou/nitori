@@ -23,8 +23,10 @@ bool? _boolean(Map<String, Object> attributes, String key) {
   return null;
 }
 
-/// create a [Node] by tag name
-Node? _createTag(
+/// Create a [Node] from a tag name, attributes, and children, using the same
+/// Satori element mapping as the string parser so wire decoding stays
+/// consistent with `parse`.
+Node? createTag(
   String tag,
   Map<String, Object> attributes,
   List<Node> children,
@@ -286,7 +288,7 @@ class Parser {
         match = attributeRegex.firstMatch(attributesStr);
       }
 
-      return _createTag(tagName, attributes, children);
+      return createTag(tagName, attributes, children);
     } else {
       var text = token;
       if (_trimNext) {
