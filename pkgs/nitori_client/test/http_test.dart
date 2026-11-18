@@ -276,7 +276,7 @@ void main() {
     };
 
     final bot = botFor(api);
-    final urls = await bot.createUpload(<dynamic>[
+    final urls = await bot.createUpload(<Object>[
       <int>[104, 105],
     ]);
 

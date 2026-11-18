@@ -7,8 +7,10 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:nitori_core/nitori_core.dart';
 import 'package:nitori_message/nitori_message.dart' hide Message;
 
@@ -89,6 +91,20 @@ class NitoriClient {
 
   /// Proxy URLs advertised by the server, useful for proxying media.
   List<String> proxyUrls = const <String>[];
+
+  /// Resolves [url] through the server's media proxy when it is allowed.
+  ///
+  /// Returns `$baseUrl/v1/proxy/$url` if [url] starts with one of the
+  /// server-advertised [proxyUrls]; returns null otherwise.
+  String? proxyUrl(String url) {
+    if (proxyUrls.any(url.startsWith)) {
+      return '$baseUrl/v1/proxy/$url';
+    }
+    return null;
+  }
+
+  /// Like [proxyUrl] but falls back to [url] itself.
+  String proxyUrlOr(String url) => proxyUrl(url) ?? url;
 
   /// Live event stream of the gateway.
   Stream<GatewayEvent> get events => _gateway.events;
@@ -239,20 +255,7 @@ class NitoriClient {
 
     final uri = Uri.parse('$baseUrl/v1/$key');
     if (method.isForm) {
-      final request = http.MultipartRequest('POST', uri)
-        ..headers.addAll(_headers(bot));
-      for (var i = 0; i < args.length; i++) {
-        final field = i == 0 ? 'file' : 'file${i + 1}';
-        final blob = args[i];
-        if (blob is List<int>) {
-          request.files.add(http.MultipartFile.fromBytes(field, blob));
-        } else if (blob is String) {
-          request.files.add(http.MultipartFile.fromString(field, blob));
-        } else {
-          throw ArgumentError('unsupported upload blob: ${blob.runtimeType}');
-        }
-      }
-      final streamed = await _http.send(request);
+      final streamed = await _http.send(_multipartRequest(uri, bot, args));
       return _decode(await http.Response.fromStream(streamed));
     }
 
@@ -271,6 +274,43 @@ class NitoriClient {
       body: jsonEncode(payload),
     );
     return _decode(response);
+  }
+
+  /// Builds a multipart upload request for [uri], adding parts named `file`,
+  /// `file1`, `file2`, ... from [blobs]. Accepts [List<int>], [String] and
+  /// [JsonBlob] parts.
+  http.MultipartRequest _multipartRequest(
+    Uri uri,
+    NitoriBot bot,
+    List<Object?> blobs, {
+    Map<String, String>? extraHeaders,
+  }) {
+    final request = http.MultipartRequest('POST', uri)
+      ..headers.addAll(_headers(bot));
+    if (extraHeaders != null) request.headers.addAll(extraHeaders);
+    for (var i = 0; i < blobs.length; i++) {
+      final field = i == 0 ? 'file' : 'file${i + 1}';
+      final blob = blobs[i];
+      if (blob is List<int>) {
+        request.files.add(http.MultipartFile.fromBytes(field, blob));
+      } else if (blob is String) {
+        request.files.add(http.MultipartFile.fromString(field, blob));
+      } else if (blob is JsonBlob) {
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            field,
+            blob.bytes,
+            filename: blob.filename,
+            contentType: blob.contentType == null
+                ? null
+                : MediaType.parse(blob.contentType!),
+          ),
+        );
+      } else {
+        throw ArgumentError('unsupported upload blob: ${blob.runtimeType}');
+      }
+    }
+    return request;
   }
 
   Map<String, String> _headers(NitoriBot bot) => <String, String>{
@@ -308,21 +348,9 @@ class NitoriClient {
     final isForm = key == 'upload.create'; // Only known form method.
 
     if (isForm) {
-      final request = http.MultipartRequest('POST', uri)
-        ..headers.addAll(_headers(bot));
-      if (extraHeaders != null) request.headers.addAll(extraHeaders);
-      for (var i = 0; i < args.length; i++) {
-        final field = i == 0 ? 'file' : 'file${i + 1}';
-        final blob = args[i];
-        if (blob is List<int>) {
-          request.files.add(http.MultipartFile.fromBytes(field, blob));
-        } else if (blob is String) {
-          request.files.add(http.MultipartFile.fromString(field, blob));
-        } else {
-          throw ArgumentError('unsupported upload blob: ${blob.runtimeType}');
-        }
-      }
-      final streamed = await _http.send(request);
+      final streamed = await _http.send(
+        _multipartRequest(uri, bot, args, extraHeaders: extraHeaders),
+      );
       final response = await http.Response.fromStream(streamed);
       return _decodeToJsonFormBody(response);
     }
@@ -450,6 +478,48 @@ class NitoriClient {
     }
     if (text.isEmpty) return null;
     return jsonDecode(text);
+  }
+
+  /// Downloads [url] as a byte stream.
+  ///
+  /// Routes through the server proxy when [useProxy] is true and the server
+  /// advertises it; otherwise fetches [url] directly. Throws
+  /// [SatoriApiException] on a non-200 status.
+  Future<Stream<List<int>>> downloadStream(
+    String url, {
+    bool useProxy = true,
+  }) async {
+    final target = useProxy ? proxyUrlOr(url) : url;
+    final response = await _http.send(http.Request('GET', Uri.parse(target)));
+    if (response.statusCode != 200) {
+      final bytes = await response.stream.toBytes();
+      throw SatoriApiException(
+        response.statusCode,
+        utf8.decode(bytes, allowMalformed: true),
+      );
+    }
+    return response.stream;
+  }
+
+  /// Downloads [url] and returns its bytes with the response content type.
+  Future<({Uint8List bytes, String? contentType})> download(
+    String url, {
+    bool useProxy = true,
+  }) async {
+    final target = useProxy ? proxyUrlOr(url) : url;
+    final response = await _http.send(http.Request('GET', Uri.parse(target)));
+    if (response.statusCode != 200) {
+      final bytes = await response.stream.toBytes();
+      throw SatoriApiException(
+        response.statusCode,
+        utf8.decode(bytes, allowMalformed: true),
+      );
+    }
+    final bytes = await response.stream.toBytes();
+    return (
+      bytes: Uint8List.fromList(bytes),
+      contentType: response.headers['content-type'],
+    );
   }
 }
 
@@ -727,11 +797,11 @@ class NitoriBot {
 
   // -- upload --
 
-  Future<List<String>> createUpload(List<dynamic> blobs) async {
+  Future<List<String>> createUpload(List<Object> blobs) async {
     final data = await client._request(
       this,
       'upload.create',
-      List<Object?>.of(blobs),
+      List<Object>.of(blobs),
     );
     return (data as Map<String, dynamic>).values.cast<String>().toList();
   }

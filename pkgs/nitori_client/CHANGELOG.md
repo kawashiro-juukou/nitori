@@ -1,3 +1,11 @@
+## 0.1.23
+
+ - **FEAT**: `NitoriClient.proxyUrl` and `proxyUrlOr` route media URLs through the server proxy when they match an advertised `proxyUrls` prefix.
+ - **FEAT**: upload methods accept `JsonBlob`, forwarding its filename and content type in the multipart part.
+ - **FEAT**: `NitoriClient.downloadStream` and `download` fetch media bytes, optionally through the proxy.
+ - **REFACTOR**: multipart request building is shared by the bot API and the generic `request`.
+ - **TEST**: `media_test.dart` covers proxy resolution, `JsonBlob` uploads and downloads.
+
 ## 0.1.22
 
  - **FEAT**: `GatewayEvent.event` decodes a gateway frame into the protocol `Event` model.

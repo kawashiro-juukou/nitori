@@ -308,7 +308,7 @@ class RemoteSatoriBot implements SatoriBot {
 
   @override
   Future<List<String>> createUpload(List<dynamic> blobs) =>
-      _remoteBot.createUpload(blobs);
+      _remoteBot.createUpload(blobs.cast<Object>());
 
   // -- GuildInterface (2 + 1 request) --
 
