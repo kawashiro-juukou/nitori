@@ -1,3 +1,7 @@
+## 0.1.24
+
+ - **FIX**: stop forwarding the removed `linkPreview` option to `NitoriClient`; require `nitori_client ^0.1.21`.
+
 ## 0.1.23
 
  - **FEAT**(bridge): local<->remote sequence number mapping (`translateLocalToRemoteSn`, `translateRemoteToLocalSn`).
