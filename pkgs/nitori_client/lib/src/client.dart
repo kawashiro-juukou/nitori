@@ -221,7 +221,7 @@ class NitoriClient {
 
   void _addBot(Login login) {
     if (_botBySn(login.sn) != null) return;
-    bots.add(NitoriBot(this, login: login));
+    bots.add(NitoriBot(_api, login: login, client: this));
   }
 
   void _updateBot(Login login) {
@@ -229,7 +229,7 @@ class NitoriClient {
     if (bot != null) {
       bot.login = login;
     } else {
-      bots.add(NitoriBot(this, login: login));
+      bots.add(NitoriBot(_api, login: login, client: this));
     }
   }
 
@@ -252,7 +252,7 @@ class NitoriClient {
   /// If a bot with the same sn already exists, does nothing.
   void addBot(Login login) {
     if (_botBySn(login.sn) != null) return;
-    bots.add(NitoriBot(this, login: login));
+    bots.add(NitoriBot(_api, login: login, client: this));
   }
 
   /// Removes the bot with the given [sn].
@@ -264,81 +264,6 @@ class NitoriClient {
   Iterable<NitoriBot> botsByPlatform(String platform) {
     return bots.where((bot) => bot.platform == platform);
   }
-
-  /// Sends one API request and returns the decoded JSON response.
-  Future<dynamic> _request(NitoriBot bot, String key, List<Object?> args) =>
-      _api.request(_identity(bot), key, args);
-
-  SatoriApiIdentity _identity(NitoriBot bot) =>
-      SatoriApiIdentity(platform: bot.platform, userId: bot.userId);
-
-  /// Public version of [_request] that allows arbitrary key and extra headers.
-  ///
-  /// Does NOT require [methods][key] to exist (for internal routes).
-  /// Reuses [_request]'s encoding logic but skips the methods lookup.
-  Future<JsonFormBody> request(
-    NitoriBot bot,
-    String key,
-    List<Object?> args, {
-    Map<String, String>? extraHeaders,
-  }) =>
-      _api.requestByKey(_identity(bot), key, args, extraHeaders: extraHeaders);
-
-  /// Makes a request with a full path (for internal routes).
-  ///
-  /// Unlike [request], this takes a full path starting with `/v1/` and doesn't
-  /// prepend the base URL's v1 prefix.
-  Future<JsonFormBody> requestFullPath(
-    NitoriBot bot,
-    String fullPath,
-    List<Object?> args, {
-    Map<String, String>? extraHeaders,
-  }) => _api.requestFullPath(
-    _identity(bot),
-    fullPath,
-    args,
-    extraHeaders: extraHeaders,
-  );
-
-  /// Makes a request with a full path, sending raw bytes body.
-  ///
-  /// For internal routes that use multipart/form-data or already-encoded
-  /// JsonForm. [method] defaults to POST; GET forwards carry no body.
-  Future<JsonFormBody> requestFullPathBytes(
-    NitoriBot bot,
-    String fullPath,
-    List<int> bodyBytes, {
-    Map<String, String>? extraHeaders,
-    String? contentType,
-    String method = 'POST',
-  }) => _api.requestFullPathBytes(
-    _identity(bot),
-    fullPath,
-    bodyBytes,
-    extraHeaders: extraHeaders,
-    contentType: contentType,
-    method: method,
-  );
-
-  /// Forwards an internal route request to the remote server, returning the
-  /// response verbatim (status, headers and bytes) instead of throwing on a
-  /// non-200 status. Used by the protocol bridge to mirror remote `/_tmp` and
-  /// `/_api` responses onto the local server.
-  Future<JsonFormBody> forwardFullPathBytes(
-    NitoriBot bot,
-    String fullPath,
-    List<int> bodyBytes, {
-    Map<String, String>? extraHeaders,
-    String? contentType,
-    String method = 'POST',
-  }) => _api.forwardFullPathBytes(
-    _identity(bot),
-    fullPath,
-    bodyBytes,
-    extraHeaders: extraHeaders,
-    contentType: contentType,
-    method: method,
-  );
 
   /// Downloads [url] as a byte stream.
   ///
@@ -359,11 +284,28 @@ class NitoriClient {
 
 /// A single login: carries the identity headers and exposes the full HTTP API.
 class NitoriBot {
-  NitoriBot(this.client, {this.login, String? platform, String? userId})
-    : platform = platform ?? login?.platform ?? '',
-      userId = userId ?? login?.user?.id ?? '';
+  NitoriBot(
+    this.api, {
+    this.login,
+    String? platform,
+    String? userId,
+    NitoriClient? client,
+  }) : _compatClient = client,
+       platform = platform ?? login?.platform ?? '',
+       userId = userId ?? login?.user?.id ?? '';
 
-  final NitoriClient client;
+  /// The HTTP API client this bot issues its requests through.
+  final SatoriApiClient api;
+
+  /// The facade this bot was created from, when it was constructed with one.
+  final NitoriClient? _compatClient;
+
+  /// The facade this bot belongs to.
+  ///
+  /// Prefer [api] for issuing requests; this getter only exists so code that
+  /// still reaches for `bot.client` keeps working.
+  @Deprecated('use api instead')
+  NitoriClient? get client => _compatClient;
 
   /// The login this bot represents; refreshed on `login-updated`.
   Login? login;
@@ -374,13 +316,70 @@ class NitoriBot {
   /// Value of the `satori-user-id` header.
   String userId;
 
+  SatoriApiIdentity get _identity =>
+      SatoriApiIdentity(platform: platform, userId: userId);
+
+  /// Sends one API request and returns the decoded JSON response.
+  Future<dynamic> _request(String key, List<Object?> args) =>
+      api.request(_identity, key, args);
+
+  /// Sends a request to an arbitrary route with optional extra headers.
+  Future<JsonFormBody> request(
+    String key,
+    List<Object?> args, {
+    Map<String, String>? extraHeaders,
+  }) => api.requestByKey(_identity, key, args, extraHeaders: extraHeaders);
+
+  /// Makes a request with a full path, sending raw bytes body.
+  Future<JsonFormBody> requestFullPathBytes(
+    String fullPath,
+    List<int> bodyBytes, {
+    Map<String, String>? extraHeaders,
+    String? contentType,
+    String method = 'POST',
+  }) => api.requestFullPathBytes(
+    _identity,
+    fullPath,
+    bodyBytes,
+    extraHeaders: extraHeaders,
+    contentType: contentType,
+    method: method,
+  );
+
+  /// Forwards an internal route request to the remote server, returning the
+  /// response verbatim (status, headers and bytes) instead of throwing on a
+  /// non-200 status.
+  Future<JsonFormBody> forwardFullPathBytes(
+    String fullPath,
+    List<int> bodyBytes, {
+    Map<String, String>? extraHeaders,
+    String? contentType,
+    String method = 'POST',
+  }) => api.forwardFullPathBytes(
+    _identity,
+    fullPath,
+    bodyBytes,
+    extraHeaders: extraHeaders,
+    contentType: contentType,
+    method: method,
+  );
+
+  /// Downloads [url] as a byte stream, optionally through the server proxy.
+  Future<Stream<List<int>>> downloadStream(
+    String url, {
+    bool useProxy = true,
+  }) => api.downloadStream(url, useProxy: useProxy);
+
+  /// Downloads [url] and returns its bytes with the response content type.
+  Future<({Uint8List bytes, String? contentType})> download(
+    String url, {
+    bool useProxy = true,
+  }) => api.download(url, useProxy: useProxy);
+
   // -- channel --
 
   Future<Channel> getChannel(String channelId, {String? guildId}) async {
-    final data = await client._request(this, 'channel.get', <Object?>[
-      channelId,
-      guildId,
-    ]);
+    final data = await _request('channel.get', <Object?>[channelId, guildId]);
     return Channel.fromJson(data as Map<String, dynamic>);
   }
 
@@ -388,10 +387,7 @@ class NitoriBot {
     String guildId, {
     String? next,
   }) async {
-    final data = await client._request(this, 'channel.list', <Object?>[
-      guildId,
-      next,
-    ]);
+    final data = await _request('channel.list', <Object?>[guildId, next]);
     return _pagination(data, Channel.fromJson);
   }
 
@@ -399,10 +395,7 @@ class NitoriBot {
     String guildId,
     Map<String, dynamic> data,
   ) async {
-    final result = await client._request(this, 'channel.create', <Object?>[
-      guildId,
-      data,
-    ]);
+    final result = await _request('channel.create', <Object?>[guildId, data]);
     return Channel.fromJson(result as Map<String, dynamic>);
   }
 
@@ -410,11 +403,11 @@ class NitoriBot {
     String channelId,
     Map<String, dynamic> data,
   ) async {
-    await client._request(this, 'channel.update', <Object?>[channelId, data]);
+    await _request('channel.update', <Object?>[channelId, data]);
   }
 
   Future<void> deleteChannel(String channelId) async {
-    await client._request(this, 'channel.delete', <Object?>[channelId]);
+    await _request('channel.delete', <Object?>[channelId]);
   }
 
   Future<void> muteChannel(
@@ -422,11 +415,7 @@ class NitoriBot {
     String? guildId,
     bool? enable,
   }) async {
-    await client._request(this, 'channel.mute', <Object?>[
-      channelId,
-      guildId,
-      enable,
-    ]);
+    await _request('channel.mute', <Object?>[channelId, guildId, enable]);
   }
 
   Stream<Channel> getChannelIter(String guildId) async* {
@@ -451,7 +440,7 @@ class NitoriBot {
     Object content, {
     dynamic referrer,
   }) async {
-    final data = await client._request(this, 'message.create', <Object?>[
+    final data = await _request('message.create', <Object?>[
       channelId,
       _renderContent(content),
       referrer,
@@ -492,7 +481,7 @@ class NitoriBot {
     String messageId,
     Object content,
   ) async {
-    await client._request(this, 'message.update', <Object?>[
+    await _request('message.update', <Object?>[
       channelId,
       messageId,
       _renderContent(content),
@@ -500,10 +489,7 @@ class NitoriBot {
   }
 
   Future<void> deleteMessage(String channelId, String messageId) async {
-    await client._request(this, 'message.delete', <Object?>[
-      channelId,
-      messageId,
-    ]);
+    await _request('message.delete', <Object?>[channelId, messageId]);
   }
 
   /// Serialises typed message content to the wire markup string.
@@ -525,10 +511,7 @@ class NitoriBot {
   }
 
   Future<Message> getMessage(String channelId, String messageId) async {
-    final data = await client._request(this, 'message.get', <Object?>[
-      channelId,
-      messageId,
-    ]);
+    final data = await _request('message.get', <Object?>[channelId, messageId]);
     return Message.fromJson(data as Map<String, dynamic>);
   }
 
@@ -539,7 +522,7 @@ class NitoriBot {
     int? limit,
     Order? order,
   }) async {
-    final data = await client._request(this, 'message.list', <Object?>[
+    final data = await _request('message.list', <Object?>[
       channelId,
       next,
       direction?.value,
@@ -574,11 +557,7 @@ class NitoriBot {
     String messageId,
     String emojiId,
   ) async {
-    await client._request(this, 'reaction.create', <Object?>[
-      channelId,
-      messageId,
-      emojiId,
-    ]);
+    await _request('reaction.create', <Object?>[channelId, messageId, emojiId]);
   }
 
   Future<void> deleteReaction(
@@ -587,7 +566,7 @@ class NitoriBot {
     String emojiId, {
     String? userId,
   }) async {
-    await client._request(this, 'reaction.delete', <Object?>[
+    await _request('reaction.delete', <Object?>[
       channelId,
       messageId,
       emojiId,
@@ -600,11 +579,7 @@ class NitoriBot {
     String messageId, {
     String? emojiId,
   }) async {
-    await client._request(this, 'reaction.clear', <Object?>[
-      channelId,
-      messageId,
-      emojiId,
-    ]);
+    await _request('reaction.clear', <Object?>[channelId, messageId, emojiId]);
   }
 
   Future<Pagination<User>> getReactionList(
@@ -613,7 +588,7 @@ class NitoriBot {
     String emojiId, {
     String? next,
   }) async {
-    final data = await client._request(this, 'reaction.list', <Object?>[
+    final data = await _request('reaction.list', <Object?>[
       channelId,
       messageId,
       emojiId,
@@ -646,23 +621,19 @@ class NitoriBot {
   // -- upload --
 
   Future<List<String>> createUpload(List<Object> blobs) async {
-    final data = await client._request(
-      this,
-      'upload.create',
-      List<Object>.of(blobs),
-    );
+    final data = await _request('upload.create', List<Object>.of(blobs));
     return (data as Map<String, dynamic>).values.cast<String>().toList();
   }
 
   // -- guild --
 
   Future<Guild> getGuild(String guildId) async {
-    final data = await client._request(this, 'guild.get', <Object?>[guildId]);
+    final data = await _request('guild.get', <Object?>[guildId]);
     return Guild.fromJson(data as Map<String, dynamic>);
   }
 
   Future<Pagination<Guild>> getGuildList({String? next}) async {
-    final data = await client._request(this, 'guild.list', <Object?>[next]);
+    final data = await _request('guild.list', <Object?>[next]);
     return _pagination(data, Guild.fromJson);
   }
 
@@ -679,10 +650,7 @@ class NitoriBot {
   }
 
   Future<GuildMember> getGuildMember(String guildId, String userId) async {
-    final data = await client._request(this, 'guild.member.get', <Object?>[
-      guildId,
-      userId,
-    ]);
+    final data = await _request('guild.member.get', <Object?>[guildId, userId]);
     return GuildMember.fromJson(data as Map<String, dynamic>);
   }
 
@@ -690,10 +658,7 @@ class NitoriBot {
     String guildId, {
     String? next,
   }) async {
-    final data = await client._request(this, 'guild.member.list', <Object?>[
-      guildId,
-      next,
-    ]);
+    final data = await _request('guild.member.list', <Object?>[guildId, next]);
     return _pagination(data, GuildMember.fromJson);
   }
 
@@ -717,11 +682,7 @@ class NitoriBot {
     String userId, {
     bool? permanent,
   }) async {
-    await client._request(this, 'guild.member.kick', <Object?>[
-      guildId,
-      userId,
-      permanent,
-    ]);
+    await _request('guild.member.kick', <Object?>[guildId, userId, permanent]);
   }
 
   Future<void> muteGuildMember(
@@ -730,7 +691,7 @@ class NitoriBot {
     int? duration,
     String? reason,
   }) async {
-    await client._request(this, 'guild.member.mute', <Object?>[
+    await _request('guild.member.mute', <Object?>[
       guildId,
       userId,
       duration,
@@ -743,11 +704,7 @@ class NitoriBot {
     String userId,
     String roleId,
   ) async {
-    await client._request(this, 'guild.member.role.set', <Object?>[
-      guildId,
-      userId,
-      roleId,
-    ]);
+    await _request('guild.member.role.set', <Object?>[guildId, userId, roleId]);
   }
 
   Future<void> unsetGuildMemberRole(
@@ -755,7 +712,7 @@ class NitoriBot {
     String userId,
     String roleId,
   ) async {
-    await client._request(this, 'guild.member.role.unset', <Object?>[
+    await _request('guild.member.role.unset', <Object?>[
       guildId,
       userId,
       roleId,
@@ -767,11 +724,11 @@ class NitoriBot {
     String userId, {
     String? next,
   }) async {
-    final data = await client._request(
-      this,
-      'guild.member.role.list',
-      <Object?>[guildId, userId, next],
-    );
+    final data = await _request('guild.member.role.list', <Object?>[
+      guildId,
+      userId,
+      next,
+    ]);
     return _pagination(data, GuildRole.fromJson);
   }
 
@@ -779,10 +736,7 @@ class NitoriBot {
     String guildId, {
     String? next,
   }) async {
-    final data = await client._request(this, 'guild.role.list', <Object?>[
-      guildId,
-      next,
-    ]);
+    final data = await _request('guild.role.list', <Object?>[guildId, next]);
     return _pagination(data, GuildRole.fromJson);
   }
 
@@ -817,7 +771,7 @@ class NitoriBot {
     if (permissions != null) data['permissions'] = permissions.toString();
     if (hoist != null) data['hoist'] = hoist;
     if (mentionable != null) data['mentionable'] = mentionable;
-    final result = await client._request(this, 'guild.role.create', <Object?>[
+    final result = await _request('guild.role.create', <Object?>[
       guildId,
       data,
     ]);
@@ -841,34 +795,27 @@ class NitoriBot {
     if (permissions != null) data['permissions'] = permissions.toString();
     if (hoist != null) data['hoist'] = hoist;
     if (mentionable != null) data['mentionable'] = mentionable;
-    await client._request(this, 'guild.role.update', <Object?>[
-      guildId,
-      roleId,
-      data,
-    ]);
+    await _request('guild.role.update', <Object?>[guildId, roleId, data]);
   }
 
   Future<void> deleteGuildRole(String guildId, String roleId) async {
-    await client._request(this, 'guild.role.delete', <Object?>[
-      guildId,
-      roleId,
-    ]);
+    await _request('guild.role.delete', <Object?>[guildId, roleId]);
   }
 
   // -- login / user / friend --
 
   Future<Login> getLogin() async {
-    final data = await client._request(this, 'login.get', const <Object?>[]);
+    final data = await _request('login.get', const <Object?>[]);
     return Login.fromJson(data as Map<String, dynamic>);
   }
 
   Future<User> getUser(String userId) async {
-    final data = await client._request(this, 'user.get', <Object?>[userId]);
+    final data = await _request('user.get', <Object?>[userId]);
     return User.fromJson(data as Map<String, dynamic>);
   }
 
   Future<Channel> createDirectChannel(String userId, {String? guildId}) async {
-    final data = await client._request(this, 'user.channel.create', <Object?>[
+    final data = await _request('user.channel.create', <Object?>[
       userId,
       guildId,
     ]);
@@ -889,7 +836,7 @@ class NitoriBot {
   }
 
   Future<Pagination<Friend>> getFriendList({String? next}) async {
-    final data = await client._request(this, 'friend.list', <Object?>[next]);
+    final data = await _request('friend.list', <Object?>[next]);
     return _pagination(data, Friend.fromJson);
   }
 
@@ -906,7 +853,7 @@ class NitoriBot {
   }
 
   Future<void> deleteFriend(String userId) async {
-    await client._request(this, 'friend.delete', <Object?>[userId]);
+    await _request('friend.delete', <Object?>[userId]);
   }
 
   Future<void> handleFriendRequest(
@@ -914,11 +861,7 @@ class NitoriBot {
     bool approve, {
     String? comment,
   }) async {
-    await client._request(this, 'friend.approve', <Object?>[
-      messageId,
-      approve,
-      comment,
-    ]);
+    await _request('friend.approve', <Object?>[messageId, approve, comment]);
   }
 
   Future<void> handleGuildRequest(
@@ -926,11 +869,7 @@ class NitoriBot {
     bool approve, {
     String? comment,
   }) async {
-    await client._request(this, 'guild.approve', <Object?>[
-      messageId,
-      approve,
-      comment,
-    ]);
+    await _request('guild.approve', <Object?>[messageId, approve, comment]);
   }
 
   Future<void> handleGuildMemberRequest(
@@ -938,7 +877,7 @@ class NitoriBot {
     bool approve, {
     String? comment,
   }) async {
-    await client._request(this, 'guild.member.approve', <Object?>[
+    await _request('guild.member.approve', <Object?>[
       messageId,
       approve,
       comment,
@@ -946,7 +885,7 @@ class NitoriBot {
   }
 
   Future<void> updateCommands(List<Command> commands) async {
-    await client._request(this, 'command.update', <Object?>[
+    await _request('command.update', <Object?>[
       commands.map((c) => c.toJson()).toList(),
     ]);
   }
