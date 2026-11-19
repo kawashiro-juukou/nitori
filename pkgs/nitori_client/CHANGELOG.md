@@ -1,13 +1,3 @@
-## 0.1.27
-
- - **FEAT**: `NitoriBot` now holds a `SatoriApiClient api` and issues its requests through it; the HTTP helpers (`request`, `requestFullPathBytes`, `forwardFullPathBytes`, `download`, `downloadStream`) live on the bot.
- - **DEPRECATED**: `NitoriBot.client` is a deprecated getter returning the `NitoriClient` the bot was built from; construct bots with the api client instead.
-
-## 0.1.26
-
- - **FEAT**: `SatoriGatewayClient` owns the WebSocket gateway lifecycle (connect, IDENTIFY, heartbeat, reconnect, event decode); `SatoriGatewayEvent` and `SatoriGatewayException` are the renamed `GatewayEvent` / `GatewayException`.
- - **DEPRECATED**: `Gateway`, `GatewayEvent` and `GatewayException` remain as deprecated typedef aliases of their `Satori*` counterparts.
-
 ## 0.1.25
 
  - **FEAT**: `SatoriApiClient` owns the HTTP API surface (requests, multipart upload, media download, proxy resolution and `SatoriApiException`), separate from the WebSocket gateway.
