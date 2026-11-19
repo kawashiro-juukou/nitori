@@ -6,26 +6,17 @@
 library;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 import 'package:nitori_core/nitori_core.dart';
 import 'package:nitori_message/nitori_message.dart' hide Message;
 
+import 'api_client.dart';
 import 'gateway.dart';
 
-/// Thrown when the server answers with a non-200 status.
-class SatoriApiException implements Exception {
-  SatoriApiException(this.statusCode, this.message);
-
-  final int statusCode;
-  final String message;
-
-  @override
-  String toString() => 'SatoriApiException: HTTP $statusCode $message';
-}
+export 'api_client.dart'
+    show SatoriApiClient, SatoriApiException, SatoriApiIdentity;
 
 /// Connects to a Satori server and exposes its bots and event stream.
 class NitoriClient {
@@ -39,7 +30,11 @@ class NitoriClient {
     Duration retryInterval = const Duration(seconds: 5),
     Duration retryLazy = const Duration(minutes: 1),
     Duration heartbeatInterval = const Duration(seconds: 10),
-  }) : _http = httpClient ?? http.Client(),
+  }) : _api = SatoriApiClient(
+         baseUrl: baseUrl,
+         token: token,
+         httpClient: httpClient,
+       ),
        _gateway = Gateway(
          baseUrl: baseUrl,
          token: token,
@@ -56,7 +51,7 @@ class NitoriClient {
       _onReadyExternal?.call(logins, urls);
     };
     _gateway.onMeta = (urls) {
-      proxyUrls = urls;
+      _api.proxyUrls = urls;
       _onMetaExternal?.call(urls);
     };
     _gateway.onStatusChanged = (status) {
@@ -84,28 +79,27 @@ class NitoriClient {
   /// The underlying gateway for test access.
   Gateway get gateway => _gateway;
 
-  /// Shared HTTP client; inject one to control timeouts / TLS in tests.
-  final http.Client _http;
+  /// HTTP API surface; owns the shared `http.Client`.
+  final SatoriApiClient _api;
+
+  /// The HTTP API client used for bot requests.
+  SatoriApiClient get api => _api;
 
   /// Bots resolved from READY and kept in sync by `login-*` events.
   final List<NitoriBot> bots = <NitoriBot>[];
 
   /// Proxy URLs advertised by the server, useful for proxying media.
-  List<String> proxyUrls = const <String>[];
+  List<String> get proxyUrls => _api.proxyUrls;
+  set proxyUrls(List<String> urls) => _api.proxyUrls = urls;
 
   /// Resolves [url] through the server's media proxy when it is allowed.
   ///
   /// Returns `$baseUrl/v1/proxy/$url` if [url] starts with one of the
   /// server-advertised [proxyUrls]; returns null otherwise.
-  String? proxyUrl(String url) {
-    if (proxyUrls.any(url.startsWith)) {
-      return '$baseUrl/v1/proxy/$url';
-    }
-    return null;
-  }
+  String? proxyUrl(String url) => _api.proxyUrl(url);
 
   /// Like [proxyUrl] but falls back to [url] itself.
-  String proxyUrlOr(String url) => proxyUrl(url) ?? url;
+  String proxyUrlOr(String url) => _api.proxyUrlOr(url);
 
   /// Live event stream of the gateway.
   Stream<GatewayEvent> get events => _gateway.events;
@@ -168,11 +162,11 @@ class NitoriClient {
   /// Disconnects and releases the shared HTTP client.
   Future<void> close() async {
     await _gateway.stop();
-    _http.close();
+    _api.close();
   }
 
   void _handleReady(List<Login> logins, List<String> proxyUrls) {
-    this.proxyUrls = proxyUrls;
+    _api.proxyUrls = proxyUrls;
     for (final login in logins) {
       _addBot(login);
     }
@@ -272,97 +266,11 @@ class NitoriClient {
   }
 
   /// Sends one API request and returns the decoded JSON response.
-  ///
-  /// Field names come from the [methods] registry; each Dart argument is keyed
-  /// by the matching wire field and passed through [transformKey] so nested
-  /// camelCase maps become snake_case on the wire.
-  Future<dynamic> _request(
-    NitoriBot bot,
-    String key,
-    List<Object?> args,
-  ) async {
-    final method = methods[key];
-    if (method == null) throw StateError('unknown method: $key');
+  Future<dynamic> _request(NitoriBot bot, String key, List<Object?> args) =>
+      _api.request(_identity(bot), key, args);
 
-    final uri = Uri.parse('$baseUrl/v1/$key');
-    if (method.isForm) {
-      final streamed = await _http.send(_multipartRequest(uri, bot, args));
-      return _decode(await http.Response.fromStream(streamed));
-    }
-
-    final payload = <String, dynamic>{};
-    for (var i = 0; i < method.fields.length; i++) {
-      final arg = args[i];
-      if (arg == null) continue;
-      final field = method.fields[i];
-      payload[field] = field == 'referrer'
-          ? arg
-          : transformKey(arg, cashConvertCamelToSnake);
-    }
-    final response = await _http.post(
-      uri,
-      headers: _headers(bot),
-      body: jsonEncode(payload),
-    );
-    return _decode(response);
-  }
-
-  /// Builds a multipart upload request for [uri], adding parts named `file`,
-  /// `file1`, `file2`, ... from [blobs]. Accepts [List<int>], [String] and
-  /// [JsonBlob] parts.
-  http.MultipartRequest _multipartRequest(
-    Uri uri,
-    NitoriBot bot,
-    List<Object?> blobs, {
-    Map<String, String>? extraHeaders,
-  }) {
-    final request = http.MultipartRequest('POST', uri)
-      ..headers.addAll(_headers(bot));
-    if (extraHeaders != null) request.headers.addAll(extraHeaders);
-    for (var i = 0; i < blobs.length; i++) {
-      final field = i == 0 ? 'file' : 'file${i + 1}';
-      final blob = blobs[i];
-      if (blob is List<int>) {
-        request.files.add(http.MultipartFile.fromBytes(field, blob));
-      } else if (blob is String) {
-        request.files.add(http.MultipartFile.fromString(field, blob));
-      } else if (blob is JsonBlob) {
-        request.files.add(
-          http.MultipartFile.fromBytes(
-            field,
-            blob.bytes,
-            filename: blob.filename,
-            contentType: blob.contentType == null
-                ? null
-                : MediaType.parse(blob.contentType!),
-          ),
-        );
-      } else {
-        throw ArgumentError('unsupported upload blob: ${blob.runtimeType}');
-      }
-    }
-    return request;
-  }
-
-  Map<String, String> _headers(NitoriBot bot) => <String, String>{
-    if (token != null) 'Authorization': 'Bearer $token',
-    'satori-platform': bot.platform,
-    'satori-user-id': bot.userId,
-    'content-type': 'application/json',
-  };
-
-  /// Builds the JSON body for an internal-route request.
-  ///
-  /// The first argument is used verbatim when it is a map; otherwise the
-  /// arguments are keyed by their positional index.
-  Map<String, dynamic> _internalBody(List<Object?> args) {
-    if (args.isNotEmpty && args.first is Map) {
-      return args.first as Map<String, dynamic>;
-    }
-    return <String, dynamic>{
-      for (var i = 0; i < args.length; i++) i.toString(): args[i],
-    };
-  }
+  SatoriApiIdentity _identity(NitoriBot bot) =>
+      SatoriApiIdentity(platform: bot.platform, userId: bot.userId);
 
   /// Public version of [_request] that allows arbitrary key and extra headers.
   ///
@@ -373,30 +281,8 @@ class NitoriClient {
     String key,
     List<Object?> args, {
     Map<String, String>? extraHeaders,
-  }) async {
-    // Build payload the same way as _request, but without method validation.
-    final uri = Uri.parse('$baseUrl/v1/$key');
-    final isForm = key == 'upload.create'; // Only known form method.
-
-    if (isForm) {
-      final streamed = await _http.send(
-        _multipartRequest(uri, bot, args, extraHeaders: extraHeaders),
-      );
-      final response = await http.Response.fromStream(streamed);
-      return _decodeToJsonFormBody(response);
-    }
-
-    // Use the first arg as the payload if it's a Map, otherwise wrap in array.
-    final body = _internalBody(args);
-    final headers = _headers(bot);
-    if (extraHeaders != null) headers.addAll(extraHeaders);
-    final response = await _http.post(
-      uri,
-      headers: headers,
-      body: jsonEncode(body),
-    );
-    return _decodeToJsonFormBody(response);
-  }
+  }) =>
+      _api.requestByKey(_identity(bot), key, args, extraHeaders: extraHeaders);
 
   /// Makes a request with a full path (for internal routes).
   ///
@@ -407,18 +293,12 @@ class NitoriClient {
     String fullPath,
     List<Object?> args, {
     Map<String, String>? extraHeaders,
-  }) async {
-    final uri = Uri.parse('$baseUrl$fullPath');
-    final body = _internalBody(args);
-    final headers = _headers(bot);
-    if (extraHeaders != null) headers.addAll(extraHeaders);
-    final response = await _http.post(
-      uri,
-      headers: headers,
-      body: jsonEncode(body),
-    );
-    return _decodeToJsonFormBody(response);
-  }
+  }) => _api.requestFullPath(
+    _identity(bot),
+    fullPath,
+    args,
+    extraHeaders: extraHeaders,
+  );
 
   /// Makes a request with a full path, sending raw bytes body.
   ///
@@ -431,32 +311,14 @@ class NitoriClient {
     Map<String, String>? extraHeaders,
     String? contentType,
     String method = 'POST',
-  }) async {
-    final uri = Uri.parse('$baseUrl$fullPath');
-    final headers = _headers(bot);
-    if (extraHeaders != null) headers.addAll(extraHeaders);
-    if (contentType != null) headers['content-type'] = contentType;
-    final response = await _http.send(
-      http.Request(method, uri)
-        ..headers.addAll(headers)
-        ..bodyBytes = method == 'GET' || method == 'HEAD'
-            ? const <int>[]
-            : bodyBytes,
-    );
-    return _decodeToJsonFormBody(await http.Response.fromStream(response));
-  }
-
-  /// Decodes response to JsonFormBody (handles both JSON and multipart).
-  JsonFormBody _decodeToJsonFormBody(http.Response response) {
-    final body = _toJsonFormBody(response);
-    if (response.statusCode != 200) {
-      throw SatoriApiException(
-        response.statusCode,
-        utf8.decode(response.bodyBytes),
-      );
-    }
-    return body;
-  }
+  }) => _api.requestFullPathBytes(
+    _identity(bot),
+    fullPath,
+    bodyBytes,
+    extraHeaders: extraHeaders,
+    contentType: contentType,
+    method: method,
+  );
 
   /// Forwards an internal route request to the remote server, returning the
   /// response verbatim (status, headers and bytes) instead of throwing on a
@@ -469,47 +331,14 @@ class NitoriClient {
     Map<String, String>? extraHeaders,
     String? contentType,
     String method = 'POST',
-  }) async {
-    final uri = Uri.parse('$baseUrl$fullPath');
-    final headers = _headers(bot);
-    if (extraHeaders != null) headers.addAll(extraHeaders);
-    if (contentType != null) headers['content-type'] = contentType;
-    final response = await _http.send(
-      http.Request(method, uri)
-        ..headers.addAll(headers)
-        ..bodyBytes = method == 'GET' || method == 'HEAD'
-            ? const <int>[]
-            : bodyBytes,
-    );
-    return _toJsonFormBody(await http.Response.fromStream(response));
-  }
-
-  JsonFormBody _toJsonFormBody(http.Response response) {
-    final contentType = response.headers['content-type'] ?? 'application/json';
-    // Skip hop-by-hop / auto-managed headers: http has already decompressed
-    // the body, so content-encoding and content-length must not be forwarded.
-    const skipped = {'content-encoding', 'content-length', 'transfer-encoding'};
-    final headers = <String, String>{
-      for (final entry in response.headers.entries)
-        if (!skipped.contains(entry.key.toLowerCase()))
-          entry.key.toLowerCase(): entry.value,
-    };
-    return JsonFormBody(
-      response.bodyBytes,
-      contentType,
-      statusCode: response.statusCode,
-      headers: headers,
-    );
-  }
-
-  dynamic _decode(http.Response response) {
-    final text = utf8.decode(response.bodyBytes);
-    if (response.statusCode != 200) {
-      throw SatoriApiException(response.statusCode, text);
-    }
-    if (text.isEmpty) return null;
-    return jsonDecode(text);
-  }
+  }) => _api.forwardFullPathBytes(
+    _identity(bot),
+    fullPath,
+    bodyBytes,
+    extraHeaders: extraHeaders,
+    contentType: contentType,
+    method: method,
+  );
 
   /// Downloads [url] as a byte stream.
   ///
@@ -519,39 +348,13 @@ class NitoriClient {
   Future<Stream<List<int>>> downloadStream(
     String url, {
     bool useProxy = true,
-  }) async {
-    final target = useProxy ? proxyUrlOr(url) : url;
-    final response = await _http.send(http.Request('GET', Uri.parse(target)));
-    if (response.statusCode != 200) {
-      final bytes = await response.stream.toBytes();
-      throw SatoriApiException(
-        response.statusCode,
-        utf8.decode(bytes, allowMalformed: true),
-      );
-    }
-    return response.stream;
-  }
+  }) => _api.downloadStream(url, useProxy: useProxy);
 
   /// Downloads [url] and returns its bytes with the response content type.
   Future<({Uint8List bytes, String? contentType})> download(
     String url, {
     bool useProxy = true,
-  }) async {
-    final target = useProxy ? proxyUrlOr(url) : url;
-    final response = await _http.send(http.Request('GET', Uri.parse(target)));
-    if (response.statusCode != 200) {
-      final bytes = await response.stream.toBytes();
-      throw SatoriApiException(
-        response.statusCode,
-        utf8.decode(bytes, allowMalformed: true),
-      );
-    }
-    final bytes = await response.stream.toBytes();
-    return (
-      bytes: Uint8List.fromList(bytes),
-      contentType: response.headers['content-type'],
-    );
-  }
+  }) => _api.download(url, useProxy: useProxy);
 }
 
 /// A single login: carries the identity headers and exposes the full HTTP API.
