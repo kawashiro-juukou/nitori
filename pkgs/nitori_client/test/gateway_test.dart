@@ -109,7 +109,7 @@ void main() {
   });
 
   test('IDENTIFY carries token and the resume sequence', () async {
-    final gateway = Gateway(
+    final gateway = SatoriGatewayClient(
       baseUrl: 'http://127.0.0.1:${mock.server.port}',
       token: 'secret',
     )..sequence = 42;
@@ -125,7 +125,7 @@ void main() {
   });
 
   test('sends PING frames at the heartbeat interval', () async {
-    final gateway = Gateway(
+    final gateway = SatoriGatewayClient(
       baseUrl: 'http://127.0.0.1:${mock.server.port}',
       heartbeatInterval: const Duration(milliseconds: 50),
     );
@@ -187,7 +187,7 @@ void main() {
     final client = NitoriClient(
       baseUrl: 'http://127.0.0.1:${mock.server.port}',
     );
-    final received = <GatewayEvent>[];
+    final received = <SatoriGatewayEvent>[];
     client.events.listen(received.add);
 
     await client.start();

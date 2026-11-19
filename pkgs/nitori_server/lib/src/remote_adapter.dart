@@ -618,7 +618,7 @@ class _RemoteSessionHost implements SessionHost {
 /// Connects to a remote Satori server via WebSocket (`/v1/events`), performs
 /// IDENTIFY with token, handles READY/META/EVENT/PING/PONG, and supports
 /// automatic reconnection with configurable retry semantics (handled by
-/// [NitoriClient.Gateway]).
+/// the client's gateway connection).
 ///
 /// Events received from the remote server are converted to local [Event] objects
 /// and emitted through the [events] stream. The local [SatoriServer] then
@@ -793,7 +793,7 @@ class RemoteSatoriAdapter implements SatoriAdapter {
   }
 
   /// Handles a gateway event from the remote server.
-  void _onGatewayEvent(GatewayEvent ge) {
+  void _onGatewayEvent(SatoriGatewayEvent ge) {
     final raw = ge.raw;
     final type = ge.type;
     final sn = ge.sn;

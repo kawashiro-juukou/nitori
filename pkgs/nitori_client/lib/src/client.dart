@@ -13,7 +13,7 @@ import 'package:nitori_core/nitori_core.dart';
 import 'package:nitori_message/nitori_message.dart' hide Message;
 
 import 'api_client.dart';
-import 'gateway.dart';
+import 'gateway_client.dart';
 
 export 'api_client.dart'
     show SatoriApiClient, SatoriApiException, SatoriApiIdentity;
@@ -35,7 +35,7 @@ class NitoriClient {
          token: token,
          httpClient: httpClient,
        ),
-       _gateway = Gateway(
+       _gateway = SatoriGatewayClient(
          baseUrl: baseUrl,
          token: token,
          platform: platform,
@@ -74,10 +74,10 @@ class NitoriClient {
   final String? userId;
 
   /// Connection lifecycle of the WebSocket gateway.
-  final Gateway _gateway;
+  final SatoriGatewayClient _gateway;
 
   /// The underlying gateway for test access.
-  Gateway get gateway => _gateway;
+  SatoriGatewayClient get gateway => _gateway;
 
   /// HTTP API surface; owns the shared `http.Client`.
   final SatoriApiClient _api;
@@ -102,7 +102,7 @@ class NitoriClient {
   String proxyUrlOr(String url) => _api.proxyUrlOr(url);
 
   /// Live event stream of the gateway.
-  Stream<GatewayEvent> get events => _gateway.events;
+  Stream<SatoriGatewayEvent> get events => _gateway.events;
 
   /// Events decoded into the protocol [Event] model, excluding `login-*`
   /// frames (bots are kept in sync separately).
@@ -133,10 +133,10 @@ class NitoriClient {
   /// Called when a button handler throws; uncaught errors fall back to the zone.
   void Function(Object error, StackTrace stackTrace)? onButtonError;
 
-  /// Internal: called by Gateway when READY is received.
+  /// Internal: called by the gateway when READY is received.
   void Function(List<Login> logins, List<String> proxyUrls)? _onReadyExternal;
 
-  /// Internal: called by Gateway when META is received.
+  /// Internal: called by the gateway when META is received.
   void Function(List<String> proxyUrls)? _onMetaExternal;
 
   /// Sets an external callback for READY (chained after internal _handleReady).
@@ -172,7 +172,7 @@ class NitoriClient {
     }
   }
 
-  void _handleLoginEvent(GatewayEvent event) {
+  void _handleLoginEvent(SatoriGatewayEvent event) {
     final login = event.login;
     if (login == null) return;
     switch (event.type) {
@@ -187,7 +187,7 @@ class NitoriClient {
 
   /// Handles `interaction/button` events and dispatches them to registered
   /// button handlers on the owning bot.
-  void _handleInteractionEvent(GatewayEvent event) {
+  void _handleInteractionEvent(SatoriGatewayEvent event) {
     if (event.type != EventName.interactionButton.value) return;
     final Event decoded;
     try {

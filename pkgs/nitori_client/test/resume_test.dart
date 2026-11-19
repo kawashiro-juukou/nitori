@@ -3,7 +3,7 @@ library;
 
 import 'package:test/test.dart';
 import 'package:nitori_client/src/client.dart';
-import 'package:nitori_client/src/gateway.dart';
+import 'package:nitori_client/src/gateway_client.dart';
 
 void main() {
   group('NitoriClient resume sequence', () {
@@ -32,7 +32,7 @@ void main() {
 
   group('Gateway sequence tracking', () {
     test('sequence updates on EVENT frame', () {
-      final gateway = Gateway(baseUrl: 'http://localhost:5140');
+      final gateway = SatoriGatewayClient(baseUrl: 'http://localhost:5140');
       gateway.sequence = null; // Ensure clean state
       gateway.sequence = 42;
       expect(gateway.sequence, equals(42));
@@ -41,7 +41,7 @@ void main() {
 
   group('Gateway sequence tracking', () {
     test('sequence updates on EVENT frame', () {
-      final gateway = Gateway(baseUrl: 'http://localhost:5140');
+      final gateway = SatoriGatewayClient(baseUrl: 'http://localhost:5140');
 
       // Simulate receiving an EVENT frame with sn=42
       gateway.sequence = null; // Ensure clean state

@@ -1,4 +1,4 @@
-/// Identity headers tests for [Gateway] and [NitoriClient].
+/// Identity headers tests for [SatoriGatewayClient] and [NitoriClient].
 library;
 
 import 'dart:async';
@@ -18,7 +18,7 @@ class _MockHttpClient extends http.BaseClient {
 void main() {
   group('Gateway identity headers', () {
     test('Gateway stores platform and userId', () {
-      final gateway = Gateway(
+      final gateway = SatoriGatewayClient(
         baseUrl: 'http://localhost:5140',
         platform: 'discord',
         userId: 'user123',
@@ -28,7 +28,7 @@ void main() {
     });
 
     test('Gateway identity fields default to null', () {
-      final gateway = Gateway(baseUrl: 'http://localhost:5140');
+      final gateway = SatoriGatewayClient(baseUrl: 'http://localhost:5140');
       expect(gateway.platform, isNull);
       expect(gateway.userId, isNull);
     });
