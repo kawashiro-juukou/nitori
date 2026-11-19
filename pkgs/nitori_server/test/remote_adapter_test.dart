@@ -303,7 +303,7 @@ void main() {
     test(
       'remote EVENT -> local adapter -> local server -> local gateway client',
       () async {
-        final received = <GatewayEvent>[];
+        final received = <SatoriGatewayEvent>[];
         final sub = localClient.events.listen(received.add);
 
         // Emit event from remote bot1
@@ -332,7 +332,7 @@ void main() {
 
     test('sn space mapping: local sn <-> remote sn correlation', () async {
       // Emit multiple events and verify the sn mapping is built correctly
-      final received = <GatewayEvent>[];
+      final received = <SatoriGatewayEvent>[];
       final sub = localClient.events.listen(received.add);
 
       // Emit 3 events from remote
@@ -398,7 +398,7 @@ void main() {
         });
 
         // login events should NOT appear in local gateway client stream
-        final received = <GatewayEvent>[];
+        final received = <SatoriGatewayEvent>[];
         final sub = localClient.events.listen(received.add);
         await Future<void>.delayed(const Duration(milliseconds: 100));
         await sub.cancel();
@@ -674,7 +674,7 @@ void main() {
         addTearDown(localServer.close);
 
         // Emit event after reconnect - connect a client to the LOCAL server
-        final received = <GatewayEvent>[];
+        final received = <SatoriGatewayEvent>[];
         final client = NitoriClient(
           baseUrl: 'http://127.0.0.1:$localPort',
           token: 'local-token',
@@ -762,7 +762,7 @@ void main() {
         await waitFor(() => client.bots.isNotEmpty);
 
         // Emit some events from remote to build the local<->remote sn mapping
-        final receivedEvents = <GatewayEvent>[];
+        final receivedEvents = <SatoriGatewayEvent>[];
         final sub = client.events.listen(receivedEvents.add);
 
         for (var i = 1; i <= 3; i++) {
@@ -829,7 +829,7 @@ void main() {
         );
 
         // Verify that events after resume continue to work
-        final receivedAfterResume = <GatewayEvent>[];
+        final receivedAfterResume = <SatoriGatewayEvent>[];
         final sub2 = client2.events.listen(receivedAfterResume.add);
 
         rAdapter.emit(
@@ -909,7 +909,7 @@ void main() {
         await client.start();
         await waitFor(() => client.status == Status.online);
 
-        final receivedEvents = <GatewayEvent>[];
+        final receivedEvents = <SatoriGatewayEvent>[];
         final sub = client.events.listen(receivedEvents.add);
 
         // Emit events from remote
@@ -971,7 +971,7 @@ void main() {
         await waitFor(() => client2.status == Status.online);
 
         // Verify events continue after both sides resumed
-        final receivedAfter = <GatewayEvent>[];
+        final receivedAfter = <SatoriGatewayEvent>[];
         final sub2 = client2.events.listen(receivedAfter.add);
 
         rAdapter.emit(
@@ -1054,7 +1054,7 @@ void main() {
         await client.start();
         await waitFor(() => client.status == Status.online);
 
-        final receivedEvents = <GatewayEvent>[];
+        final receivedEvents = <SatoriGatewayEvent>[];
         final sub = client.events.listen(receivedEvents.add);
 
         for (var i = 1; i <= 3; i++) {
@@ -1151,7 +1151,7 @@ void main() {
         await client3.start();
         await waitFor(() => client3.status == Status.online);
 
-        final receivedAfterRestart = <GatewayEvent>[];
+        final receivedAfterRestart = <SatoriGatewayEvent>[];
         final sub3 = client3.events.listen(receivedAfterRestart.add);
 
         // Emit a NEW event from remote (this will have remote sn 4)

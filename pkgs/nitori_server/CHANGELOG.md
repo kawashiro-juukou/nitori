@@ -1,3 +1,7 @@
+## 0.1.25
+
+ - **REFACTOR**: use `SatoriGatewayEvent` in the remote adapter to match the renamed gateway types in `nitori_client`.
+
 ## 0.1.24
 
  - **FIX**: stop forwarding the removed `linkPreview` option to `NitoriClient`; require `nitori_client ^0.1.21`.

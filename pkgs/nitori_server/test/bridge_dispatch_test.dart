@@ -272,7 +272,7 @@ void main() {
       'dispatching does NOT publish into live SatoriServer client stream (no duplication)',
       () async {
         // Connect a gateway client to the LOCAL server
-        final receivedByClient = <GatewayEvent>[];
+        final receivedByClient = <SatoriGatewayEvent>[];
         final subClient = localClient.events.listen(receivedByClient.add);
 
         // Create dispatcher with a local bot

@@ -300,7 +300,7 @@ void main() {
       // We just verify the client stays connected and can receive events.
       // Actual PING frame inspection is at gateway level; here we ensure
       // the connection is alive by emitting and receiving an event.
-      final received = <GatewayEvent>[];
+      final received = <SatoriGatewayEvent>[];
       final sub = client.events.listen(received.add);
       adapter.emitFromBot1(
         Event(
@@ -437,12 +437,12 @@ void main() {
       await ws.close();
 
       // New gateway with sequence = 3 to request replay (should replay nothing since sn>3).
-      final g2 = Gateway(
+      final g2 = SatoriGatewayClient(
         baseUrl: 'http://127.0.0.1:${rHttpServer.port}',
         token: 'resume',
       )..sequence = 3;
       addTearDown(g2.stop);
-      final replayed = <GatewayEvent>[];
+      final replayed = <SatoriGatewayEvent>[];
       g2.events.listen(replayed.add);
       await g2.start();
       await waitFor(() => g2.status == Status.online);
@@ -453,12 +453,12 @@ void main() {
 
       // Now test with sn=1: should replay sn=2,3.
       await g2.stop();
-      final g3 = Gateway(
+      final g3 = SatoriGatewayClient(
         baseUrl: 'http://127.0.0.1:${rHttpServer.port}',
         token: 'resume',
       )..sequence = 1;
       addTearDown(g3.stop);
-      final replayed2 = <GatewayEvent>[];
+      final replayed2 = <SatoriGatewayEvent>[];
       g3.events.listen(replayed2.add);
       await g3.start();
       await waitFor(() => g3.status == Status.online);
@@ -561,7 +561,7 @@ void main() {
     );
 
     test('Multi-bot: events from both bots carry login identity', () async {
-      final received = <GatewayEvent>[];
+      final received = <SatoriGatewayEvent>[];
       final sub = client.events.listen(received.add);
 
       adapter.emitFromBot1(
