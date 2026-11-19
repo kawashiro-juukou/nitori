@@ -1,3 +1,8 @@
+## 0.1.26
+
+ - **FEAT**: `SatoriGatewayClient` owns the WebSocket gateway lifecycle (connect, IDENTIFY, heartbeat, reconnect, event decode); `SatoriGatewayEvent` and `SatoriGatewayException` are the renamed `GatewayEvent` / `GatewayException`.
+ - **DEPRECATED**: `Gateway`, `GatewayEvent` and `GatewayException` remain as deprecated typedef aliases of their `Satori*` counterparts.
+
 ## 0.1.25
 
  - **FEAT**: `SatoriApiClient` owns the HTTP API surface (requests, multipart upload, media download, proxy resolution and `SatoriApiException`), separate from the WebSocket gateway.
