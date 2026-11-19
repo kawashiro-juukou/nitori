@@ -61,7 +61,7 @@ class MockMediaApi {
 }
 
 NitoriBot botFor(MockMediaApi api) => NitoriBot(
-  NitoriClient(baseUrl: 'http://127.0.0.1:${api.server.port}'),
+  NitoriClient(baseUrl: 'http://127.0.0.1:${api.server.port}').api,
   platform: 'mock',
   userId: 'bot-1',
 );

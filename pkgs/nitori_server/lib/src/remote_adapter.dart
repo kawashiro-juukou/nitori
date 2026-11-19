@@ -85,7 +85,7 @@ class RemoteSatoriBot implements SatoriBot {
   ///
   /// Returns the path portion only (without baseUrl), e.g.
   /// `/v1/internal/telegram/12345/_api/someMethod`.
-  /// Use with [NitoriClient.forwardFullPathBytes].
+  /// Use with [SatoriApiClient.forwardFullPathBytes].
   String getInternalUrl(
     String path, {
     Map<String, String>? query,
@@ -502,8 +502,7 @@ class RemoteSatoriBot implements SatoriBot {
       query: query.isEmpty ? null : query,
       slash: true,
     );
-    return _remoteBot.client.forwardFullPathBytes(
-      _remoteBot,
+    return _remoteBot.forwardFullPathBytes(
       internalUrl,
       body,
       method: method,
@@ -537,8 +536,7 @@ class RemoteSatoriBot implements SatoriBot {
       extraHeaders['satori-pagination'] = pagination;
     }
 
-    final response = await _remoteBot.client.forwardFullPathBytes(
-      _remoteBot,
+    final response = await _remoteBot.forwardFullPathBytes(
       internalUrl,
       request.body is List<int> ? request.body as List<int> : const <int>[],
       extraHeaders: extraHeaders,
@@ -577,9 +575,8 @@ class _RemoteInternalProxy {
       'kwargs': namedArgs.map((k, v) => MapEntry(k.toString(), v)),
     });
 
-    return _bot._remoteBot.client
+    return _bot._remoteBot
         .requestFullPathBytes(
-          _bot._remoteBot,
           path,
           jsonBody.bytes,
           extraHeaders: {

@@ -53,7 +53,7 @@ class MockApi {
 }
 
 NitoriBot botFor(MockApi api) => NitoriBot(
-  NitoriClient(baseUrl: 'http://127.0.0.1:${api.server.port}'),
+  NitoriClient(baseUrl: 'http://127.0.0.1:${api.server.port}').api,
   platform: 'mock',
   userId: 'bot-1',
 );
@@ -98,7 +98,7 @@ void main() {
       baseUrl: 'http://127.0.0.1:${api.server.port}',
       token: 'secret',
     );
-    final bot = NitoriBot(client, platform: 'mock', userId: 'bot-1');
+    final bot = NitoriBot(client.api, platform: 'mock', userId: 'bot-1');
     api.handler = (request, body) async {
       expect(request.headers.value('authorization'), 'Bearer secret');
       return (status: HttpStatus.ok, body: <String, dynamic>{'id': 'm1'});
