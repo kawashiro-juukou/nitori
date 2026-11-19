@@ -1,3 +1,10 @@
+## 0.1.25
+
+ - **FEAT**: `SatoriApiClient` owns the HTTP API surface (requests, multipart upload, media download, proxy resolution and `SatoriApiException`), separate from the WebSocket gateway.
+ - **FEAT**: `SatoriApiIdentity` carries the `satori-platform` / `satori-user-id` pair a request is made on behalf of.
+ - **FEAT**: `NitoriClient.api` exposes the underlying `SatoriApiClient`; existing `NitoriClient` methods delegate to it and behave unchanged.
+ - **REFACTOR**: the bot API methods now run through `SatoriApiClient` instead of `NitoriClient` internals.
+
 ## 0.1.24
 
  - **FEAT**: `NitoriBot.onButton` and `offButton` register handlers by `button.id`; incoming `interaction/button` events are dispatched to the owning bot.
