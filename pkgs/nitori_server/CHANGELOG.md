@@ -1,7 +1,3 @@
-## 0.1.26
-
- - **REFACTOR**: the remote adapter drives the remote bot through its `SatoriApiClient api` instead of the removed bot-based request shims.
-
 ## 0.1.25
 
  - **REFACTOR**: use `SatoriGatewayEvent` in the remote adapter to match the renamed gateway types in `nitori_client`.
