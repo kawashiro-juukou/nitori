@@ -1,0 +1,51 @@
+name: Release
+
+# Local flow: bump the version in pkgs/<pkg>/pubspec.yaml and push to master.
+# This workflow compares every package against the latest pub.dev release and,
+# for the ones that are newer, creates annotated tags (tool/release.sh) and
+# dispatches the Publish workflow for each tag. pub.dev's trusted publishing is
+# bound to the tag ref, so the tag must exist before publish runs.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'pkgs/*/pubspec.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Tag and publish bumped packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # push tags
+      actions: write    # dispatch the Publish workflow
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Configure git identity
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Create and push tags
+        id: tags
+        run: bash tool/release.sh
+
+      - name: Dispatch publish for each tag
+        if: steps.tags.outputs.tags != ''
+        run: |
+          for tag in $(python3 -c 'import json,sys; print("\n".join(json.load(sys.stdin)))' <<< '${{ steps.tags.outputs.tags }}'); do
+            echo "dispatching publish for $tag"
+            gh workflow run publish.yml --ref "$tag"
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
